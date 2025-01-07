@@ -166,6 +166,7 @@ int main(int argc, char **argv)
         auto csvPrefix = filepath.substr(0, filenamePos + 1);
         if (serializeToBson) 
         {
+            std::cout << "loading as bson" << std::endl;
             bson::serializer::loadAsBson(
                 filepath, 
                 name, 
@@ -175,6 +176,7 @@ int main(int argc, char **argv)
         }
         else if (serializeToJson) 
         {
+            std::cout << "loading as json" << std::endl;
             void *ptr = bson::serializer::loadAsJson(
                 filepath, 
                 name, 
@@ -183,6 +185,7 @@ int main(int argc, char **argv)
             );
         }
         else {
+            std::cout << "loading " << filepath << std::endl;
             auto root = wisent::serializer::load(
                 filepath, 
                 name, 
@@ -200,7 +203,7 @@ int main(int argc, char **argv)
         avg = (total + timeDiff) / count;
         std::cout << "took " << timeDiff << " ns (avg:" << avg << ")" << std::endl;
         
-        res.set_content("Done.", "text/plain");
+        res.set_content("Loaded " + name + " in " + std::to_string(timeDiff * 0.000000001) + " s. ", "text/plain");
     });
 
     svr.Get("/unload",

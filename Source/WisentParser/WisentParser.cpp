@@ -26,8 +26,7 @@ struct Buffer {
 
     int expressionCount() const
     {
-        return *reinterpret_cast<int64_t *>(input +
-                                            sizeof(int64_t)); 
+        return *reinterpret_cast<int64_t *>(input + sizeof(int64_t)); 
     }
 
     int argumentCount() const { return *reinterpret_cast<int64_t *>(input); }
@@ -106,7 +105,7 @@ struct SerializedExpression {
     Atom asAtom() const
     {
         switch (type()) {
-        case ARGUMENT_TYPE_STRING:
+        case ARGUMENT_TYPE_STRING: 
             return Atom::String;
         case ARGUMENT_TYPE_SYMBOL:
             return Atom::Symbol;
@@ -169,23 +168,3 @@ int64_t processInts(const std::vector<std::pair<WisentArgumentType, std::vector<
     return agg;
 }
 
-
-// int main(int argc, char *argv[])
-// {
-//     std::string packageFile = argv[argc - 1];
-
-//     Buffer buffer;
-//     // Load buffer with wisentLoad here
-
-//     SerializedExpression root{0, buffer};
-
-//     int64_t result = 0;
-//     benchmark("sum values", [&]() {
-//         result += processInts(root.arguments());
-//     });
-
-//     std::cout << "Result: " << result << std::endl;
-
-//     // Todo - memory freeing 
-//     return 0;
-// }

@@ -10,6 +10,8 @@ namespace wisent
             std::string const& csvPrefix, 
             bool disableRLE = false,
             bool disableCsvHandling = false, 
+            bool enableDeltaEncoding = false,
+            bool enableHuffmanEncoding = false, 
             bool forceReload = false
         );
 

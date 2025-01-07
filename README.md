@@ -5,12 +5,23 @@
 ```
 WisentCpp/
 │
+├── Data/ 
+│
+├── Documentation/
+│   ├── Report/
+│   └── WisentExample/
+│
 ├── Include/    QQ - probably very bad practice
 │
 ├── Source/
+│   ├── client-app/
+│   ├── WisentHelpers
+│   ├── WisentSerializer
 │   └── WisentServer
 │
 └── Test/
+    ├── Basic
+    └── Python
 ```
 
 ## Requirements
@@ -30,8 +41,7 @@ QQ - [this stack overflow post](https://stackoverflow.com/questions/30714175/cla
 
 ```
 ./test_build.sh
-cd build
-./WisentServer
+./build/WisentServer
 ```
 
 QQ - data preparation

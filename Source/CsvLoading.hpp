@@ -1,5 +1,5 @@
 #pragma once
-#include <nlohmann/json.hpp>
+#include "../Include/json.h"
 #include <optional>
 #include "rapidcsv.h"
 #include <string>
