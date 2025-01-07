@@ -92,9 +92,15 @@ class SharedMemorySegment
 };
 
 std::unordered_map<std::string, SharedMemorySegment> &sharedMemorySegments();
+
 SharedMemorySegment *&currentSharedMemory();
+
 void setCurrentSharedMemory(SharedMemorySegment &sharedMemory);
+
 void *sharedMemoryMalloc(size_t size);
+
 void *sharedMemoryRealloc(void *pointer, size_t size);
+
 void sharedMemoryFree(void *pointer);
+
 SharedMemorySegment &createOrGetMemorySegment(std::string const &name);

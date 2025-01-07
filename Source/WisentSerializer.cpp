@@ -175,7 +175,8 @@ class JsonToWisent : public json::json_sax_t
 
     void resetTypeRLE(std::uint64_t endIndex)
     {
-        if (numRepeatedArgumentTypes >= WisentArgumentType_RLE_MINIMUM_SIZE) {
+        if (numRepeatedArgumentTypes >= WisentArgumentType_RLE_MINIMUM_SIZE) 
+        {
             setRLEArgumentFlagOrPropagateTypes(
                 root, endIndex - numRepeatedArgumentTypes,
                 numRepeatedArgumentTypes);
@@ -251,11 +252,13 @@ class JsonToWisent : public json::json_sax_t
 
     bool handleCsvFile(std::string const &filename)
     {
-        if (disableCsvHandling) {
+        if (disableCsvHandling) 
+        {
             return false;
         }
         auto extPos = filename.find_last_of(".");
-        if (extPos == std::string::npos || filename.substr(extPos) != ".csv") {
+        if (extPos == std::string::npos || filename.substr(extPos) != ".csv") 
+        {
             return false;
         }
         startExpression("Table");
