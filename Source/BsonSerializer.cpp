@@ -3,7 +3,7 @@
 #include "SharedMemorySegment.hpp"
 #include <cassert>
 #include <fstream>
-#include <nlohmann/json.hpp>
+#include "../Include/json.h"
 #include <sstream>
 #include <vector>
 

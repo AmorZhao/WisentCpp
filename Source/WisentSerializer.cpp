@@ -2,9 +2,11 @@
 #include "CsvLoading.hpp"
 #include "SharedMemorySegment.hpp"
 #include "WisentHelpers.h"
+#include "HuffmanHelpers.h"
 #include <cassert>
 #include <fstream>
-#include <nlohmann/json.hpp>
+#include <iostream>
+#include "../Include/json.h"
 #include <vector>
 
 using json = nlohmann::json;
@@ -22,6 +24,8 @@ class JsonToWisent : public json::json_sax_t
     SharedMemorySegment &sharedMemory;
     std::string const &csvPrefix;
     bool disableRLE;
+    bool enableDeltaEncoding; 
+    bool enableHuffmanEncoding; 
     bool disableCsvHandling;
     uint64_t numRepeatedArgumentTypes; // count repeated type for triggering RLE encoding
 
@@ -29,12 +33,19 @@ class JsonToWisent : public json::json_sax_t
     JsonToWisent(uint64_t expressionCount,
                  std::vector<uint64_t> &&argumentCountPerLayer,
                  SharedMemorySegment &sharedMemory,
-                 std::string const &csvPrefix, bool disableRLE,
-                 bool disableCsvHandling)
+                 std::string const &csvPrefix, 
+                 bool disableRLE, 
+                 bool disableCsvHandling,
+                 bool enableDeltaEncoding, 
+                 bool enableHuffmanEncoding) 
         : root(nullptr),
           cumulArgCountPerLayer(std::move(argumentCountPerLayer)),
-          sharedMemory(sharedMemory), csvPrefix(csvPrefix),
-          disableRLE(disableRLE), disableCsvHandling(disableCsvHandling),
+          sharedMemory(sharedMemory), 
+          csvPrefix(csvPrefix),
+          disableRLE(disableRLE), 
+          disableCsvHandling(disableCsvHandling),
+          enableDeltaEncoding(enableDeltaEncoding),
+          enableHuffmanEncoding(enableHuffmanEncoding),
           numRepeatedArgumentTypes(0)
     {
         // we need the accumulated count at each layer
@@ -164,8 +175,8 @@ class JsonToWisent : public json::json_sax_t
             numRepeatedArgumentTypes = 1;
             return;
         }
-        if (getArgumentTypes(root)[argIndex - 1] !=
-            getArgumentTypes(root)[argIndex]) {
+        if (getArgumentTypes(root)[argIndex - 1] != getArgumentTypes(root)[argIndex]) 
+        {
             resetTypeRLE(argIndex);
             numRepeatedArgumentTypes = 1;
             return;
@@ -301,11 +312,15 @@ class JsonToWisent : public json::json_sax_t
     }
 };
 
-WisentRootExpression *
-wisent::serializer::load(std::string const &path,
-                         std::string const &sharedMemoryName,
-                         std::string const &csvPrefix, bool disableRLE,
-                         bool disableCsvHandling, bool forceReload)
+WisentRootExpression *wisent::serializer::load(
+    std::string const &path,
+    std::string const &sharedMemoryName,
+    std::string const &csvPrefix, 
+    bool disableRLE,
+    bool disableCsvHandling, 
+    bool enableDeltaEncoding, 
+    bool enableHuffmanEncoding,
+    bool forceReload)
 {
     auto &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
     if (!forceReload && sharedMemory.exists() && !sharedMemory.loaded()) 
@@ -328,6 +343,7 @@ wisent::serializer::load(std::string const &path,
 
     if (!ifs.good()) 
     {
+        std::cout << "failed to read: " << path << std::endl;
         throw std::runtime_error("failed to read: " + path);
     }
 
@@ -335,18 +351,22 @@ wisent::serializer::load(std::string const &path,
     uint64_t expressionCount = 0;
     std::vector<uint64_t> argumentCountPerLayer;
     argumentCountPerLayer.reserve(16);
+
     json::parse(
         ifs, [&csvPrefix, &disableCsvHandling, &expressionCount,
               &argumentCountPerLayer, layerIndex = uint64_t{0},
               wasKeyValue = std::vector<bool>(16)](
-                 int depth, json::parse_event_t event, json &parsed) mutable {
-            if (wasKeyValue.size() <= depth) {
+                int depth, json::parse_event_t event, json &parsed) mutable {
+            if (wasKeyValue.size() <= depth) 
+            {
                 wasKeyValue.resize(wasKeyValue.size() * 2, false);
             }
-            if (argumentCountPerLayer.size() <= layerIndex) {
+            if (argumentCountPerLayer.size() <= layerIndex) 
+            {
                 argumentCountPerLayer.resize(layerIndex + 1, 0);
             }
-            if (event == json::parse_event_t::key) {
+            if (event == json::parse_event_t::key) 
+            {
                 argumentCountPerLayer[layerIndex]++;
                 expressionCount++;
                 wasKeyValue[depth] = true;
@@ -354,14 +374,16 @@ wisent::serializer::load(std::string const &path,
                 return true;
             }
             if (event == json::parse_event_t::object_start ||
-                event == json::parse_event_t::array_start) {
+                event == json::parse_event_t::array_start) 
+            {
                 argumentCountPerLayer[layerIndex]++;
                 expressionCount++;
                 layerIndex++;
                 return true;
             }
             if (event == json::parse_event_t::object_end ||
-                event == json::parse_event_t::array_end) {
+                event == json::parse_event_t::array_end) 
+            {
                 layerIndex--;
                 if (wasKeyValue[depth]) {
                     wasKeyValue[depth] = false;
@@ -400,14 +422,26 @@ wisent::serializer::load(std::string const &path,
                 return true;
             }
         });
-    JsonToWisent jsonToWisent(expressionCount, std::move(argumentCountPerLayer),
-                              sharedMemory, csvPrefix, disableRLE,
-                              disableCsvHandling);
+
+    JsonToWisent jsonToWisent(
+        expressionCount,
+        std::move(argumentCountPerLayer),
+        sharedMemory,
+        csvPrefix,
+        disableRLE,
+        disableCsvHandling,
+        enableDeltaEncoding, 
+        enableDeltaEncoding
+    );
+
     ifs.seekg(0);
     json::sax_parse(ifs, &jsonToWisent);
     ifs.close();
+
+    std::cout << "loaded: " << path << std::endl;
     return jsonToWisent.getRoot();
 }
+
 
 void wisent::serializer::unload (std::string const &sharedMemoryName)
 {
@@ -426,25 +460,34 @@ void wisent::serializer::free (std::string const &sharedMemoryName)
 extern "C" {
     char *wisentLoad (
         char const *path, 
-        char const *sharedMemoryName,
-        char const *csvPrefix)
+        char const *sharedMemoryName, 
+        char const *csvPrefix, 
+        bool disableRLE, 
+        bool disableCsvHandling,
+        bool enableDeltaEncoding, 
+        bool enableHuffmanEncoding) 
     {
         return reinterpret_cast<char *>(
             wisent::serializer::load(
-                path, 
-                sharedMemoryName, 
-                csvPrefix
+                path,
+                sharedMemoryName,
+                csvPrefix,
+                disableRLE,
+                disableCsvHandling,
+                enableDeltaEncoding, 
+                enableHuffmanEncoding, 
+                false // forceReload
             )
         );
     }
 
-    void wisentUnload (char const *sharedMemoryName)
+    void wisentUnload(char const *sharedMemoryName)
     {
         wisent::serializer::unload(sharedMemoryName);
-    };
+    }
 
-    void wisentFree (char const *sharedMemoryName)
+    void wisentFree(char const *sharedMemoryName)
     {
         wisent::serializer::free(sharedMemoryName);
-    };
+    }
 }

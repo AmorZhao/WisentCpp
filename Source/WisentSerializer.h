@@ -4,7 +4,11 @@
 char* wisentLoad(
     char const* path, 
     char const* sharedMemoryName, 
-    char const* csvPrefix
+    char const* csvPrefix, 
+    bool disableRLE, 
+    bool disableCsvHandling,
+    bool enableDeltaEncoding, 
+    bool enableHuffmanEncoding
 );
 
 void wisentUnload(char const* sharedMemoryName);
