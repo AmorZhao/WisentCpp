@@ -1,7 +1,26 @@
-/build*
 /.vscode
+
+/build/*
+Tests/**/build*
+
 /cpm_modules
+
 .DS_Store
-Data/**/*.csv
-Data/**/*.json
-Documentation/Report*
+
+Documentation/Final Report
+Documentation/Interim Report
+
+# LaTeX temporary files
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.thm
+*.toc
+
+# editor-specific files
+*.swp
+*.bak
+*.tmp

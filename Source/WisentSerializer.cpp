@@ -2,12 +2,13 @@
 #include "CsvLoading.hpp"
 #include "SharedMemorySegment.hpp"
 #include "WisentHelpers.h"
-#include "HuffmanHelpers.h"
+#include "HuffmanHelpers.h" // not used 
 #include <cassert>
 #include <fstream>
 #include <iostream>
-#include "../Include/json.h"
 #include <vector>
+#include <sys/resource.h>
+#include "../Include/json.h"
 
 using json = nlohmann::json;
 
@@ -49,11 +50,16 @@ class JsonToWisent : public json::json_sax_t
           numRepeatedArgumentTypes(0)
     {
         // we need the accumulated count at each layer
-        std::partial_sum(cumulArgCountPerLayer.begin(),
-                         cumulArgCountPerLayer.end(),
-                         cumulArgCountPerLayer.begin());
-        root = allocateExpressionTree(cumulArgCountPerLayer.back(),
-                                      expressionCount, sharedMemoryMalloc);
+        std::partial_sum(
+            cumulArgCountPerLayer.begin(),
+            cumulArgCountPerLayer.end(),
+            cumulArgCountPerLayer.begin()
+        );
+        root = allocateExpressionTree(
+            cumulArgCountPerLayer.back(),
+            expressionCount, 
+            sharedMemoryMalloc
+        );
         wasKeyValue.resize(cumulArgCountPerLayer.size(), false);
     }
 
@@ -274,18 +280,20 @@ class JsonToWisent : public json::json_sax_t
         }
         startExpression("Table");
         auto doc = openCsvFile(csvPrefix + filename);
-        for (auto const &columnName : doc.GetColumnNames()) {
-            if (!handleCsvColumn<int64_t>(doc, columnName,
-                                          [this](auto val) { addLong(val); })) {
-                if (!handleCsvColumn<double_t>(
-                        doc, columnName,
-                        [this](auto val) { addDouble(val); })) {
-                    if (!handleCsvColumn<std::string>(
-                            doc, columnName,
-                            [this](auto const &val) { addString(val); })) {
+        for (auto const &columnName : doc.GetColumnNames()) 
+        {
+            if (!handleCsvColumn<int64_t>(doc, columnName, [this](auto val) 
+                    { addLong(val); })) 
+            {
+                if (!handleCsvColumn<double_t>(doc, columnName, [this](auto val) 
+                        { addDouble(val); })) 
+                {
+                    if (!handleCsvColumn<std::string>(doc, columnName, [this](auto const &val) 
+                            { addString(val); })) 
+                    {
                         throw std::runtime_error(
-                            "failed to handle csv column: '" + columnName +
-                            "'");
+                            "failed to handle csv column: '" + columnName + "'"
+                        );
                     }
                 }
             }
@@ -295,8 +303,10 @@ class JsonToWisent : public json::json_sax_t
     }
 
     template <typename T, typename Func>
-    bool handleCsvColumn(rapidcsv::Document const &doc,
-                         std::string const &columnName, Func &&addValueFunc)
+    bool handleCsvColumn(
+        rapidcsv::Document const &doc,
+        std::string const &columnName, 
+        Func &&addValueFunc)
     {
         auto column = loadCsvData<T>(doc, columnName);
         if (column.empty()) {
@@ -308,6 +318,10 @@ class JsonToWisent : public json::json_sax_t
             val ? addValueFunc(*val) : addSymbol("Missing");
         }
         endExpression();
+        std::cout << "Handled column: " << columnName << std::endl;
+        struct rusage usage;
+        getrusage(RUSAGE_SELF, &usage);
+        std::cout << "Memory usage: " << usage.ru_maxrss << " KB" << std::endl;
         return true;
     }
 };
@@ -352,11 +366,20 @@ WisentRootExpression *wisent::serializer::load(
     std::vector<uint64_t> argumentCountPerLayer;
     argumentCountPerLayer.reserve(16);
 
-    json::parse(
-        ifs, [&csvPrefix, &disableCsvHandling, &expressionCount,
-              &argumentCountPerLayer, layerIndex = uint64_t{0},
-              wasKeyValue = std::vector<bool>(16)](
-                int depth, json::parse_event_t event, json &parsed) mutable {
+    auto _ = json::parse(
+        ifs, 
+        [                   // lambda captures
+            &csvPrefix, 
+            &disableCsvHandling, 
+            &expressionCount,
+            &argumentCountPerLayer, 
+            layerIndex = uint64_t{0},
+            wasKeyValue = std::vector<bool>(16)
+        ](                  // lambda params
+            int depth, 
+            json::parse_event_t event, 
+            json &parsed
+        ) mutable {
             if (wasKeyValue.size() <= depth) 
             {
                 wasKeyValue.resize(wasKeyValue.size() * 2, false);
@@ -391,37 +414,41 @@ WisentRootExpression *wisent::serializer::load(
                 }
                 return true;
             }
-            if (event == json::parse_event_t::value) {
+            if (event == json::parse_event_t::value) 
+            {
                 argumentCountPerLayer[layerIndex]++;
-                if (!disableCsvHandling && parsed.is_string()) {
+                if (!disableCsvHandling && parsed.is_string()) 
+                {
                     auto filename = parsed.get<std::string>();
                     auto extPos = filename.find_last_of(".");
                     if (extPos != std::string::npos &&
-                        filename.substr(extPos) == ".csv") {
+                        filename.substr(extPos) == ".csv") 
+                    {
+                        std::cout << "Handling csv file: " << filename << std::endl;
                         auto doc = openCsvFile(csvPrefix + filename);
                         auto rows = doc.GetRowCount();
                         auto cols = doc.GetColumnCount();
                         static const size_t numTableLayers = 2; // Column/Data
-                        if (argumentCountPerLayer.size() <=
-                            layerIndex + numTableLayers) {
-                            argumentCountPerLayer.resize(
-                                layerIndex + numTableLayers + 1, 0);
+                        if (argumentCountPerLayer.size() <= layerIndex + numTableLayers) 
+                        {
+                            argumentCountPerLayer.resize(layerIndex + numTableLayers + 1, 0);
                         }
                         expressionCount++; // Table expression
-                        argumentCountPerLayer[layerIndex + 1] +=
-                            cols; // Column expressions
+                        argumentCountPerLayer[layerIndex + 1] += cols; // Column expressions
                         expressionCount += cols;
-                        argumentCountPerLayer[layerIndex + 2] +=
-                            cols * rows; // Column data
+                        argumentCountPerLayer[layerIndex + 2] += cols * rows; // Column data
                     }
                 }
-                if (wasKeyValue[depth]) {
+                if (wasKeyValue[depth]) 
+                {
                     wasKeyValue[depth] = false;
                     layerIndex--;
                 }
                 return true;
             }
-        });
+            return true;
+        }
+    );
 
     JsonToWisent jsonToWisent(
         expressionCount,
@@ -446,8 +473,13 @@ WisentRootExpression *wisent::serializer::load(
 void wisent::serializer::unload (std::string const &sharedMemoryName)
 {
     auto &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
-    assert(sharedMemory.loaded());
+    if (!sharedMemory.loaded()) 
+    {
+        std::cerr << "Error: Shared memory segment is not loaded." << std::endl;
+        return;
+    }
     sharedMemory.unload();
+    std::cout << "Shared memory segment unloaded successfully." << std::endl;
 }
 
 void wisent::serializer::free (std::string const &sharedMemoryName)
@@ -481,12 +513,12 @@ extern "C" {
         );
     }
 
-    void wisentUnload(char const *sharedMemoryName)
+    void wisentUnload (char const *sharedMemoryName)
     {
         wisent::serializer::unload(sharedMemoryName);
     }
 
-    void wisentFree(char const *sharedMemoryName)
+    void wisentFree (char const *sharedMemoryName)
     {
         wisent::serializer::free(sharedMemoryName);
     }

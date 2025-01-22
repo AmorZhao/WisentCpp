@@ -85,7 +85,10 @@ int main(int argc, char **argv)
                 auto end = std::chrono::high_resolution_clock::now();
                 auto timeDiff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
-                auto &[count, avg] = averageTimings.try_emplace(filepath, 0, 0).first->second;
+                auto emplaceResult = averageTimings.emplace(filepath, std::make_pair(0L, 0L));
+                auto &count = emplaceResult.first->second.first;
+                auto &avg = emplaceResult.first->second.second;
+                
                 auto total = avg * count;
                 count++;
                 avg = (total + timeDiff) / count;
@@ -134,13 +137,13 @@ int main(int argc, char **argv)
     {
         auto const &name = req.get_param_value("name");
         auto const &filepath = req.get_param_value("path");
+        // Todo - fix param parsing
 
         bool loadCSV = true;
         if (req.has_param("loadCSV")) 
         {
             auto const &str = req.get_param_value("loadCSV");
-            loadCSV = (str.empty() || str == "True" || str == "true" ||
-                       atoi(str.c_str()) > 0);
+            loadCSV = (str.empty() || str == "True" || str == "true" || atoi(str.c_str()) > 0);
         }
 
         bool serializeToBson = false;
@@ -197,7 +200,9 @@ int main(int argc, char **argv)
 
         auto end = std::chrono::high_resolution_clock::now();
         auto timeDiff =std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        auto &[count, avg] = averageTimings.try_emplace(name + filepath, 0, 0).first->second;
+        auto it = averageTimings.emplace(name + filepath, std::make_pair(0, 0)).first;
+        auto &count = it->second.first;
+        auto &avg = it->second.second;
         auto total = avg * count;
         count++;
         avg = (total + timeDiff) / count;
@@ -212,6 +217,7 @@ int main(int argc, char **argv)
                 std::cout << "unloading dataset '" << name << "'" << std::endl;
                 wisent::serializer::unload(name);
                 res.set_content("Done.", "text/plain");
+                // Todo - change set_content
             });
 
     svr.Get("/erase", 

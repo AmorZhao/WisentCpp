@@ -3,9 +3,9 @@
 #include "SharedMemorySegment.hpp"
 #include <cassert>
 #include <fstream>
-#include "../Include/json.h"
 #include <sstream>
 #include <vector>
+#include "../Include/json.h"
 
 using json = nlohmann::json;
 
@@ -157,7 +157,7 @@ void *bson::serializer::loadAsBson(
     );
     auto v = json::to_bson(j);
 
-    std::vector<std::uint8_t, SharedMemoryAllocator<std::uint8_t>> sharedV(
+    static std::vector<std::uint8_t, SharedMemoryAllocator<std::uint8_t>> sharedV(
         v.begin(), 
         v.end()
     );
@@ -193,10 +193,12 @@ void *bson::serializer::loadAsJson(
     std::ostringstream ostream;
     ostream << j;
 
-    std::basic_string<char, std::char_traits<char>, SharedMemoryAllocator<char>> str;
-    str = std::move(ostream).str();
+    static std::basic_string<char, std::char_traits<char>, SharedMemoryAllocator<char>> str(
+        ostream.str().begin(), 
+        ostream.str().end()
+    );
 
-    return str.data();
+    return const_cast<void *>(static_cast<const void *>(str.data())); 
 }
 
 void bson::serializer::unload(std::string const &sharedMemoryName)
