@@ -29,6 +29,10 @@ import requests
 import struct
 import ctypes
 
+import tracemalloc
+
+tracemalloc.start()
+
 from enum import Enum
  
 class ArgType(Enum):
@@ -65,7 +69,7 @@ def argsToDictionary(expr):
 def argsToTable(table):
     dict = {}
     for column in table.args:
-        dict[column.args[0].name] = column.args[1]
+        dict[column.args[0]] = column.args[1]
     return dict
     
 def readExpression(offset, args, argTypes, exprs, strings):
@@ -73,6 +77,10 @@ def readExpression(offset, args, argTypes, exprs, strings):
     headStr = readSymbol(head, strings).name
     expr = Expression(headStr)
     readArgs(expr.args, startChild, endChild, args, argTypes, exprs, strings)
+    # Get current memory usage
+    current, peak = tracemalloc.get_traced_memory()
+    print(f"Current memory usage: {current}")
+    print(f"Peak memory usage: {peak}")
     if(headStr == "Object"):
         return argsToDictionary(expr)
     elif(headStr == "List"):
@@ -88,7 +96,7 @@ def readArgs(outputArgs, startChild, endChild, args, argTypes, exprs, strings):
         if(argType & 0x80):
             argType &= ~0x80
             argCount = struct.unpack("@I", argTypes[(startChild+1)*8:(startChild+2)*8-4])[0]
-            #print("unpacking RLE - argType:" + str(argType) + " argCount:" + str(argCount))
+            # print("unpacking RLE - argType:" + str(argType) + " argCount:" + str(argCount))
             for i in range(startChild, startChild + argCount):
                 outputArgs.append(readArgWithType(argType, i, args, argTypes, exprs, strings))
             startChild += argCount
@@ -112,9 +120,15 @@ def readSymbol(offset, strings):
     
 def readArg(offset, args, argTypes, exprs, strings):
     argType = struct.unpack("@Q", argTypes[offset*8:(offset+1)*8])[0]
+
+    # Get current memory usage
+    current, peak = tracemalloc.get_traced_memory()
+    print(f"Current memory usage: {current}")
+    print(f"Peak memory usage: {peak}")
+
     return readArgWithType(argType, offset, args, argTypes, exprs, strings)
 
-def readArgWithType(argType, offset, args, argTypes, exprs, strings):
+def readArgWithType(argType, offset, args, argTypes, exprs, strings):  
     match ArgType(argType):
         case ArgType.BOOL:
             return struct.unpack("@?", args[(offset+1)*8-1:(offset+1)*8])[0]
@@ -134,25 +148,31 @@ def readArgWithType(argType, offset, args, argTypes, exprs, strings):
 
 def deserialize(buffer):
     argCount, exprCount = struct.unpack("@QQ", buffer[:16])
+
     offset = 32 # skip originalAddress, stringArgumentsFillIndex
     argsBufferSize = argCount*8
     args = buffer[offset:offset+argsBufferSize]
+    
     offset += argsBufferSize
     argTypesBufferSize = argCount*8
     argTypes = buffer[offset:offset+argTypesBufferSize]
+    
     offset += argTypesBufferSize
     exprsBufferSize = exprCount*24
     exprs = buffer[offset:offset+exprsBufferSize]
+    
     offset += exprsBufferSize
     strings = buffer[offset:]
+    
     return readArg(0, args, argTypes, exprs, strings)
 
 def main():
     # request server to load data
     URL="http://localhost:3000"
     datapackageName = "datapackage" + datasetSuffix + ".json"
-    resp = requests.get(url=URL+'/load', params={'name':'datapackage', 'path':'../Data/owid-deaths/' + datapackageName})
-    #resp = requests.get(url=URL+'/load', params={'name':'datapackage', 'path':'../Data/opsd-weather/' + datapackageName})
+    # resp = requests.get(url=URL+'/load', params={'name':'datapackage', 'path':'/root/WisentCpp/Data/owid-deaths/' + datapackageName})
+    resp = requests.get(url=URL+'/load', params={'name':'datapackage', 'path':'/root/WisentCpp/Data/opsd-weather/' + datapackageName})
+    # resp = requests.get(url=URL+'/load', params={'name':'datapackage', 'path':'/root/WisentCpp/Data/opsd-weather/' + datapackageName, 'loadCSV':False})
     print("loading response: " + (resp.text if resp.ok else str(resp.headers)))
     
     # deserialize the data
@@ -163,9 +183,13 @@ def main():
         print(expr)
     finally:
         datapackage.close()
-        # request server to unload the data
-        resp = requests.get(url=URL+'/unload', params={'name':'datapackage'})
-        print("unloading response: " + (resp.text if resp.ok else str(resp.headers)))
-    
+        # # request server to unload the data
+        # resp = requests.get(url=URL+'/unload', params={'name':'datapackage'})
+        # print("unloading response: " + (resp.text if resp.ok else str(resp.headers)))
+
+        # # resource leak precaution
+        # resp = requests.get(url=URL+'/erase', params={'name':'datapackage'})  
+        # print("Erasing datapackage: " + (resp.text if resp.ok else str(resp.headers)))
+
 if __name__ == "__main__":
     main()
