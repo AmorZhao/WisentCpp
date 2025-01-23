@@ -180,13 +180,13 @@ def main():
     URL="http://localhost:3000"
     datapackageName = "datapackage" + datasetSuffix + ".json"
 
-    resp = requests.get(url=URL+'/load', params={'name':'datapackage', 'path':'../Data/owid-deaths/' + datapackageName})
-    # resp = requests.get(url=URL+'/load', params={'name':'datapackage', 'path':'../Data/opsd-weather/' + datapackageName})
+    # resp = requests.get(url=URL+'/load', params={'name':'datapackage', 'path':'/root/WisentCpp/Data/owid-deaths/' + datapackageName})
+    resp = requests.get(url=URL+'/load', params={'name':'datapackage', 'path':'/root/WisentCpp/Data/opsd-weather/' + datapackageName})
 
     print("loading response: " + (resp.text if resp.ok else str(resp.headers)))
     
-    columnName = "Accidents (excl. road) - Death Rates"
-    # columnName = "GB_temperature"
+    # columnName = "Accidents (excl. road) - Death Rates"
+    columnName = "DEA2_temperature"
         
     remove_shm_from_resource_tracker()
     datapackage = shared_memory.SharedMemory("datapackage")
@@ -197,7 +197,9 @@ def main():
     finally:
         datapackage.close()
         resp = requests.get(url=URL+'/unload', params={'name':'datapackage'})
-        print("unloading response: " + (resp.text if resp.ok else str(resp.headers)))
+        print("unloading datapackage: " + (resp.text if resp.ok else str(resp.headers)))
+        resp = requests.get(url=URL+'/erase', params={'name':'datapackage'})  # resource leak precaution
+        print("Erasing datapackage: " + (resp.text if resp.ok else str(resp.headers)))
     
 if __name__ == "__main__":
     main()

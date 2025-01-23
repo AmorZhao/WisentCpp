@@ -1,8 +1,11 @@
 #!/bin/bash
-
+cd /root/Wisent++
 rm -rf build
 
-mkdir build
+mkdir -p build
 cd build
+
 cmake ..
 cmake --build . --verbose
+
+../build/WisentServer

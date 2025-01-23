@@ -15,13 +15,19 @@ WisentCpp/
 │
 ├── Source/
 │   ├── client-app/
+│   │
+│   ├── SharedMemorySegment
+│   ├── CsvLoading
+│   │
 │   ├── WisentHelpers
 │   ├── WisentSerializer
+│   │
 │   └── WisentServer
 │
 └── Test/
-    ├── Basic
-    └── Python
+    ├── Basic/
+    ├── Python/
+    └── UnitTests/
 ```
 
 ## Requirements

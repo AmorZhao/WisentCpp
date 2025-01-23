@@ -1,0 +1,2545 @@
+{
+    "profile": "tabular-data-package",
+    "name": "opsd_weather_data",
+    "title": "Weather Data",
+    "id": "https://doi.org/10.25832/weather_data/2019-04-09",
+    "description": "Hourly geographically aggregated weather data for Europe",
+    "longDescription": "This data package contains weather data relevant for power system modeling, at hourly resolution, for Europe, aggregated by Renewables.ninja from the NASA MERRA-2 reanalysis. It covers the European countries using a population-weighted mean across all MERRA-2 grid cells within the given country. It also covers Germany's NUTS-2 zones.",
+    "homepage": "https://data.open-power-system-data.org/weather_data/2019-04-09",
+    "documentation": "https://github.com/Open-Power-System-Data/weather_data/blob/2019-04-09/main.ipynb",
+    "version": "2019-04-09",
+    "created": "2019-04-09",
+    "lastChanges": "All European countries",
+    "keywords": [
+        "Open Power System Data",
+        "time series",
+        "power systems",
+        "weather",
+        "MERRA-2",
+        "Renewables.ninja"
+    ],
+    "geographicalScope": "Europe",
+    "temporalScope": {
+        "start": "1980-01-01",
+        "end": "2016-12-31"
+    },
+    "contributors": [
+        {
+            "web": "https://www.pfenninger.org/",
+            "name": "Stefan Pfenninger",
+            "email": "stefan.pfenninger@usys.ethz.ch",
+            "organization": "ETH Z\u00fcrich",
+            "role": "author"
+        },
+        {
+            "web": "https://www.imperial.ac.uk/people/i.staffell",
+            "name": "Iain Staffell",
+            "email": "i.staffell@imperial.ac.uk",
+            "organization": "Imperial College London",
+            "role": "author"
+        }
+    ],
+    "sources": [
+        {
+            "name": "NASA",
+            "web": "https://gmao.gsfc.nasa.gov/reanalysis/MERRA-2/"
+        },
+        {
+            "name": "Renewables.ninja",
+            "web": "https://www.renewables.ninja/#/country"
+        }
+    ],
+    "resources": [
+        {
+            "profile": "tabular-data-resource",
+            "name": "opsd_weather_data",
+            "title": "Weather Data",
+            "description": "Geographically aggregated weather data",
+            "path": "weather_data.csv",
+            "format": "csv",
+            "mediatype": "text/csv",
+            "encoding": "UTF8",
+            "bytes": 607989279,
+            "hash": "9899007a7e3c39296129d6683182c56c",
+            "dialect": {
+                "csvddfVersion": 1.0,
+                "delimiter": ",",
+                "lineTerminator": "\n",
+                "header": true
+            },
+            "schema": {
+                "primaryKey": "utc_timestamp",
+                "missingValues": "",
+                "fields": [
+                    {
+                        "name": "utc_timestamp",
+                        "description": "Start of time period in Coordinated Universal Time",
+                        "type": "datetime",
+                        "format": "fmt:%Y-%m-%dT%H%M%SZ",
+                        "opsdContentfilter": true
+                    },
+                    {
+                        "name": "BG_temperature",
+                        "description": "temperature weather variable for BG in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "BG",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "BG_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for BG in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "BG",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "BG_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for BG in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "BG",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "EE_temperature",
+                        "description": "temperature weather variable for EE in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "EE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "EE_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for EE in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "EE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "EE_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for EE in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "EE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "ES_temperature",
+                        "description": "temperature weather variable for ES in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "ES",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "ES_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for ES in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "ES",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "ES_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for ES in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "ES",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "FI_temperature",
+                        "description": "temperature weather variable for FI in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "FI",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "FI_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for FI in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "FI",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "FI_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for FI in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "FI",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "GB_temperature",
+                        "description": "temperature weather variable for GB in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "GB",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "GB_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for GB in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "GB",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "GB_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for GB in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "GB",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "GR_temperature",
+                        "description": "temperature weather variable for GR in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "GR",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "GR_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for GR in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "GR",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "GR_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for GR in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "GR",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "HR_temperature",
+                        "description": "temperature weather variable for HR in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "HR",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "HR_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for HR in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "HR",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "HR_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for HR in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "HR",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "HU_temperature",
+                        "description": "temperature weather variable for HU in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "HU",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "HU_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for HU in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "HU",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "HU_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for HU in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "HU",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "IE_temperature",
+                        "description": "temperature weather variable for IE in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "IE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "IE_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for IE in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "IE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "IE_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for IE in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "IE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "IT_temperature",
+                        "description": "temperature weather variable for IT in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "IT",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "IT_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for IT in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "IT",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "IT_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for IT in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "IT",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "LT_temperature",
+                        "description": "temperature weather variable for LT in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "LT",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "LT_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for LT in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "LT",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "LT_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for LT in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "LT",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "LV_temperature",
+                        "description": "temperature weather variable for LV in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "LV",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "LV_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for LV in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "LV",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "LV_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for LV in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "LV",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "NO_temperature",
+                        "description": "temperature weather variable for NO in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": false,
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "NO_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for NO in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": false,
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "NO_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for NO in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": false,
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "PT_temperature",
+                        "description": "temperature weather variable for PT in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "PT",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "PT_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for PT in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "PT",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "PT_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for PT in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "PT",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "RO_temperature",
+                        "description": "temperature weather variable for RO in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "RO",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "RO_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for RO in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "RO",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "RO_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for RO in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "RO",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "SE_temperature",
+                        "description": "temperature weather variable for SE in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "SE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "SE_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for SE in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "SE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "SE_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for SE in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "SE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "SI_temperature",
+                        "description": "temperature weather variable for SI in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "SI",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "SI_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for SI in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "SI",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "SI_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for SI in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "SI",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "SK_temperature",
+                        "description": "temperature weather variable for SK in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "SK",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "SK_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for SK in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "SK",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "SK_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for SK in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "SK",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "AT_windspeed_10m",
+                        "description": "windspeed_10m weather variable for AT in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "AT",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "AT_temperature",
+                        "description": "temperature weather variable for AT in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "AT",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "AT_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for AT in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "AT",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "AT_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for AT in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "AT",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "BE_windspeed_10m",
+                        "description": "windspeed_10m weather variable for BE in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "BE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "BE_temperature",
+                        "description": "temperature weather variable for BE in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "BE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "BE_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for BE in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "BE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "BE_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for BE in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "BE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "CH_windspeed_10m",
+                        "description": "windspeed_10m weather variable for CH in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "CH",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "CH_temperature",
+                        "description": "temperature weather variable for CH in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "CH",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "CH_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for CH in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "CH",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "CH_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for CH in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "CH",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "CZ_windspeed_10m",
+                        "description": "windspeed_10m weather variable for CZ in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "CZ",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "CZ_temperature",
+                        "description": "temperature weather variable for CZ in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "CZ",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "CZ_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for CZ in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "CZ",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "CZ_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for CZ in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "CZ",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "DE_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "DE_temperature",
+                        "description": "temperature weather variable for DE in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "DE_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "DE_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "DE11_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE11 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE11_temperature",
+                        "description": "temperature weather variable for DE11 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE11_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE11 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE11_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE11 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE12_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE12 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE12_temperature",
+                        "description": "temperature weather variable for DE12 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE12_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE12 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE12_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE12 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE13_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE13 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE13_temperature",
+                        "description": "temperature weather variable for DE13 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE13_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE13 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE13_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE13 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE14_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE14 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE14_temperature",
+                        "description": "temperature weather variable for DE14 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE14_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE14 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE14_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE14 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE21_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE21 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE21_temperature",
+                        "description": "temperature weather variable for DE21 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE21_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE21 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE21_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE21 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE22_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE22 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE22_temperature",
+                        "description": "temperature weather variable for DE22 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE22_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE22 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE22_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE22 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE23_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE23 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE23_temperature",
+                        "description": "temperature weather variable for DE23 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE23_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE23 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE23_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE23 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE24_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE24 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE24_temperature",
+                        "description": "temperature weather variable for DE24 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE24_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE24 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE24_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE24 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE25_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE25 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE25_temperature",
+                        "description": "temperature weather variable for DE25 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE25_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE25 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE25_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE25 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE26_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE26 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE26_temperature",
+                        "description": "temperature weather variable for DE26 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE26_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE26 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE26_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE26 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE27_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE27 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE27_temperature",
+                        "description": "temperature weather variable for DE27 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE27_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE27 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE27_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE27 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE30_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE30 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE30_temperature",
+                        "description": "temperature weather variable for DE30 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE30_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE30 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE30_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE30 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE40_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE40 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE40_temperature",
+                        "description": "temperature weather variable for DE40 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE40_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE40 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE40_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE40 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE50_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE50 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE50_temperature",
+                        "description": "temperature weather variable for DE50 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE50_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE50 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE50_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE50 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE60_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE60 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE60_temperature",
+                        "description": "temperature weather variable for DE60 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE60_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE60 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE60_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE60 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE71_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE71 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE71_temperature",
+                        "description": "temperature weather variable for DE71 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE71_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE71 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE71_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE71 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE72_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE72 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE72_temperature",
+                        "description": "temperature weather variable for DE72 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE72_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE72 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE72_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE72 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE73_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE73 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE73_temperature",
+                        "description": "temperature weather variable for DE73 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE73_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE73 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE73_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE73 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE80_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE80 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE80_temperature",
+                        "description": "temperature weather variable for DE80 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE80_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE80 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE80_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE80 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE91_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE91 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE91_temperature",
+                        "description": "temperature weather variable for DE91 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE91_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE91 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE91_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE91 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE92_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE92 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE92_temperature",
+                        "description": "temperature weather variable for DE92 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE92_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE92 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE92_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE92 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE93_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE93 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE93_temperature",
+                        "description": "temperature weather variable for DE93 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE93_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE93 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE93_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE93 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE94_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DE94 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE94_temperature",
+                        "description": "temperature weather variable for DE94 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE94_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DE94 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DE94_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DE94 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA1_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DEA1 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA1_temperature",
+                        "description": "temperature weather variable for DEA1 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA1_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DEA1 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA1_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DEA1 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA2_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DEA2 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA2_temperature",
+                        "description": "temperature weather variable for DEA2 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA2_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DEA2 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA2_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DEA2 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA3_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DEA3 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA3_temperature",
+                        "description": "temperature weather variable for DEA3 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA3_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DEA3 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA3_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DEA3 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA4_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DEA4 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA4_temperature",
+                        "description": "temperature weather variable for DEA4 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA4_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DEA4 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA4_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DEA4 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA5_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DEA5 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA5_temperature",
+                        "description": "temperature weather variable for DEA5 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA5_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DEA5 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEA5_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DEA5 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEB1_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DEB1 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEB1_temperature",
+                        "description": "temperature weather variable for DEB1 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEB1_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DEB1 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEB1_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DEB1 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEB2_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DEB2 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEB2_temperature",
+                        "description": "temperature weather variable for DEB2 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEB2_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DEB2 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEB2_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DEB2 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEB3_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DEB3 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEB3_temperature",
+                        "description": "temperature weather variable for DEB3 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEB3_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DEB3 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEB3_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DEB3 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEC0_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DEC0 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEC0_temperature",
+                        "description": "temperature weather variable for DEC0 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEC0_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DEC0 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEC0_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DEC0 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DED2_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DED2 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DED2_temperature",
+                        "description": "temperature weather variable for DED2 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DED2_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DED2 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DED2_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DED2 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DED4_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DED4 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DED4_temperature",
+                        "description": "temperature weather variable for DED4 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DED4_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DED4 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DED4_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DED4 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DED5_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DED5 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DED5_temperature",
+                        "description": "temperature weather variable for DED5 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DED5_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DED5 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DED5_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DED5 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEE0_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DEE0 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEE0_temperature",
+                        "description": "temperature weather variable for DEE0 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEE0_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DEE0 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEE0_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DEE0 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEF0_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DEF0 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEF0_temperature",
+                        "description": "temperature weather variable for DEF0 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEF0_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DEF0 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEF0_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DEF0 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEG0_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DEG0 in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEG0_temperature",
+                        "description": "temperature weather variable for DEG0 in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEG0_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DEG0 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DEG0_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DEG0 in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DE",
+                            "Resolution": "NUTS-2"
+                        }
+                    },
+                    {
+                        "name": "DK_windspeed_10m",
+                        "description": "windspeed_10m weather variable for DK in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "DK",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "DK_temperature",
+                        "description": "temperature weather variable for DK in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "DK",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "DK_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for DK in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "DK",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "DK_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for DK in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "DK",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "FR_windspeed_10m",
+                        "description": "windspeed_10m weather variable for FR in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "FR",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "FR_temperature",
+                        "description": "temperature weather variable for FR in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "FR",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "FR_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for FR in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "FR",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "FR_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for FR in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "FR",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "LU_windspeed_10m",
+                        "description": "windspeed_10m weather variable for LU in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "LU",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "LU_temperature",
+                        "description": "temperature weather variable for LU in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "LU",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "LU_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for LU in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "LU",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "LU_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for LU in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "LU",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "NL_windspeed_10m",
+                        "description": "windspeed_10m weather variable for NL in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "NL",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "NL_temperature",
+                        "description": "temperature weather variable for NL in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "NL",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "NL_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for NL in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "NL",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "NL_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for NL in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "NL",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "PL_windspeed_10m",
+                        "description": "windspeed_10m weather variable for PL in m/s",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "windspeed_10m",
+                            "Country": "PL",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "PL_temperature",
+                        "description": "temperature weather variable for PL in degrees C",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "temperature",
+                            "Country": "PL",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "PL_radiation_direct_horizontal",
+                        "description": "radiation_direct_horizontal weather variable for PL in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_direct_horizontal",
+                            "Country": "PL",
+                            "Resolution": "Country"
+                        }
+                    },
+                    {
+                        "name": "PL_radiation_diffuse_horizontal",
+                        "description": "radiation_diffuse_horizontal weather variable for PL in W/m2",
+                        "type": "number (float)",
+                        "opsdProperties": {
+                            "Variable": "radiation_diffuse_horizontal",
+                            "Country": "PL",
+                            "Resolution": "Country"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

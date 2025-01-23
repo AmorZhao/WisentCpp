@@ -10,9 +10,8 @@ project(
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fstandalone-debug")
 # set(CMAKE_CXX_EXTENSIONS NO)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 # Configure CCache if available
 find_program(CCACHE_EXECUTABLE ccache)
@@ -41,13 +40,6 @@ endif()
 # include(cmake/CPM.cmake)
 # CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.8.0")
 
-# CPMAddPackage(
-#   NAME fmt
-#   GIT_TAG 10.2.1
-#   GITHUB_REPOSITORY fmtlib/fmt
-#   OPTIONS "FMT_INSTALL YES" # create an installable target
-# )
-
 # ---- Add source files ----
 
 include_directories(${CMAKE_SOURCE_DIR}/Include)
@@ -60,41 +52,16 @@ set(BsonSerializerFiles Source/BsonSerializer.cpp)
 # WisentSerializer Plugin
 add_library(WisentSerializer SHARED ${WisentSerializerFiles})
 
-# Wisent Server
-add_executable(WisentServer ${WisentSerializerFiles} ${BsonSerializerFiles} ${WisentServerFiles})
-# add_dependencies(WisentServer httplib)
+# WisentServer
+add_executable(WisentServer ${WisentServerFiles} ${WisentSerializerFiles} ${BsonSerializerFiles})
 
-# # Benchmarks
-# add_executable(Benchmarks ${WisentSerializerFiles} ${BsonSerializerFiles} ${WisentBenchmarkFiles})
-# add_dependencies(Benchmarks googlebenchmark)
-# target_link_libraries(Benchmarks PRIVATE ITTNotifySupport)
-# target_link_libraries(Benchmarks PRIVATE benchmark)
-# target_link_libraries(Benchmarks PRIVATE benchmark_main)
-# target_compile_options(Benchmarks PUBLIC -DBENCHMARK_STATIC_DEFINE)
-# add_dependencies(Benchmarks cpp-httplib)
-# add_dependencies(Benchmarks rapidjson)
+# Link libraries
+target_link_libraries(WisentServer WisentSerializer)
 
-list(APPEND AllExeTargets WisentServer)
-list(APPEND AllTargets WisentServer WisentSerializer)
+# Set properties for all targets
+set_target_properties(WisentServer PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED ON)
+set_target_properties(WisentSerializer PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED ON)
 
-foreach(Target IN LISTS AllTargets)
-    set_target_properties(${Target} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    if(MSVC)
-        target_compile_options(${Target} PUBLIC "/Zc:__cplusplus")
-        target_compile_options(${Target} PUBLIC "/EHsc")
-    endif()
-    set_target_properties(${Target} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
-    target_include_directories(${Target} SYSTEM PUBLIC ${WisentBenchmarks_BINARY_DIR}/deps/include)
-    target_link_directories(${Target} PUBLIC ${WisentBenchmarks_BINARY_DIR}/deps/lib)
-    if(UNIX AND NOT APPLE)
-        target_link_libraries(${Target} PRIVATE rt)
-    endif()
-    target_include_directories(${Target} SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
-    target_link_libraries(${Target} PRIVATE ${CMAKE_SOURCE_DIR}/Include)
-    # target_link_libraries(${Target} PRIVATE nlohmann_json)
-    # target_link_libraries(${Target} PRIVATE simdjson)
-endforeach()
-
-set_target_properties(WisentSerializer PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
+# Install targets
 install(TARGETS WisentSerializer LIBRARY DESTINATION lib)
 install(TARGETS WisentServer RUNTIME DESTINATION bin)

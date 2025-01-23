@@ -1,5 +1,6 @@
 #include "SharedMemorySegment.hpp"
 #include <cassert>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -23,23 +24,32 @@ void setCurrentSharedMemory(SharedMemorySegment &sharedMemory)
 
 void *sharedMemoryMalloc(size_t size)
 {
-    assert(currentSharedMemory != nullptr);
+    if (currentSharedMemory() == nullptr) 
+    {
+        std::cerr << "Cannot malloc memory as currentSharedMemory is nullptr" << std::endl;
+    }
     return currentSharedMemory()->malloc(size);
 }
 
 void *sharedMemoryRealloc(void *pointer, size_t size)
 {
-    assert(currentSharedMemory != nullptr);
+    if (currentSharedMemory() == nullptr) 
+    {
+        std::cerr << "Cannot realloc memory as currentSharedMemory is nullptr" << std::endl;
+    }
     return currentSharedMemory()->realloc(pointer, size);
 }
 
 void sharedMemoryFree(void *pointer)
 {
-    assert(currentSharedMemory != nullptr);
+    if (currentSharedMemory() == nullptr) 
+    {
+        std::cerr << "Cannot free memory as currentSharedMemory is nullptr" << std::endl;
+    }
     currentSharedMemory()->free(pointer);
 }
 
 SharedMemorySegment &createOrGetMemorySegment(std::string const &name)
 {
-    return sharedMemorySegments().try_emplace(name, name).first->second;
+    return sharedMemorySegments().emplace(name, name).first->second;
 }
