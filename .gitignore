@@ -8,7 +8,6 @@ Tests/**/build*
 .DS_Store
 
 Documentation/Final Report
-Documentation/Interim Report
 
 # LaTeX temporary files
 *.aux
@@ -19,6 +18,10 @@ Documentation/Interim Report
 *.synctex.gz
 *.thm
 *.toc
+*.bbl
+*.blg
+*.bcf
+*.run.xml
 
 # editor-specific files
 *.swp

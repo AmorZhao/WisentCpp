@@ -1,0 +1,63 @@
+\begin{titlepage}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}} 
+
+%----------------------------------------------------------------------------------------
+%	LOGO SECTION
+%----------------------------------------------------------------------------------------
+
+\hspace{-0.6cm} 
+\includegraphics[width=8cm]{./Figures/imperial-new-logo.png}\\[0.5cm]
+\vspace{2cm}
+
+\begin{center} % Center remainder of the page
+
+%----------------------------------------------------------------------------------------
+%	HEADING SECTIONS
+%----------------------------------------------------------------------------------------
+\fontfamily{ptm}\selectfont\textsc{\LARGE \reporttype \\[0.2cm]}
+\vspace{1.3cm}
+\fontfamily{ptm}\selectfont\textsc{\Large Department of Computing}\\[0.5cm] 
+\fontfamily{ptm}\selectfont\textsc{\large Imperial College of Science, Technology and Medicine}\\[0.5cm] 
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+\HRule \\[0.2cm]
+{ \setlength{\baselineskip}{1.2\baselineskip}
+    \huge \bfseries \reporttitle \\[0.3cm]}
+\HRule \\[1.5cm]
+\end{center}
+
+%----------------------------------------------------------------------------------------
+%	AUTHOR SECTION
+%----------------------------------------------------------------------------------------
+
+\centering
+\begin{minipage}{0.5\textwidth}
+\begin{flushleft} \large
+\textit{Author:}\\
+\reportauthor~(CID: \cid)
+\end{flushleft}
+\end{minipage}
+~
+\begin{minipage}{0.4\textwidth}
+\begin{flushright} \large
+\textit{Supervisor:} \\
+\supervisor \\
+\vspace{0.5cm}
+\textit{Second Marker:} \\
+\secondmarker
+\end{flushright}
+\end{minipage}\\[2cm]
+\makeatother
+
+\vspace{2cm}
+\makeatletter
+\@date 
+\vfill
+\makeatother
+
+% \restoregeometry
+
+\end{titlepage}
+

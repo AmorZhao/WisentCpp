@@ -35,7 +35,7 @@ WisentCpp/
 ```bash
 GCC >= 5.0
 Clang >= 3.4
-camke >= 3.10
+cmake >= 3.10
 ```
 
 QQ - [this stack overflow post](https://stackoverflow.com/questions/30714175/clang-3-4-c14-support)
