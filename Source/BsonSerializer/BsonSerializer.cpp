@@ -1,11 +1,11 @@
 #include "BsonSerializer.hpp"
-#include "CsvLoading.hpp"
-#include "SharedMemorySegment.hpp"
+#include "../Helpers/CsvLoading.hpp"
+#include "../Helpers/SharedMemorySegment.hpp"
 #include <cassert>
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include "../Include/json.h"
+#include "../../Include/json.h"
 
 using json = nlohmann::json;
 

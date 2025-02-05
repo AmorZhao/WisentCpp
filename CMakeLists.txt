@@ -44,24 +44,46 @@ endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/Include)
 include_directories(${CMAKE_SOURCE_DIR}/Source)
+include_directories(${CMAKE_SOURCE_DIR}/Source/WisentSerializer)
+include_directories(${CMAKE_SOURCE_DIR}/Source/WisentParser)
+include_directories(${CMAKE_SOURCE_DIR}/Source/BsonSerializer)
+include_directories(${CMAKE_SOURCE_DIR}/Source/Helpers)
 
 set(WisentServerFiles Source/WisentServer.cpp)
-set(WisentSerializerFiles Source/WisentSerializer.cpp Source/SharedMemorySegment.cpp)
-set(BsonSerializerFiles Source/BsonSerializer.cpp)
+set(WisentSerializerFiles Source/WisentSerializer/WisentSerializer.cpp)
+set(WisentParserFiles Source/WisentParser/WisentParser.cpp)
+set(BsonSerializerFiles Source/BsonSerializer/BsonSerializer.cpp)
+set(HelperFiles Source/Helpers/SharedMemorySegment.cpp)
 
-# WisentSerializer Plugin
 add_library(WisentSerializer SHARED ${WisentSerializerFiles})
+add_library(WisentParser SHARED ${WisentParserFiles})
+add_library(BsonSerializer SHARED ${BsonSerializerFiles})
+add_library(Helpers SHARED ${HelperFiles})
 
-# WisentServer
-add_executable(WisentServer ${WisentServerFiles} ${WisentSerializerFiles} ${BsonSerializerFiles})
+add_executable(WisentServer 
+  ${WisentServerFiles} 
+  ${WisentSerializerFiles} 
+  ${WisentParserFiles} 
+  ${BsonSerializerFiles}
+  ${HelperFiles}
+)
 
 # Link libraries
 target_link_libraries(WisentServer WisentSerializer)
+target_link_libraries(WisentServer WisentParser)
+target_link_libraries(WisentServer BsonSerializer)
+target_link_libraries(WisentServer Helpers)
 
 # Set properties for all targets
 set_target_properties(WisentServer PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED ON)
 set_target_properties(WisentSerializer PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED ON)
+set_target_properties(WisentParser PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED ON)
+set_target_properties(BsonSerializer PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED ON)
+set_target_properties(Helpers PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED ON)
 
 # Install targets
 install(TARGETS WisentSerializer LIBRARY DESTINATION lib)
+install(TARGETS WisentParser LIBRARY DESTINATION lib)
+install(TARGETS BsonSerializer LIBRARY DESTINATION lib)
+install(TARGETS Helpers LIBRARY DESTINATION lib)
 install(TARGETS WisentServer RUNTIME DESTINATION bin)

@@ -20,10 +20,10 @@ endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
 set(SOURCE_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../Source/BsonSerializer.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../Source/SharedMemorySegment.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../Source/CsvLoading.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../Source/WisentSerializer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Source/BsonSerializer/BsonSerializer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Source/Helpers/SharedMemorySegment.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Source/Helpers/CsvLoading.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Source/WisentSerializer/WisentSerializer.cpp
 
 )
 
