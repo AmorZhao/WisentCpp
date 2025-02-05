@@ -9,6 +9,6 @@ namespace wisent
             std::string const& query
         );
 
-        std::string parse(); 
+        std::string parse(std::string const& name); 
     }
 }
