@@ -12,13 +12,13 @@ def remove_shm_from_resource_tracker():
     def fix_register(name, rtype):
         if rtype == "shared_memory":
             return
-        return resource_tracker._resource_tracker.register(self, name, rtype)
+        return resource_tracker._resource_tracker.register(name, rtype)
     resource_tracker.register = fix_register
 
     def fix_unregister(name, rtype):
         if rtype == "shared_memory":
             return
-        return resource_tracker._resource_tracker.unregister(self, name, rtype)
+        return resource_tracker._resource_tracker.unregister(name, rtype)
     resource_tracker.unregister = fix_unregister
 
     if "shared_memory" in resource_tracker._CLEANUP_FUNCS:
