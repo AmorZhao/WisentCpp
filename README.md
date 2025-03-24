@@ -11,16 +11,21 @@ WisentCpp/
 │   ├── Report/
 │   └── WisentExample/
 │
-├── Include/    QQ - probably very bad practice
+├── Include/
 │
 ├── Source/
-│   ├── client-app/
 │   │
-│   ├── SharedMemorySegment
-│   ├── CsvLoading
+│   ├── Helpers/
+│   │   │   
+│   │   ├── SharedMemorySegment
+│   │   └── CsvLoading
 │   │
-│   ├── WisentHelpers
-│   ├── WisentSerializer
+│   ├── BsonSerializer/
+│   │
+│   ├── WisentSerializer/
+│   │   │
+│   │   ├── WisentHelpers
+│   │   └── WisentSerializer
 │   │
 │   └── WisentServer
 │

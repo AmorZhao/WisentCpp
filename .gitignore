@@ -9,6 +9,9 @@ Tests/**/build*
 
 Documentation/Final Report
 
+Misc/Zstd-Compression/test/*
+!Misc/Zstd-Compression/test/original.txt
+
 # LaTeX temporary files
 *.aux
 *.fdb_latexmk

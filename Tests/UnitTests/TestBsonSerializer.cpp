@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "../../Source/BsonSerializer.hpp"
-#include "../../Source/CsvLoading.hpp"
-#include "../../Source/SharedMemorySegment.hpp"
+#include "../../Src/BsonSerializer/BsonSerializer.hpp"
+#include "../../Src/Helpers/CsvLoading.hpp"
+#include "../../Src/Helpers/SharedMemorySegment.hpp"
 #include "helpers/unitTestHelpers.hpp"
 #include <string>
 #include <fstream>

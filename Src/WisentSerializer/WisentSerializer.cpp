@@ -1,6 +1,6 @@
 #include "WisentSerializer.hpp"
-#include "CsvLoading.hpp"
-#include "SharedMemorySegment.hpp"
+#include "../Helpers/CsvLoading.hpp"
+#include "../Helpers/SharedMemorySegment.hpp"
 #include "WisentHelpers.h"
 #include "HuffmanHelpers.h" // not used 
 #include <cassert>
@@ -8,7 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <sys/resource.h>
-#include "../Include/json.h"
+#include "../../Include/json.h"
 
 using json = nlohmann::json;
 

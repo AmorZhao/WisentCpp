@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../../Source/SharedMemorySegment.hpp"
+#include "../../Src/Helpers/SharedMemorySegment.hpp"
 
 class SharedMemorySegmentTest : public ::testing::Test {
 protected:

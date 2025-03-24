@@ -1,7 +1,8 @@
 #include "../Include/httplib.h"
-#include "BsonSerializer.hpp"
-#include "CsvLoading.hpp"
-#include "WisentSerializer.hpp"
+#include "BsonSerializer/BsonSerializer.hpp"
+#include "Helpers/CsvLoading.hpp"
+#include "WisentSerializer/WisentSerializer.hpp"
+#include "WisentParser/WisentParser.hpp"
 #include <chrono>
 #include <iostream>
 #include <map>
@@ -211,27 +212,34 @@ int main(int argc, char **argv)
         res.set_content("Loaded " + name + " in " + std::to_string(timeDiff * 0.000000001) + " s. ", "text/plain");
     });
 
-    svr.Get("/unload",
-            [&](const httplib::Request &req, httplib::Response &res) {
-                auto const &name = req.get_param_value("name");
-                std::cout << "unloading dataset '" << name << "'" << std::endl;
-                wisent::serializer::unload(name);
-                res.set_content("Done.", "text/plain");
-                // Todo - change set_content
-            });
+    svr.Get("/unload", [&](const httplib::Request &req, httplib::Response &res) 
+    {
+        auto const &name = req.get_param_value("name");
+        std::cout << "unloading dataset '" << name << "'" << std::endl;
+        wisent::serializer::unload(name);
+        res.set_content("Done.", "text/plain");
+        // Todo - change set_content
+    });
 
-    svr.Get("/erase", 
-            [&](const httplib::Request &req, httplib::Response &res) {
-                auto const &name = req.get_param_value("name");
-                std::cout << "erasing dataset '" << name << "'" << std::endl;
-                wisent::serializer::free(name);
-                res.set_content("Done.", "text/plain");
-            });
+    svr.Get("/erase", [&](const httplib::Request &req, httplib::Response &res) 
+    {
+        auto const &name = req.get_param_value("name");
+        std::cout << "erasing dataset '" << name << "'" << std::endl;
+        wisent::serializer::free(name);
+        res.set_content("Done.", "text/plain");
+    });
 
-    svr.Get("/stop", 
-            [&](const httplib::Request & /*req*/, httplib::Response & /*res*/) { 
-                svr.stop(); 
-            });
+    svr.Get("/parse", [&](const httplib::Request & req, httplib::Response &res) 
+    {
+        auto const &name = req.get_param_value("name");
+        auto parsed = wisent::parser::parse(name);
+        res.set_content(parsed, "text/plain");
+    }); 
+
+    svr.Get("/stop", [&](const httplib::Request & /*req*/, httplib::Response & /*res*/) 
+    { 
+        svr.stop(); 
+    });
 
     std::cout << "Server running on port " << httpPort << "..." << std::endl;
 

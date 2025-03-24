@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "../../Source/WisentSerializer.hpp"
-#include "../../Source/CsvLoading.hpp"
-#include "../../Source/SharedMemorySegment.hpp"
+#include "../../Src/WisentSerializer/WisentSerializer.hpp"
+#include "../../Src/Helpers/CsvLoading.hpp"
+#include "../../Src/Helpers/SharedMemorySegment.hpp"
 #include "helpers/unitTestHelpers.hpp"
 #include <string>
 #include <fstream>
