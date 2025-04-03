@@ -1,7 +1,6 @@
 #include "SharedMemorySegment.hpp"
 #include <cassert>
 #include <iostream>
-#include <memory>
 #include <string>
 #include <unordered_map>
 

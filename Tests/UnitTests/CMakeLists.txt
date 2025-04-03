@@ -24,7 +24,6 @@ set(SOURCE_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/Helpers/SharedMemorySegment.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/Helpers/CsvLoading.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentSerializer/WisentSerializer.cpp
-
 )
 
 set(TEST_SOURCES

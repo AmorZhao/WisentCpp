@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include "../../Src/Helpers/CsvLoading.hpp"
 #include "helpers/unitTestHelpers.hpp"
-#include <fstream>
 
 TEST(CsvLoadingTest, OpenCsvFile) {
     std::string csvContent = "Name,Age\nAlice,30\nBob,25";

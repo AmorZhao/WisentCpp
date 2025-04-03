@@ -1,10 +1,8 @@
 #include <gtest/gtest.h>
 #include "../../Src/WisentSerializer/WisentSerializer.hpp"
-#include "../../Src/Helpers/CsvLoading.hpp"
 #include "../../Src/Helpers/SharedMemorySegment.hpp"
 #include "helpers/unitTestHelpers.hpp"
 #include <string>
-#include <fstream>
 
 TEST(WisentSerializerTest, WisentLoad) {
     const char* sharedMemoryName = "TestSharedMemory";

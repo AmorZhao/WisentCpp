@@ -1,6 +1,7 @@
 /.vscode
+/.cache
 
-/build/*
+/build*
 Tests/**/build*
 
 /cpm_modules

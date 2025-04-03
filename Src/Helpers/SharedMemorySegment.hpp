@@ -17,8 +17,7 @@ class SharedMemorySegment
   public:
     SharedMemorySegment(std::string const &name)
         : object(open_or_create, name.c_str(), read_write), region(nullptr)
-    {
-    }
+    {}
     SharedMemorySegment(SharedMemorySegment &&other) = default;
     ~SharedMemorySegment() = default;
 

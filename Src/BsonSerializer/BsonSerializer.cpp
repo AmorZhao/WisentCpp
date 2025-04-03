@@ -135,7 +135,8 @@ void *bson::serializer::loadAsBson(
     std::string const &path,
     std::string const &sharedMemoryName,
     std::string const &csvPrefix,
-    bool disableCsvHandling, bool forceReload)
+    bool disableCsvHandling, 
+    bool forceReload)
 {
     auto &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
 

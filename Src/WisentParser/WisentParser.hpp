@@ -1,4 +1,3 @@
-#include "../WisentSerializer/WisentHelpers.h"
 #include <string>
 
 namespace wisent 

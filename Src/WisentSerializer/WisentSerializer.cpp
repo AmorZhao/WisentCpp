@@ -2,7 +2,6 @@
 #include "../Helpers/CsvLoading.hpp"
 #include "../Helpers/SharedMemorySegment.hpp"
 #include "WisentHelpers.h"
-#include "HuffmanHelpers.h" // not used 
 #include <cassert>
 #include <fstream>
 #include <iostream>
@@ -28,28 +27,29 @@ class JsonToWisent : public json::json_sax_t
     bool enableDeltaEncoding; 
     bool enableHuffmanEncoding; 
     bool disableCsvHandling;
-    uint64_t numRepeatedArgumentTypes; // count repeated type for triggering RLE encoding
+    uint64_t repeatedArgumentTypeCount; 
 
   public:
-    JsonToWisent(uint64_t expressionCount,
-                 std::vector<uint64_t> &&argumentCountPerLayer,
-                 SharedMemorySegment &sharedMemory,
-                 std::string const &csvPrefix, 
-                 bool disableRLE, 
-                 bool disableCsvHandling,
-                 bool enableDeltaEncoding, 
-                 bool enableHuffmanEncoding) 
-        : root(nullptr),
-          cumulArgCountPerLayer(std::move(argumentCountPerLayer)),
-          sharedMemory(sharedMemory), 
-          csvPrefix(csvPrefix),
-          disableRLE(disableRLE), 
-          disableCsvHandling(disableCsvHandling),
-          enableDeltaEncoding(enableDeltaEncoding),
-          enableHuffmanEncoding(enableHuffmanEncoding),
-          numRepeatedArgumentTypes(0)
+    JsonToWisent(
+        uint64_t expressionCount,
+        std::vector<uint64_t> &&argumentCountPerLayer,
+        SharedMemorySegment &sharedMemory,
+        std::string const &csvPrefix, 
+        bool disableRLE, 
+        bool disableCsvHandling,
+        bool enableDeltaEncoding, 
+        bool enableHuffmanEncoding
+    ): 
+        root(nullptr),
+        cumulArgCountPerLayer(std::move(argumentCountPerLayer)),
+        sharedMemory(sharedMemory), 
+        csvPrefix(csvPrefix),
+        disableRLE(disableRLE), 
+        disableCsvHandling(disableCsvHandling),
+        enableDeltaEncoding(enableDeltaEncoding),
+        enableHuffmanEncoding(enableHuffmanEncoding),
+        repeatedArgumentTypeCount(0)
     {
-        // we need the accumulated count at each layer
         std::partial_sum(
             cumulArgCountPerLayer.begin(),
             cumulArgCountPerLayer.end(),
@@ -155,8 +155,10 @@ class JsonToWisent : public json::json_sax_t
         throw std::runtime_error("binary value not implemented");
     }
 
-    bool parse_error(std::size_t position, const std::string &last_token,
-                     const json::exception &ex) override
+    bool parse_error(
+        std::size_t position, 
+        const std::string &last_token,
+        const json::exception &ex) override
     {
         throw std::runtime_error(
             "parse_error(position=" + std::to_string(position) +
@@ -167,9 +169,7 @@ class JsonToWisent : public json::json_sax_t
   private:
     uint64_t getNextArgumentIndex()
     {
-        return getExpressionSubexpressions(root)[expressionIndexStack.back()]
-                   .startChildOffset +
-               argumentIteratorStack.back()++;
+        return getExpressionSubexpressions(root)[expressionIndexStack.back()].startChildOffset + argumentIteratorStack.back()++;
     }
 
     void applyTypeRLE(std::uint64_t argIndex)
@@ -177,28 +177,28 @@ class JsonToWisent : public json::json_sax_t
         if (disableRLE) {
             return;
         }
-        if (numRepeatedArgumentTypes == 0) {
-            numRepeatedArgumentTypes = 1;
+        if (repeatedArgumentTypeCount == 0) {
+            repeatedArgumentTypeCount = 1;
             return;
         }
         if (getArgumentTypes(root)[argIndex - 1] != getArgumentTypes(root)[argIndex]) 
         {
             resetTypeRLE(argIndex);
-            numRepeatedArgumentTypes = 1;
+            repeatedArgumentTypeCount = 1;
             return;
         }
-        ++numRepeatedArgumentTypes;
+        ++repeatedArgumentTypeCount;
     }
 
     void resetTypeRLE(std::uint64_t endIndex)
     {
-        if (numRepeatedArgumentTypes >= WisentArgumentType_RLE_MINIMUM_SIZE) 
+        if (repeatedArgumentTypeCount >= WisentArgumentType_RLE_MINIMUM_SIZE) 
         {
             setRLEArgumentFlagOrPropagateTypes(
-                root, endIndex - numRepeatedArgumentTypes,
-                numRepeatedArgumentTypes);
+                root, endIndex - repeatedArgumentTypeCount,
+                repeatedArgumentTypeCount);
         }
-        numRepeatedArgumentTypes = 0;
+        repeatedArgumentTypeCount = 0;
     }
 
     void addLong(std::int64_t input)
@@ -318,10 +318,10 @@ class JsonToWisent : public json::json_sax_t
             val ? addValueFunc(*val) : addSymbol("Missing");
         }
         endExpression();
-        std::cout << "Handled column: " << columnName << std::endl;
-        struct rusage usage;
-        getrusage(RUSAGE_SELF, &usage);
-        std::cout << "Memory usage: " << usage.ru_maxrss << " KB" << std::endl;
+        // std::cout << "Handled column: " << columnName << std::endl;
+        // struct rusage usage;
+        // getrusage(RUSAGE_SELF, &usage);
+        // std::cout << "Memory usage: " << usage.ru_maxrss << " KB" << std::endl;
         return true;
     }
 };
@@ -354,18 +354,16 @@ WisentRootExpression *wisent::serializer::load(
     setCurrentSharedMemory(sharedMemory);
 
     std::ifstream ifs(path);
-
     if (!ifs.good()) 
     {
         std::cout << "failed to read: " << path << std::endl;
         throw std::runtime_error("failed to read: " + path);
     }
 
-    // 1st traversal just to calculate the total size needed
+    // 1st traversal: count & calculate the total size needed
     uint64_t expressionCount = 0;
     std::vector<uint64_t> argumentCountPerLayer;
     argumentCountPerLayer.reserve(16);
-
     auto _ = json::parse(
         ifs, 
         [                   // lambda captures
@@ -446,10 +444,11 @@ WisentRootExpression *wisent::serializer::load(
                 }
                 return true;
             }
-            return true;
+            return true;   // never reached
         }
     );
 
+    // initialise Wisent expression tree
     JsonToWisent jsonToWisent(
         expressionCount,
         std::move(argumentCountPerLayer),
@@ -461,6 +460,7 @@ WisentRootExpression *wisent::serializer::load(
         enableDeltaEncoding
     );
 
+    // 2nd traversal: parse and populate 
     ifs.seekg(0);
     json::sax_parse(ifs, &jsonToWisent);
     ifs.close();

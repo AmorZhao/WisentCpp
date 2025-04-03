@@ -1,7 +1,6 @@
 #ifndef WISENTHELPERS_H
 #define WISENTHELPERS_H
 #ifdef __cplusplus
-#include <cinttypes>
 #include <cstring>
 extern "C" {
 #else
@@ -13,6 +12,7 @@ extern "C" {
 // NOLINTBEGIN(cppcoreguidelines-pro-type-cstyle-cast)
 
 #include <stdlib.h>
+#include <stdint.h>
 
 //////////////////////////////// Data Structures ///////////////////////////////
 
@@ -95,24 +95,17 @@ static enum WisentArgumentType *getArgumentTypes(struct WisentRootExpression *ro
         root->argumentCount *sizeof(union WisentArgumentValue)];
 }
 
-static struct WisentExpression *
-getExpressionSubexpressions(struct WisentRootExpression *root)
+static struct WisentExpression *getExpressionSubexpressions(struct WisentRootExpression *root)
 {
-    return (struct WisentExpression
-                *) 
-        &root->arguments[root->argumentCount *
-                         (sizeof(union WisentArgumentValue) +
-                          sizeof(enum WisentArgumentType))];
+    return (struct WisentExpression*) &root->arguments[
+        root->argumentCount * (sizeof(union WisentArgumentValue) + sizeof(enum WisentArgumentType))];
 }
 
 static char *getStringBuffer(struct WisentRootExpression *root)
 {
-    return (char *) 
-        &root->arguments[root->argumentCount *
-                             (sizeof(union WisentArgumentValue) +
-                              sizeof(enum WisentArgumentType)) +
-                         root->expressionCount *
-                             (sizeof(struct WisentExpression))];
+    return (char *) &root->arguments[
+        root->argumentCount * (sizeof(union WisentArgumentValue) + sizeof(enum WisentArgumentType)) 
+        + root->expressionCount * (sizeof(struct WisentExpression))];
 }
 
 //////////////////////////////   Memory Management /////////////////////////////
@@ -120,11 +113,10 @@ static char *getStringBuffer(struct WisentRootExpression *root)
 static struct WisentRootExpression *allocateExpressionTree(
     uint64_t argumentCount, 
     uint64_t expressionCount,
-    void *(*allocateFunction)(size_t))
+    void *(*allocateFunction)(size_t))  // sharedMemoryMalloc(size)
 {
     struct WisentRootExpression *root =
-        (struct WisentRootExpression*)
-        allocateFunction( 
+        (struct WisentRootExpression*) allocateFunction( 
             sizeof(struct WisentRootExpression) +
             sizeof(union WisentArgumentValue) * argumentCount +
             sizeof(enum WisentArgumentType) * argumentCount +
@@ -138,66 +130,66 @@ static struct WisentRootExpression *allocateExpressionTree(
     return root;
 }
 
-static void freeExpressionTree(struct WisentRootExpression *root,
-                               void (*freeFunction)(void *))
+static void freeExpressionTree(   // ToDo: this is not being called? 
+    struct WisentRootExpression *root,
+    void (*freeFunction)(void *))
 {
     freeFunction(root); 
 }
 
 static int64_t *makeLongArgument(
     struct WisentRootExpression *root,
-    uint64_t argumentOutputI)
+    uint64_t argumentOutputIndex)
 {
 #ifdef __cplusplus
     auto ARGUMENT_TYPE_LONG = WisentArgumentType::ARGUMENT_TYPE_LONG;
 #endif
-
-    getArgumentTypes(root)[argumentOutputI] = ARGUMENT_TYPE_LONG;
-    return &getExpressionArguments(root)[argumentOutputI].asLong;
+    getArgumentTypes(root)[argumentOutputIndex] = ARGUMENT_TYPE_LONG;
+    return &getExpressionArguments(root)[argumentOutputIndex].asLong;
 };
 
 static size_t *makeSymbolArgument(
     struct WisentRootExpression *root,
-    uint64_t argumentOutputI)
+    uint64_t argumentOutputIndex)
 {
 #ifdef __cplusplus
     auto ARGUMENT_TYPE_SYMBOL = WisentArgumentType::ARGUMENT_TYPE_SYMBOL;
 #endif
-    getArgumentTypes(root)[argumentOutputI] = ARGUMENT_TYPE_SYMBOL;
-    return &getExpressionArguments(root)[argumentOutputI].asString;
+    getArgumentTypes(root)[argumentOutputIndex] = ARGUMENT_TYPE_SYMBOL;
+    return &getExpressionArguments(root)[argumentOutputIndex].asString;
 };
 
 static size_t *makeExpressionArgument(
     struct WisentRootExpression *root,
-    uint64_t argumentOutputI)
+    uint64_t argumentOutputIndex)
 {
 #ifdef __cplusplus
     auto ARGUMENT_TYPE_SYMBOL = WisentArgumentType::ARGUMENT_TYPE_EXPRESSION;
 #endif
-    getArgumentTypes(root)[argumentOutputI] = ARGUMENT_TYPE_EXPRESSION;
-    return &getExpressionArguments(root)[argumentOutputI].asString;
+    getArgumentTypes(root)[argumentOutputIndex] = ARGUMENT_TYPE_EXPRESSION;
+    return &getExpressionArguments(root)[argumentOutputIndex].asString;
 };
 
 static size_t *makeStringArgument(
     struct WisentRootExpression *root,
-    uint64_t argumentOutputI)
+    uint64_t argumentOutputIndex)
 {
 #ifdef __cplusplus
     auto ARGUMENT_TYPE_STRING = WisentArgumentType::ARGUMENT_TYPE_STRING;
 #endif
-    getArgumentTypes(root)[argumentOutputI] = ARGUMENT_TYPE_STRING;
-    return &getExpressionArguments(root)[argumentOutputI].asString;
+    getArgumentTypes(root)[argumentOutputIndex] = ARGUMENT_TYPE_STRING;
+    return &getExpressionArguments(root)[argumentOutputIndex].asString;
 };
 
 static double *makeDoubleArgument(
     struct WisentRootExpression *root,
-    uint64_t argumentOutputI)
+    uint64_t argumentOutputIndex)
 {
 #ifdef __cplusplus
     auto ARGUMENT_TYPE_DOUBLE = WisentArgumentType::ARGUMENT_TYPE_DOUBLE;
 #endif
-    getArgumentTypes(root)[argumentOutputI] = ARGUMENT_TYPE_DOUBLE;
-    return &getExpressionArguments(root)[argumentOutputI].asDouble;
+    getArgumentTypes(root)[argumentOutputIndex] = ARGUMENT_TYPE_DOUBLE;
+    return &getExpressionArguments(root)[argumentOutputIndex].asDouble;
 };
 
 /////////////////////////////// Encoding Helpers ///////////////////////////////
@@ -224,100 +216,100 @@ static void deltaDecode(const int64_t *encoded, uint64_t count, int64_t *output)
 
 static void setRLEArgumentFlagOrPropagateTypes(
     struct WisentRootExpression *root,
-    uint64_t argumentOutputI, 
+    uint64_t argumentOutputIndex, 
     uint32_t size)
 {
     if (size < WisentArgumentType_RLE_MINIMUM_SIZE) 
     {
-        enum WisentArgumentType const type = getArgumentTypes(root)[argumentOutputI];
-        for (uint64_t i = argumentOutputI + 1; i < argumentOutputI + size; ++i) 
+        enum WisentArgumentType const type = getArgumentTypes(root)[argumentOutputIndex];
+        for (uint64_t i = argumentOutputIndex + 1; i < argumentOutputIndex + size; ++i) 
         {
             getArgumentTypes(root)[i] = type;
         }
         return;
     }
-    (*(size_t*)(&getArgumentTypes(root)[argumentOutputI])) |= WisentArgumentType_RLE_BIT;
-    (*(size_t*)(&getArgumentTypes(root)[argumentOutputI + 1])) = (size_t)size;
+    (*(size_t*)(&getArgumentTypes(root)[argumentOutputIndex])) |= WisentArgumentType_RLE_BIT;
+    (*(size_t*)(&getArgumentTypes(root)[argumentOutputIndex + 1])) = (size_t)size;
 }
 
 static void setDeltaEncodedFlagOrPropagateTypes(
     struct WisentRootExpression *root,
-    uint64_t argumentOutputI, 
+    uint64_t argumentOutputIndex, 
     uint32_t size)
 {
     if (size < WisentArgumentType_RLE_MINIMUM_SIZE) 
     {
-        enum WisentArgumentType const type = getArgumentTypes(root)[argumentOutputI];
-        for (uint64_t i = argumentOutputI + 1; i < argumentOutputI + size; ++i) 
+        enum WisentArgumentType const type = getArgumentTypes(root)[argumentOutputIndex];
+        for (uint64_t i = argumentOutputIndex + 1; i < argumentOutputIndex + size; ++i) 
         {
             getArgumentTypes(root)[i] = type;
         }
         return;
     }
-    (*(size_t*)(&getArgumentTypes(root)[argumentOutputI])) |= 
+    (*(size_t*)(&getArgumentTypes(root)[argumentOutputIndex])) |= 
         WisentArgumentType_RLE_BIT | WisentArgumentType_DELTA_ENCODED_BIT;
-    (*(size_t*)(&getArgumentTypes(root)[argumentOutputI + 1])) = (size_t)size;
+    (*(size_t*)(&getArgumentTypes(root)[argumentOutputIndex + 1])) = (size_t)size;
 }
 
 static int64_t *makeLongArgumentsRun(
     struct WisentRootExpression *root,
-    uint64_t argumentOutputI, 
+    uint64_t argumentOutputIndex, 
     uint32_t size)
 {
-    int64_t *value = makeLongArgument(root, argumentOutputI);
-    setRLEArgumentFlagOrPropagateTypes(root, argumentOutputI, size);
+    int64_t *value = makeLongArgument(root, argumentOutputIndex);
+    setRLEArgumentFlagOrPropagateTypes(root, argumentOutputIndex, size);
     return value;
 }
 
 static size_t *makeSymbolArgumentsRun(
     struct WisentRootExpression *root,
-    uint64_t argumentOutputI, 
+    uint64_t argumentOutputIndex, 
     uint32_t size)
 {
-    size_t *value = makeSymbolArgument(root, argumentOutputI);
-    setRLEArgumentFlagOrPropagateTypes(root, argumentOutputI, size);
+    size_t *value = makeSymbolArgument(root, argumentOutputIndex);
+    setRLEArgumentFlagOrPropagateTypes(root, argumentOutputIndex, size);
     return value;
 }
 
 static size_t *makeExpressionArgumentsRun(
     struct WisentRootExpression *root,
-    uint64_t argumentOutputI,
+    uint64_t argumentOutputIndex,
     uint64_t size)
 {
-    size_t *value = makeExpressionArgument(root, argumentOutputI);
-    setRLEArgumentFlagOrPropagateTypes(root, argumentOutputI, size);
+    size_t *value = makeExpressionArgument(root, argumentOutputIndex);
+    setRLEArgumentFlagOrPropagateTypes(root, argumentOutputIndex, size);
     return value;
 }
 
 static size_t *makeStringArgumentsRun(
     struct WisentRootExpression *root,
-    uint64_t argumentOutputI, 
+    uint64_t argumentOutputIndex, 
     uint64_t size)
 {
-    size_t *value = makeStringArgument(root, argumentOutputI);
-    setRLEArgumentFlagOrPropagateTypes(root, argumentOutputI, size);
+    size_t *value = makeStringArgument(root, argumentOutputIndex);
+    setRLEArgumentFlagOrPropagateTypes(root, argumentOutputIndex, size);
     return value;
 }
 
 static double *makeDoubleArgumentsRun(
     struct WisentRootExpression *root,
-    uint64_t argumentOutputI, 
+    uint64_t argumentOutputIndex, 
     uint64_t size)
 {
-    double *value = makeDoubleArgument(root, argumentOutputI);
-    setRLEArgumentFlagOrPropagateTypes(root, argumentOutputI, size);
+    double *value = makeDoubleArgument(root, argumentOutputIndex);
+    setRLEArgumentFlagOrPropagateTypes(root, argumentOutputIndex, size);
     return value;
 }
 
 static int64_t *makeDeltaEncodedLongArgumentsRun(
     struct WisentRootExpression *root,
-    uint64_t argumentOutputI,
+    uint64_t argumentOutputIndex,
     uint32_t size)
 {
-    int64_t *value = makeLongArgument(root, argumentOutputI);
-    int64_t *originalValues = &getExpressionArguments(root)[argumentOutputI].asLong;
+    int64_t *value = makeLongArgument(root, argumentOutputIndex);
+    int64_t *originalValues = &getExpressionArguments(root)[argumentOutputIndex].asLong;
     deltaEncode(originalValues, size, value);
-    setDeltaEncodedFlagOrPropagateTypes(root, argumentOutputI, size);
+    setDeltaEncodedFlagOrPropagateTypes(root, argumentOutputIndex, size);
     return value;
 }
 

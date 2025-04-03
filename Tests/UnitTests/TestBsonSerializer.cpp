@@ -1,10 +1,8 @@
 #include <gtest/gtest.h>
 #include "../../Src/BsonSerializer/BsonSerializer.hpp"
-#include "../../Src/Helpers/CsvLoading.hpp"
 #include "../../Src/Helpers/SharedMemorySegment.hpp"
 #include "helpers/unitTestHelpers.hpp"
 #include <string>
-#include <fstream>
 
 TEST(BsonSerializerTest, Unload) {
     std::string sharedMemoryName = "TestSharedMemory";

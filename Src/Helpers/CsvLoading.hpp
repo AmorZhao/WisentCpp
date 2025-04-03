@@ -12,8 +12,8 @@ using json = nlohmann::json;
 static rapidcsv::Document openCsvFile(std::string const &filepath)
 {
     struct rusage usage;
-    getrusage(RUSAGE_SELF, &usage);
-    std::cout << "Memory usage: " << usage.ru_maxrss << " KB" << std::endl;
+    // getrusage(RUSAGE_SELF, &usage);
+    // std::cout << "Memory usage: " << usage.ru_maxrss << " KB" << std::endl;
     try {
         rapidcsv::Document doc(
             filepath,
@@ -22,11 +22,11 @@ static rapidcsv::Document openCsvFile(std::string const &filepath)
             rapidcsv::ConverterParams(),
             rapidcsv::LineReaderParams()
         );
-        getrusage(RUSAGE_SELF, &usage);
-        std::cout << "Memory usage: " << usage.ru_maxrss << " KB" << std::endl;
-        auto rows = doc.GetRowCount();
-        auto cols = doc.GetColumnCount();
-        std::cout << "Rows: " << rows << ", Columns: " << cols << std::endl;
+        // getrusage(RUSAGE_SELF, &usage);
+        // std::cout << "Memory usage: " << usage.ru_maxrss << " KB" << std::endl;
+        // auto rows = doc.GetRowCount();
+        // auto cols = doc.GetColumnCount();
+        // std::cout << "Rows: " << rows << ", Columns: " << cols << std::endl;
         return doc;
     } catch (const std::exception &e) {
         std::cerr << "Error opening CSV file: " << e.what() << std::endl;
@@ -37,8 +37,8 @@ static rapidcsv::Document openCsvFile(std::string const &filepath)
 template <typename T>
 static std::vector<boost::optional<T>> loadCsvData(
     rapidcsv::Document const &doc,
-    std::string const &columnName)
-{
+    std::string const &columnName
+) {
     std::vector<boost::optional<T>> column;
     try {
         auto numRows = doc.GetRowCount();
@@ -100,8 +100,8 @@ static std::vector<boost::optional<T>> loadCsvData(
 template <typename T>
 static json loadCsvDataToJson(
     rapidcsv::Document const &doc,
-    std::string const &columnName)
-{
+    std::string const &columnName
+) {
     json column(json::value_t::array);
     try {
         auto numRows = doc.GetRowCount();
