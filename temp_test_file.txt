@@ -1,0 +1,7 @@
+{
+    "key": "value",
+    "nested": {
+        "innerKey": "innerValue"
+    },
+    "array": [1, 2, 3]
+}

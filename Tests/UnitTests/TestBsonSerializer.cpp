@@ -1,67 +1,66 @@
 #include <gtest/gtest.h>
 #include "../../Src/BsonSerializer/BsonSerializer.hpp"
-#include "../../Src/Helpers/SharedMemorySegment.hpp"
+#include "../../Src/Helpers/ISharedMemory.hpp"
 #include "helpers/unitTestHelpers.hpp"
 #include <string>
 
-TEST(BsonSerializerTest, Unload) {
-    std::string sharedMemoryName = "TestSharedMemory";
-    
-    auto &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
-    sharedMemory.load();
-    
-    ASSERT_TRUE(sharedMemory.loaded());
-    
-    bson::serializer::unload(sharedMemoryName);
-    
-    ASSERT_FALSE(sharedMemory.loaded());
-}
+const std::string MockSharedMemoryName = "MockSharedMemory";
+const std::string MockCsvPrefix = "MockCsvPrefix";
+const std::string MockFileContent = R"({
+    "key": "value",
+    "nested": {
+        "innerKey": "innerValue"
+    },
+    "array": [1, 2, 3]
+})";
+const std::istringstream MockFileStream(MockFileContent);
+const std::string MockFileName = createTempFile(MockFileContent);
 
-TEST(BsonSerializerTest, Free) {
-    std::string sharedMemoryName = "TestSharedMemory";
-    
-    auto &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
-    sharedMemory.load();
-    
-    ASSERT_TRUE(sharedMemory.loaded());
-    
-    bson::serializer::free(sharedMemoryName);
-    
-    ASSERT_FALSE(sharedMemory.loaded());
-    ASSERT_EQ(sharedMemorySegments().count(sharedMemoryName), 0);
-}
-
-TEST(BsonSerializerTest, LoadAsBson) {
-    std::string sharedMemoryName = "TestSharedMemory";
-    auto &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
-    std::string csvPrefix = "test_prefix";
-    std::string content = R"({"key": "value"})";
-    std::string filename = createTempFile(content);
+TEST(BsonSerializerTest, LoadAsBson) 
+{
+    auto &sharedMemory = createOrGetMemorySegment(MockSharedMemoryName);
 
     void* result = bson::serializer::loadAsBson(
-        filename, 
-        sharedMemoryName, 
-        csvPrefix
+        MockFileName, 
+        MockSharedMemoryName, 
+        MockCsvPrefix
     );
     ASSERT_NE(result, nullptr);
 
-    std::remove(filename.c_str());
-    bson::serializer::free(sharedMemoryName);
+    std::remove(MockFileName.c_str());
+    bson::serializer::free(MockSharedMemoryName);
 }
 
-TEST(BsonSerializerTest, LoadAsJson) {
-    std::string sharedMemoryName = "TestSharedMemory";
-    std::string csvPrefix = "test_prefix";
-    std::string content = R"({"key": "value"})";
-    std::string filename = createTempFile(content);
-
+TEST(BsonSerializerTest, LoadAsJson) 
+{
     void* result = bson::serializer::loadAsJson(
-        filename, 
-        sharedMemoryName, 
-        csvPrefix
+        MockFileName, 
+        MockSharedMemoryName, 
+        MockCsvPrefix
     );
     ASSERT_NE(result, nullptr);
 
-    std::remove(filename.c_str());
-    bson::serializer::free(sharedMemoryName);
+    std::remove(MockFileName.c_str());
+    bson::serializer::free(MockSharedMemoryName);
+}
+
+TEST(BsonSerializerTest, Unload) 
+{   
+    auto &sharedMemory = createOrGetMemorySegment(MockSharedMemoryName);
+    sharedMemory->load();
+    ASSERT_TRUE(sharedMemory->isLoaded());
+    
+    bson::serializer::unload(MockSharedMemoryName);
+    ASSERT_FALSE(sharedMemory->isLoaded());
+}
+
+TEST(BsonSerializerTest, Free) 
+{
+    auto &sharedMemory = createOrGetMemorySegment(MockSharedMemoryName);
+    sharedMemory->load();
+    ASSERT_TRUE(sharedMemory->isLoaded());
+    
+    bson::serializer::free(MockSharedMemoryName);
+    ASSERT_FALSE(sharedMemory->isLoaded());
+    ASSERT_EQ(sharedMemorySegments().count(MockSharedMemoryName), 0);
 }

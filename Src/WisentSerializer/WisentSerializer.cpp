@@ -1,6 +1,6 @@
 #include "WisentSerializer.hpp"
 #include "../Helpers/CsvLoading.hpp"
-#include "../Helpers/SharedMemorySegment.hpp"
+#include "../Helpers/ISharedMemory.hpp"
 #include "WisentHelpers.h"
 #include <cassert>
 #include <fstream>
@@ -21,7 +21,7 @@ class JsonToWisent : public json::json_sax_t
     std::vector<uint64_t> expressionIndexStack{0};
     uint64_t nextExpressionIndex{0};
     uint64_t layerIndex{0};
-    SharedMemorySegment &sharedMemory;
+    std::unique_ptr<ISharedMemory> &sharedMemory;
     std::string const &csvPrefix;
     bool disableRLE;
     bool enableDeltaEncoding; 
@@ -33,7 +33,7 @@ class JsonToWisent : public json::json_sax_t
     JsonToWisent(
         uint64_t expressionCount,
         std::vector<uint64_t> &&argumentCountPerLayer,
-        SharedMemorySegment &sharedMemory,
+        std::unique_ptr<ISharedMemory> &sharedMemory,
         std::string const &csvPrefix, 
         bool disableRLE, 
         bool disableCsvHandling,
@@ -337,16 +337,16 @@ WisentRootExpression *wisent::serializer::load(
     bool forceReload)
 {
     auto &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
-    if (!forceReload && sharedMemory.exists() && !sharedMemory.loaded()) 
+    if (!forceReload && sharedMemory->exists() && !sharedMemory->isLoaded()) 
     {
-        sharedMemory.load();
+        sharedMemory->load();
     }
-    if (sharedMemory.loaded()) 
+    if (sharedMemory->isLoaded()) 
     {
         if (!forceReload) 
         {
             return reinterpret_cast<WisentRootExpression *>(
-                sharedMemory.baseAddress()
+                sharedMemory->baseAddress()
             );
         }
         free(sharedMemoryName);
@@ -473,19 +473,19 @@ WisentRootExpression *wisent::serializer::load(
 void wisent::serializer::unload (std::string const &sharedMemoryName)
 {
     auto &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
-    if (!sharedMemory.loaded()) 
+    if (!sharedMemory->isLoaded()) 
     {
         std::cerr << "Error: Shared memory segment is not loaded." << std::endl;
         return;
     }
-    sharedMemory.unload();
+    sharedMemory->unload();
     std::cout << "Shared memory segment unloaded successfully." << std::endl;
 }
 
 void wisent::serializer::free (std::string const &sharedMemoryName)
 {
     auto &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
-    sharedMemory.erase();
+    sharedMemory->erase();
     sharedMemorySegments().erase(sharedMemoryName);
 }
 

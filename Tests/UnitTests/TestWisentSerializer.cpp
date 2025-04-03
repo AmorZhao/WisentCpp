@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "../../Src/WisentSerializer/WisentSerializer.hpp"
-#include "../../Src/Helpers/SharedMemorySegment.hpp"
+#include "../../Src/Helpers/ISharedMemory.hpp"
 #include "helpers/unitTestHelpers.hpp"
 #include <string>
 
@@ -29,7 +29,7 @@ TEST(WisentSerializerTest, WisentUnload) {
     wisent::serializer::unload(sharedMemoryName);
 
     auto& sharedMemory = createOrGetMemorySegment(sharedMemoryName);
-    ASSERT_FALSE(sharedMemory.loaded());
+    ASSERT_FALSE(sharedMemory->isLoaded());
 
     std::remove(filename.c_str());
     wisent::serializer::free(sharedMemoryName);
@@ -47,7 +47,7 @@ TEST(WisentSerializerTest, WisentFree) {
     wisent::serializer::free(sharedMemoryName);
 
     auto& sharedMemory = createOrGetMemorySegment(sharedMemoryName);
-    ASSERT_FALSE(sharedMemory.loaded());
+    ASSERT_FALSE(sharedMemory->isLoaded());
     ASSERT_EQ(sharedMemorySegments().count(sharedMemoryName), 0);
 
     std::remove(filename.c_str());

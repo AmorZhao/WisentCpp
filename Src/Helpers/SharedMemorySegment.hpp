@@ -1,14 +1,14 @@
 #pragma once
+#include "ISharedMemory.hpp"
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <memory>
 #include <string>
-#include <unordered_map>
 
 using namespace boost::interprocess;
 
 /* Not a general implementation: assuming always a single allocation! */
-class SharedMemorySegment 
+class SharedMemorySegment : public ISharedMemory
 {
   private:
     shared_memory_object object;
@@ -25,17 +25,17 @@ class SharedMemorySegment
     SharedMemorySegment &operator=(SharedMemorySegment const &other) = delete;
     SharedMemorySegment &operator=(SharedMemorySegment &&other) = delete;
 
-    void *malloc(size_t size)
+    void *malloc(size_t size) override
     {
-        assert(!loaded());
+        assert(!isLoaded());
         object.truncate(size);
         load();
         return baseAddress();
     }
 
-    void *realloc(void *pointer, size_t size)
+    void *realloc(void *pointer, size_t size) override
     {
-        assert(loaded());
+        assert(isLoaded());
         assert(pointer == baseAddress());
         unload();
         object.truncate(size);
@@ -43,63 +43,49 @@ class SharedMemorySegment
         return baseAddress();
     }
 
-    void free(void *pointer)
+    void load() override
+    { 
+        region = std::make_unique<mapped_region>(object, read_write); 
+    }
+
+    void unload() override
+    { 
+        region.reset(); 
+    }
+
+    void erase() override
+    {
+        unload();
+        shared_memory_object::remove(object.get_name());
+    }
+
+    void free(void *pointer) override
     {
         assert(pointer == baseAddress());
         unload();
         erase();
     }
 
-    void erase()
-    {
-        unload();
-        shared_memory_object::remove(object.get_name());
-    }
-
-    void load() 
-    { 
-        region = std::make_unique<mapped_region>(object, read_write); 
-    }
-
-    void unload() 
-    { 
-        region.reset(); 
-    }
-
-    bool exists() const
+    bool exists() const override
     {
         offset_t size;
         return object.get_size(size) && size > 0;
     }
 
-    bool loaded() const 
+    bool isLoaded() const override
     { 
         return exists() && region.get() != nullptr; 
     }
 
-    void *baseAddress() const
+    void *baseAddress() const override
     {
-        assert(loaded());
+        assert(isLoaded());
         return region->get_address();
     }
 
-    size_t size() const
+    size_t size() const override
     {
-        assert(loaded());
+        assert(isLoaded());
         return region->get_size();
     }
 };
-
-std::unordered_map<std::string, SharedMemorySegment> &sharedMemorySegments();
-
-SharedMemorySegment *&currentSharedMemory();
-
-void setCurrentSharedMemory(SharedMemorySegment &sharedMemory);
-
-void *sharedMemoryMalloc(size_t size);
-
-void *sharedMemoryRealloc(void *pointer, size_t size);
-
-void sharedMemoryFree(void *pointer);
-
-SharedMemorySegment &createOrGetMemorySegment(std::string const &name);

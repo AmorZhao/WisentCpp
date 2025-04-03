@@ -4,7 +4,7 @@ project(WisentCppUnitTests)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
 
 find_package(Boost REQUIRED)
 
@@ -20,19 +20,20 @@ endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
 set(SOURCE_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/BsonSerializer/BsonSerializer.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/Helpers/SharedMemorySegment.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/Helpers/ISharedMemory.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/Helpers/CsvLoading.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/BsonSerializer/BsonSerializer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentSerializer/WisentSerializer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/helpers/unitTestHelpers.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/helpers/MockSharedMemorySegment.cpp
 )
 
 set(TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/GTestMain.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/TestSharedMemorySegment.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/TestMockSharedMemorySegment.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/TestCsvLoading.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/TestBsonSerializer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/TestWisentSerializer.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/helpers/unitTestHelpers.cpp
 )
 
 add_executable(UnitTests ${SOURCE_FILES} ${TEST_SOURCES})

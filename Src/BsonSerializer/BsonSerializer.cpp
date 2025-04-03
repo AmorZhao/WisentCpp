@@ -1,8 +1,10 @@
 #include "BsonSerializer.hpp"
 #include "../Helpers/CsvLoading.hpp"
-#include "../Helpers/SharedMemorySegment.hpp"
+#include "../Helpers/ISharedMemory.hpp"
 #include <cassert>
+#include <cstddef>
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <vector>
 #include "../../Include/json.h"
@@ -87,7 +89,7 @@ json load(
         throw std::runtime_error("failed to read: " + path);
     }
 
-    auto j = json::parse(
+    json j = json::parse(
         ifs, 
         [&csvPrefix, &disableCsvHandling](
             int depth, 
@@ -98,16 +100,16 @@ json load(
             {
                 if (!disableCsvHandling && parsed.is_string()) 
                 {
-                    auto filename = parsed.get<std::string>();
-                    auto extPos = filename.find_last_of(".");
+                    std::string filename = parsed.get<std::string>();
+                    size_t extPos = filename.find_last_of(".");
 
                     if (extPos != std::string::npos 
                         && filename.substr(extPos) == ".csv") 
                     {
-                        auto doc = openCsvFile(csvPrefix + filename);
+                        rapidcsv::Document doc = openCsvFile(csvPrefix + filename);
                         json columns(json::value_t::object);
 
-                        for (auto const &columnName : doc.GetColumnNames()) 
+                        for (std::string const &columnName : doc.GetColumnNames()) 
                         {
                             json column = loadCsvDataToJson<int64_t>(doc, columnName);
                             if (column.is_null()) 
@@ -138,25 +140,25 @@ void *bson::serializer::loadAsBson(
     bool disableCsvHandling, 
     bool forceReload)
 {
-    auto &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
+    std::unique_ptr<ISharedMemory> &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
 
-    if (sharedMemory.loaded()) 
+    if (sharedMemory->isLoaded()) 
     {
         if (!forceReload) 
         {
-            return sharedMemory.baseAddress();
+            return sharedMemory->baseAddress();
         }
         free(sharedMemoryName);
     }
 
     setCurrentSharedMemory(sharedMemory);
 
-    auto j = load(
+    json j = load(
         path, 
         csvPrefix, 
         disableCsvHandling
     );
-    auto v = json::to_bson(j);
+    std::vector<std::uint8_t> v = json::to_bson(j);
 
     static std::vector<std::uint8_t, SharedMemoryAllocator<std::uint8_t>> sharedV(
         v.begin(), 
@@ -173,20 +175,20 @@ void *bson::serializer::loadAsJson(
     bool disableCsvHandling, 
     bool forceReload)
 {
-    auto &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
+    std::unique_ptr<ISharedMemory> &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
 
-    if (sharedMemory.loaded()) 
+    if (sharedMemory->isLoaded()) 
     {
         if (!forceReload) 
         {
-            return sharedMemory.baseAddress();
+            return sharedMemory->baseAddress();
         }
         free(sharedMemoryName);
     }
 
     setCurrentSharedMemory(sharedMemory);
 
-    auto j = load(
+    json j = load(
         path, 
         csvPrefix, 
         disableCsvHandling
@@ -204,14 +206,14 @@ void *bson::serializer::loadAsJson(
 
 void bson::serializer::unload(std::string const &sharedMemoryName)
 {
-    auto &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
-    assert(sharedMemory.loaded());
-    sharedMemory.unload();
+    std::unique_ptr<ISharedMemory> &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
+    assert(sharedMemory->isLoaded());
+    sharedMemory->unload();
 }
 
 void bson::serializer::free(std::string const &sharedMemoryName)
 {
-    auto &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
-    sharedMemory.erase();
+    std::unique_ptr<ISharedMemory> &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
+    sharedMemory->erase();
     sharedMemorySegments().erase(sharedMemoryName);
 }

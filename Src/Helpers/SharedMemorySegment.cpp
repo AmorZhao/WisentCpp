@@ -4,21 +4,21 @@
 #include <string>
 #include <unordered_map>
 
-std::unordered_map<std::string, SharedMemorySegment> &sharedMemorySegments()
+std::unordered_map<std::string, std::unique_ptr<ISharedMemory>> &sharedMemorySegments()
 {
-    static std::unordered_map<std::string, SharedMemorySegment> segments;
+    static std::unordered_map<std::string, std::unique_ptr<ISharedMemory>> segments;
     return segments;
 }
 
-SharedMemorySegment *&currentSharedMemory()
+std::unique_ptr<ISharedMemory> &currentSharedMemory()
 {
-    static SharedMemorySegment *currentSharedMemoryPtr = nullptr;
+    static std::unique_ptr<ISharedMemory> currentSharedMemoryPtr = nullptr;
     return currentSharedMemoryPtr;
 }
 
-void setCurrentSharedMemory(SharedMemorySegment &sharedMemory)
+void setCurrentSharedMemory(std::unique_ptr<ISharedMemory> &sharedMemory)
 {
-    currentSharedMemory() = &sharedMemory;
+    currentSharedMemory() = std::move(sharedMemory);
 }
 
 void *sharedMemoryMalloc(size_t size)
@@ -48,7 +48,9 @@ void sharedMemoryFree(void *pointer)
     currentSharedMemory()->free(pointer);
 }
 
-SharedMemorySegment &createOrGetMemorySegment(std::string const &name)
+std::unique_ptr<ISharedMemory> &createOrGetMemorySegment(std::string const &name)
 {
-    return sharedMemorySegments().emplace(name, name).first->second;
+    return sharedMemorySegments()
+        .emplace(name, std::make_unique<SharedMemorySegment>(name))
+        .first->second;
 }
