@@ -227,12 +227,25 @@ int main(int argc, char **argv)
         res.set_content("Done.", "text/plain");
     });
 
-    // svr.Get("/parse", [&](const httplib::Request & req, httplib::Response &res) 
+    svr.Get("/parse", [&](const httplib::Request & req, httplib::Response &res) 
+    {
+        auto const &name = req.get_param_value("name");
+        auto parsed = wisent::parser::parse(name);
+        res.set_content(parsed, "text/plain");
+    }); 
+
+    // svr.Get("/compress", [&](const httplib::Request &req, httplib::Response &res) 
     // {
     //     auto const &name = req.get_param_value("name");
-    //     auto parsed = wisent::parser::parse(name);
-    //     res.set_content(parsed, "text/plain");
-    // }); 
+    //     auto const &compressionType = req.get_param_value("type");
+    //     std::cout << "compressing dataset '" << name << "' with type " << compressionType << std::endl; 
+    //     auto start = std::chrono::high_resolution_clock::now();
+    //     wisent::serializer::compress(name, compressionType);
+    //     auto end = std::chrono::high_resolution_clock::now();
+    //     auto timeDiff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    //     std::cout << "took " << timeDiff << " ns" << std::endl;
+    //     res.set_content("Done.", "text/plain");
+    // });
 
     svr.Get("/stop", [&](const httplib::Request & /*req*/, httplib::Response & /*res*/) 
     { 
