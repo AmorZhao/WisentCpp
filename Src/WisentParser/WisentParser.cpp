@@ -1,6 +1,6 @@
 #include "WisentParser.hpp"
 #include "../WisentSerializer/WisentHelpers.h"
-#include "../Helpers/ISharedMemory.hpp"
+#include "../Helpers/ISharedMemorySegment.hpp"
 #include <iostream>
 #include <vector>
 #include <memory>
@@ -191,9 +191,11 @@ std::string deserialize(const std::string& buffer)
     return readArgument(0, argumentVector, typeBytefield, structureVector, stringBuffer);
 }
 
-std::string wisent::parser::parse(std::string const& sharedMemoryName)
+std::string wisent::parser::parse(
+    ISharedMemorySegments *sharedMemorySegments,
+    std::string const& sharedMemoryName)
 {
-    auto& sharedMemory = createOrGetMemorySegment(sharedMemoryName);
+    ISharedMemorySegment *sharedMemory = sharedMemorySegments->createOrGetMemorySegment(sharedMemoryName);
     if (!sharedMemory->isLoaded()) 
     {
         std::cerr << "Can't parse wisent file: Shared memory segment is not loaded." << std::endl;

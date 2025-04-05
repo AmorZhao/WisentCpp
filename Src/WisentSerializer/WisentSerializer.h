@@ -1,7 +1,10 @@
 #ifndef WISENTSERIALIZER_H
 #define WISENTSERIALIZER_H
 
+#include "../Helpers/ISharedMemorySegment.hpp" 
+
 char* wisentLoad(
+    ISharedMemorySegments *sharedMemorySegments,
     char const* path, 
     char const* sharedMemoryName, 
     char const* csvPrefix, 
@@ -11,8 +14,14 @@ char* wisentLoad(
     bool enableHuffmanEncoding
 );
 
-void wisentUnload(char const* sharedMemoryName);
+void wisentUnload(
+    ISharedMemorySegments *sharedMemorySegments,
+    char const* sharedMemoryName
+);
 
-void wisentFree(char const* sharedMemoryName);
+void wisentFree(
+    ISharedMemorySegments *sharedMemorySegments,
+    char const* sharedMemoryName
+);
 
 #endif /* WISENTSERIALIZER_H */

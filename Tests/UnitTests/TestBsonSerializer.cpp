@@ -18,7 +18,7 @@ const std::string MockFileName = createTempFile(MockFileContent);
 
 TEST(BsonSerializerTest, LoadAsBson) 
 {
-    auto &sharedMemory = createOrGetMemorySegment(MockSharedMemoryName);
+    ISharedMemorySegment *sharedMemory = SharedMemoryHelpers::createOrGetMemorySegment(MockSharedMemoryName);
 
     void* result = bson::serializer::loadAsBson(
         MockFileName, 
@@ -46,8 +46,8 @@ TEST(BsonSerializerTest, LoadAsJson)
 
 TEST(BsonSerializerTest, Unload) 
 {   
-    auto &sharedMemory = createOrGetMemorySegment(MockSharedMemoryName);
-    sharedMemory->load();
+    ISharedMemorySegment *sharedMemory = SharedMemoryHelpers::createOrGetMemorySegment
+    ISharedMemorySegment->load();
     ASSERT_TRUE(sharedMemory->isLoaded());
     
     bson::serializer::unload(MockSharedMemoryName);
@@ -56,7 +56,7 @@ TEST(BsonSerializerTest, Unload)
 
 TEST(BsonSerializerTest, Free) 
 {
-    auto &sharedMemory = createOrGetMemorySegment(MockSharedMemoryName);
+    ISharedMemorySegment *sharedMemory = SharedMemoryHelpers::createOrGetMemorySegment
     sharedMemory->load();
     ASSERT_TRUE(sharedMemory->isLoaded());
     

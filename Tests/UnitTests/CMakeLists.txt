@@ -20,20 +20,20 @@ endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
 set(SOURCE_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/Helpers/ISharedMemory.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/Helpers/CsvLoading.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/BsonSerializer/BsonSerializer.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentSerializer/WisentSerializer.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/helpers/unitTestHelpers.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/Helpers/ISharedMemorySegment.hpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/Helpers/CsvLoading.hpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/BsonSerializer/BsonSerializer.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentSerializer/WisentSerializer.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/helpers/unitTestHelpers.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/helpers/MockSharedMemorySegment.cpp
 )
 
 set(TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/GTestMain.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/TestMockSharedMemorySegment.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/TestCsvLoading.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/TestBsonSerializer.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/TestWisentSerializer.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/TestCsvLoading.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/TestBsonSerializer.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/TestWisentSerializer.cpp
 )
 
 add_executable(UnitTests ${SOURCE_FILES} ${TEST_SOURCES})

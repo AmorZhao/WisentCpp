@@ -55,7 +55,7 @@ set(WisentParserFiles Src/WisentParser/WisentParser.cpp)
 set(BsonSerializerFiles Src/BsonSerializer/BsonSerializer.cpp)
 set(HelperFiles 
   Src/Helpers/SharedMemorySegment.cpp 
-  Src/Helpers/ISharedMemory.hpp
+  Src/Helpers/ISharedMemorySegment.hpp
 )
 
 add_library(WisentSerializer SHARED ${WisentSerializerFiles})

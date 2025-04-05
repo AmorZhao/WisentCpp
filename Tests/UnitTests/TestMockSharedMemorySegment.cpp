@@ -1,50 +1,65 @@
 #include "gtest/gtest.h"
-#include <memory>
-#include "../../Src/Helpers/ISharedMemory.hpp"
+#include "../../Src/Helpers/ISharedMemorySegment.hpp"
+#include "helpers/MockSharedMemorySegment.cpp"
 
-const std::string MockSharedMemoryName = "MockSharedMemoryName";
-const size_t MockSharedMemorySize = 1024;
-
-TEST(MockSharedMemorySegmentTest, CreateOrGetMemorySegment_NewSegmentGetsCreated) 
+class MockSharedMemorySegmentTest : public ::testing::Test 
 {
-    std::unique_ptr<ISharedMemory> &mockSharedMemory = createOrGetMemorySegment(MockSharedMemoryName);
+protected:
+    const std::string MockSharedMemoryName = "MockSharedMemoryName";
+    const std::string MockDifferentName = "MockDifferentName";
+    const size_t MockSharedMemorySize = 1024;
+    
+    ISharedMemorySegments *mockSharedMemorySegments;
+    void SetUp() override 
+    {
+        mockSharedMemorySegments = new MockSharedMemorySegments();
+    }
+
+    void TearDown() override 
+    {
+    }
+};
+
+TEST_F(MockSharedMemorySegmentTest, CreateOrGetMemorySegment_NewSegmentGetsCreated) 
+{
+    ISharedMemorySegment *mockSharedMemory = mockSharedMemorySegments->createOrGetMemorySegment(MockSharedMemoryName);
     ASSERT_NE(mockSharedMemory, nullptr);
     ASSERT_EQ(mockSharedMemory->isLoaded(), false);
 
-    ASSERT_EQ(currentSharedMemory(), nullptr);
-    setCurrentSharedMemory(mockSharedMemory);
-    ASSERT_NE(currentSharedMemory(), nullptr);
+    ASSERT_EQ(mockSharedMemorySegments->getCurrentSharedMemory(), nullptr);
+    mockSharedMemorySegments->setCurrentSharedMemory(mockSharedMemory);
+    ASSERT_NE(mockSharedMemorySegments->getCurrentSharedMemory(), nullptr);
 
-    auto pointer = sharedMemoryMalloc(MockSharedMemorySize);
+    auto pointer = mockSharedMemorySegments->sharedMemoryMalloc(MockSharedMemorySize);
     ASSERT_NE(pointer, nullptr);
-    ASSERT_EQ(sharedMemorySegments().size(), 1);
+    ASSERT_EQ(mockSharedMemorySegments->getSharedMemorySegments().size(), 1);
 
-    sharedMemorySegments().clear();
-    currentSharedMemory() = nullptr;
+    mockSharedMemorySegments->getSharedMemorySegments().clear();
+    mockSharedMemorySegments->setCurrentSharedMemory(nullptr);
     pointer = nullptr;
 }
 
-TEST(MockSharedMemorySegmentTest, CreateOrGetMemorySegment_DuplicatedSegmentGetsReturned) 
+TEST_F(MockSharedMemorySegmentTest, CreateOrGetMemorySegment_DuplicatedSegmentGetsReturned) 
 {
-    ASSERT_EQ(sharedMemorySegments().size(), 0);
-    std::unique_ptr<ISharedMemory> &mockSharedMemory = createOrGetMemorySegment("MockSharedMemoryName");
-    ASSERT_EQ(sharedMemorySegments().size(), 1);
+    ASSERT_EQ(mockSharedMemorySegments->getSharedMemorySegments().size(), 0);
+    ISharedMemorySegment *mockSharedMemory = mockSharedMemorySegments->createOrGetMemorySegment(MockSharedMemoryName);
+    ASSERT_EQ(mockSharedMemorySegments->getSharedMemorySegments().size(), 1);
     
-    setCurrentSharedMemory(mockSharedMemory);
-    sharedMemoryMalloc(MockSharedMemorySize);
+    mockSharedMemorySegments->setCurrentSharedMemory(mockSharedMemory);
+    mockSharedMemorySegments->sharedMemoryMalloc(MockSharedMemorySize);
 
-    auto pointer = currentSharedMemory()->baseAddress(); 
+    auto pointer = mockSharedMemorySegments->getCurrentSharedMemory()->baseAddress(); 
 
-    std::unique_ptr<ISharedMemory> &mockSharedMemoryDuplicated = createOrGetMemorySegment(MockSharedMemoryName);
-    setCurrentSharedMemory(mockSharedMemoryDuplicated);
-    ASSERT_EQ(sharedMemorySegments().size(), 1);
-    // ASSERT_EQ(currentSharedMemory()->baseAddress(), pointer);
+    ISharedMemorySegment *mockSharedMemoryDuplicated = mockSharedMemorySegments->createOrGetMemorySegment(MockSharedMemoryName);
+    mockSharedMemorySegments->setCurrentSharedMemory(mockSharedMemoryDuplicated);
+    ASSERT_EQ(mockSharedMemorySegments->getSharedMemorySegments().size(), 1);
+    ASSERT_EQ(mockSharedMemorySegments->getCurrentSharedMemory()->baseAddress(), pointer);
 
-    std::unique_ptr<ISharedMemory> &mockSharedMemoryNotDuplicated = createOrGetMemorySegment("DifferentName");
-    ASSERT_EQ(sharedMemorySegments().size(), 2);
+    ISharedMemorySegment *mockSharedMemoryNotDuplicated = mockSharedMemorySegments->createOrGetMemorySegment(MockDifferentName);
+    ASSERT_EQ(mockSharedMemorySegments->getSharedMemorySegments().size(), 2);
 
-    sharedMemorySegments().clear();
-    currentSharedMemory() = nullptr;
+    mockSharedMemorySegments->getSharedMemorySegments().clear();
+    mockSharedMemorySegments->setCurrentSharedMemory(nullptr);
     mockSharedMemory = nullptr; 
     mockSharedMemoryDuplicated = nullptr;   
 }

@@ -1,11 +1,12 @@
-#include "../../../Src/Helpers/ISharedMemory.hpp"
+#include "../../../Src/Helpers/ISharedMemorySegment.hpp"
+#include <memory>
 #include <utility>
 #include <vector>
 #include <cassert>
 #include <iostream>
 
 /* Mock shared memory behaviour, without interacting with system-level memory */
-class MockSharedMemorySegment : public ISharedMemory
+class MockSharedMemorySegment : public ISharedMemorySegment
 {
   private:
     std::vector<char> memory;
@@ -49,7 +50,7 @@ class MockSharedMemorySegment : public ISharedMemory
 
     void erase() override {
         unload();
-        sharedMemorySegments().erase(segmentName);
+        // mockSharedMemorySegments->getSharedMemorySegments().erase(segmentName);
     }
 
     void free(void *pointer) override
@@ -82,57 +83,65 @@ class MockSharedMemorySegment : public ISharedMemory
     }
 };
 
-static std::unordered_map<std::string, std::unique_ptr<ISharedMemory>> segments;
-
-std::unordered_map<std::string, std::unique_ptr<ISharedMemory>> &sharedMemorySegments()
+class MockSharedMemorySegments : public ISharedMemorySegments
 {
-    return segments;
-}
+private: 
+    std::unordered_map<std::string, std::unique_ptr<ISharedMemorySegment>> sharedMemorySegments;
+    ISharedMemorySegment *currentSharedMemory;
 
-std::unique_ptr<ISharedMemory> &currentSharedMemory()
-{
-    static std::unique_ptr<ISharedMemory> currentSharedMemoryPtr = nullptr;
-    return currentSharedMemoryPtr;
-}
+public:
+    MockSharedMemorySegments() 
+        : currentSharedMemory(nullptr)
+        , sharedMemorySegments()
+    {}
 
-void setCurrentSharedMemory(std::unique_ptr<ISharedMemory> &sharedMemory)
-{
-    currentSharedMemory() = std::move(sharedMemory);
-}
+    ~MockSharedMemorySegments() override = default;
 
-void *sharedMemoryMalloc(size_t size)
-{
-    return currentSharedMemory()->malloc(size);
-}
-
-void *sharedMemoryRealloc(void *pointer, size_t size)
-{
-    return currentSharedMemory()->realloc(pointer, size);
-}
-
-void sharedMemoryFree(void *pointer)
-{
-    if (currentSharedMemory() == nullptr) 
+    std::unordered_map<std::string, std::unique_ptr<ISharedMemorySegment>> &getSharedMemorySegments() override
     {
-        std::cerr << "Cannot free memory as currentSharedMemory is nullptr" << std::endl;
-    }
-    currentSharedMemory()->free(pointer);
-}
-
-std::unique_ptr<ISharedMemory> &createOrGetMemorySegment(std::string const &name)
-{
-    // Check if the segment already exists
-    auto it = segments.find(name);
-    if (it != segments.end()) {
-        std::cout << "Returning existing shared memory segment: " << name << std::endl;
-        return it->second;
+        return sharedMemorySegments;
     }
 
-    // If not found, create and insert a new one
-    std::cout << "Creating new shared memory segment: " << name << std::endl;
-    segments.insert(std::make_pair(name, std::make_unique<MockSharedMemorySegment>(name)));
+    ISharedMemorySegment *getCurrentSharedMemory() override
+    {
+        return currentSharedMemory;
+    }
 
-    auto it2 = segments.find(name);
-    return it2->second; 
-}
+    void setCurrentSharedMemory(ISharedMemorySegment *sharedMemory) override
+    {
+        currentSharedMemory = sharedMemory;
+    }
 
+    void *sharedMemoryMalloc(size_t size) override
+    {
+        return getCurrentSharedMemory()->malloc(size);
+    }
+
+    void *sharedMemoryRealloc(void *pointer, size_t size) override
+    {
+        return getCurrentSharedMemory()->realloc(pointer, size);
+    }
+
+    void sharedMemoryFree(void *pointer) override
+    {
+        if (getCurrentSharedMemory() == nullptr) 
+        {
+            std::cerr << "Cannot free memory as currentSharedMemory is nullptr" << std::endl;
+        }
+        getCurrentSharedMemory()->free(pointer);
+    }
+
+    ISharedMemorySegment *createOrGetMemorySegment(std::string const &name) override
+    {
+        auto it = getSharedMemorySegments().find(name);
+        if (it != getSharedMemorySegments().end()) 
+        {
+            return it->second.get();
+        }
+
+        std::unique_ptr<MockSharedMemorySegment> newSegment = std::make_unique<MockSharedMemorySegment>(name);
+        MockSharedMemorySegment *newSegmentPtr = newSegment.get();
+        getSharedMemorySegments().insert(std::make_pair(name, std::move(newSegment)));
+        return newSegmentPtr;
+    }
+}; 

@@ -1,6 +1,6 @@
 #include "WisentSerializer.hpp"
 #include "../Helpers/CsvLoading.hpp"
-#include "../Helpers/ISharedMemory.hpp"
+#include "../Helpers/ISharedMemorySegment.hpp"
 #include "WisentHelpers.h"
 #include <cassert>
 #include <fstream>
@@ -21,19 +21,21 @@ class JsonToWisent : public json::json_sax_t
     std::vector<uint64_t> expressionIndexStack{0};
     uint64_t nextExpressionIndex{0};
     uint64_t layerIndex{0};
-    std::unique_ptr<ISharedMemory> &sharedMemory;
+    ISharedMemorySegment *sharedMemory;
     std::string const &csvPrefix;
     bool disableRLE;
     bool enableDeltaEncoding; 
     bool enableHuffmanEncoding; 
     bool disableCsvHandling;
     uint64_t repeatedArgumentTypeCount; 
+    ISharedMemorySegments *sharedMemorySegments;
 
   public:
     JsonToWisent(
+        ISharedMemorySegments *sharedMemorySegments,
         uint64_t expressionCount,
         std::vector<uint64_t> &&argumentCountPerLayer,
-        std::unique_ptr<ISharedMemory> &sharedMemory,
+        ISharedMemorySegment *sharedMemory,
         std::string const &csvPrefix, 
         bool disableRLE, 
         bool disableCsvHandling,
@@ -41,6 +43,7 @@ class JsonToWisent : public json::json_sax_t
         bool enableHuffmanEncoding
     ): 
         root(nullptr),
+        sharedMemorySegments(sharedMemorySegments),
         cumulArgCountPerLayer(std::move(argumentCountPerLayer)),
         sharedMemory(sharedMemory), 
         csvPrefix(csvPrefix),
@@ -58,7 +61,7 @@ class JsonToWisent : public json::json_sax_t
         root = allocateExpressionTree(
             cumulArgCountPerLayer.back(),
             expressionCount, 
-            sharedMemoryMalloc
+            sharedMemorySegments
         );
         wasKeyValue.resize(cumulArgCountPerLayer.size(), false);
     }
@@ -218,7 +221,7 @@ class JsonToWisent : public json::json_sax_t
     void addString(std::string const &input)
     {
         auto storedString =
-            storeString(&root, input.c_str(), sharedMemoryRealloc);
+            storeString(&root, input.c_str(), sharedMemorySegments);
         uint64_t argIndex = getNextArgumentIndex();
         *makeStringArgument(root, argIndex) = storedString;
         applyTypeRLE(argIndex);
@@ -227,7 +230,7 @@ class JsonToWisent : public json::json_sax_t
     void addSymbol(std::string const &symbol)
     {
         auto storedString =
-            storeString(&root, symbol.c_str(), sharedMemoryRealloc);
+            storeString(&root, symbol.c_str(), sharedMemorySegments);
         uint64_t argIndex = getNextArgumentIndex();
         *makeSymbolArgument(root, argIndex) = storedString;
         applyTypeRLE(argIndex);
@@ -245,7 +248,7 @@ class JsonToWisent : public json::json_sax_t
         auto expressionIndex = nextExpressionIndex++;
         addExpression(expressionIndex);
         auto storedString =
-            storeString(&root, head.c_str(), sharedMemoryRealloc);
+            storeString(&root, head.c_str(), sharedMemorySegments);
         auto startChildOffset = cumulArgCountPerLayer[layerIndex++];
         *makeExpression(root, expressionIndex) = WisentExpression{
             storedString, startChildOffset,
@@ -327,6 +330,7 @@ class JsonToWisent : public json::json_sax_t
 };
 
 WisentRootExpression *wisent::serializer::load(
+    ISharedMemorySegments *sharedMemorySegments,
     std::string const &path,
     std::string const &sharedMemoryName,
     std::string const &csvPrefix, 
@@ -336,7 +340,7 @@ WisentRootExpression *wisent::serializer::load(
     bool enableHuffmanEncoding,
     bool forceReload)
 {
-    auto &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
+    ISharedMemorySegment *sharedMemory = sharedMemorySegments->createOrGetMemorySegment(sharedMemoryName);
     if (!forceReload && sharedMemory->exists() && !sharedMemory->isLoaded()) 
     {
         sharedMemory->load();
@@ -349,9 +353,9 @@ WisentRootExpression *wisent::serializer::load(
                 sharedMemory->baseAddress()
             );
         }
-        free(sharedMemoryName);
+        free(sharedMemorySegments, sharedMemoryName);
     }
-    setCurrentSharedMemory(sharedMemory);
+    sharedMemorySegments->setCurrentSharedMemory(sharedMemory);
 
     std::ifstream ifs(path);
     if (!ifs.good()) 
@@ -450,6 +454,7 @@ WisentRootExpression *wisent::serializer::load(
 
     // initialise Wisent expression tree
     JsonToWisent jsonToWisent(
+        sharedMemorySegments,
         expressionCount,
         std::move(argumentCountPerLayer),
         sharedMemory,
@@ -470,9 +475,11 @@ WisentRootExpression *wisent::serializer::load(
 }
 
 
-void wisent::serializer::unload (std::string const &sharedMemoryName)
+void wisent::serializer::unload (
+    ISharedMemorySegments *sharedMemorySegments, 
+    std::string const &sharedMemoryName)
 {
-    auto &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
+    ISharedMemorySegment *sharedMemory = sharedMemorySegments->createOrGetMemorySegment(sharedMemoryName);
     if (!sharedMemory->isLoaded()) 
     {
         std::cerr << "Error: Shared memory segment is not loaded." << std::endl;
@@ -482,15 +489,18 @@ void wisent::serializer::unload (std::string const &sharedMemoryName)
     std::cout << "Shared memory segment unloaded successfully." << std::endl;
 }
 
-void wisent::serializer::free (std::string const &sharedMemoryName)
+void wisent::serializer::free (
+    ISharedMemorySegments *sharedMemorySegments,
+    std::string const &sharedMemoryName)
 {
-    auto &sharedMemory = createOrGetMemorySegment(sharedMemoryName);
+    ISharedMemorySegment *sharedMemory = sharedMemorySegments->createOrGetMemorySegment(sharedMemoryName);
     sharedMemory->erase();
-    sharedMemorySegments().erase(sharedMemoryName);
+    sharedMemorySegments->getSharedMemorySegments().erase(sharedMemoryName);
 }
 
 extern "C" {
     char *wisentLoad (
+        ISharedMemorySegments *sharedMemorySegments,
         char const *path, 
         char const *sharedMemoryName, 
         char const *csvPrefix, 
@@ -501,6 +511,7 @@ extern "C" {
     {
         return reinterpret_cast<char *>(
             wisent::serializer::load(
+                sharedMemorySegments,
                 path,
                 sharedMemoryName,
                 csvPrefix,
@@ -513,13 +524,17 @@ extern "C" {
         );
     }
 
-    void wisentUnload (char const *sharedMemoryName)
+    void wisentUnload (
+        ISharedMemorySegments *sharedMemorySegments,
+        char const *sharedMemoryName)
     {
-        wisent::serializer::unload(sharedMemoryName);
+        wisent::serializer::unload(sharedMemorySegments, sharedMemoryName);
     }
 
-    void wisentFree (char const *sharedMemoryName)
+    void wisentFree (
+        ISharedMemorySegments *sharedMemorySegments,
+        char const *sharedMemoryName)
     {
-        wisent::serializer::free(sharedMemoryName);
+        wisent::serializer::free(sharedMemorySegments, sharedMemoryName);
     }
 }

@@ -1,10 +1,12 @@
 #include "WisentHelpers.h"
+#include "../Helpers/ISharedMemorySegment.hpp"
 #include <string>
 namespace wisent 
 {
     namespace serializer 
     {
         WisentRootExpression* load(
+            ISharedMemorySegments *sharedMemorySegments,
             std::string const& path, 
             std::string const& sharedMemoryName,
             std::string const& csvPrefix, 
@@ -16,10 +18,12 @@ namespace wisent
         );
 
         void unload(
+            ISharedMemorySegments *sharedMemorySegments,
             std::string const& sharedMemoryName
         );
 
         void free(
+            ISharedMemorySegments *sharedMemorySegments,
             std::string const& sharedMemoryName
         );
     }

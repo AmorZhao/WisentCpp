@@ -2,11 +2,13 @@
 #define WISENTHELPERS_H
 #ifdef __cplusplus
 #include <cstring>
+#include "../Helpers/ISharedMemorySegment.hpp"
 extern "C" {
 #else
 #include <inttypes.h>
 #include <stdbool.h>
 #include <string.h>
+#include "../Helpers/ISharedMemorySegment.hpp"
 #endif
 // NOLINTBEGIN(hicpp-use-auto,cppcoreguidelines-pro-type-union-access)
 // NOLINTBEGIN(cppcoreguidelines-pro-type-cstyle-cast)
@@ -113,10 +115,10 @@ static char *getStringBuffer(struct WisentRootExpression *root)
 static struct WisentRootExpression *allocateExpressionTree(
     uint64_t argumentCount, 
     uint64_t expressionCount,
-    void *(*allocateFunction)(size_t))  // sharedMemoryMalloc(size)
+    ISharedMemorySegments *sharedMemorySegments)  // sharedMemoryMalloc(size)
 {
     struct WisentRootExpression *root =
-        (struct WisentRootExpression*) allocateFunction( 
+        (struct WisentRootExpression*) sharedMemorySegments->sharedMemoryMalloc( 
             sizeof(struct WisentRootExpression) +
             sizeof(union WisentArgumentValue) * argumentCount +
             sizeof(enum WisentArgumentType) * argumentCount +
@@ -323,11 +325,11 @@ static struct WisentExpression *makeExpression(
 static size_t storeString(
     struct WisentRootExpression **root,
     char const *inputString,
-    void *(*reallocateFunction)(void *, size_t))
+    ISharedMemorySegments *sharedMemorySegments)
 {
     size_t const inputStringLength = strlen(inputString);
     *root = (struct WisentRootExpression*) 
-        reallocateFunction(
+        sharedMemorySegments->sharedMemoryRealloc(
             *root, 
             ((char *)(getStringBuffer(*root)) - ((char *)*root)) + 
             (*root)->stringArgumentsFillIndex + inputStringLength + 1

@@ -1,6 +1,7 @@
 #include "../Include/httplib.h"
 #include "BsonSerializer/BsonSerializer.hpp"
 #include "Helpers/CsvLoading.hpp"
+#include "Helpers/SharedMemorySegment.cpp"
 #include "WisentSerializer/WisentSerializer.hpp"
 #include "WisentParser/WisentParser.hpp"
 #include <chrono>
@@ -19,6 +20,7 @@ int main(int argc, char **argv)
     bool loadArgAsBson = false;
     std::vector<std::string> filepaths;
     std::map<std::string, std::pair<int64_t, int64_t>> averageTimings;
+    ISharedMemorySegments *sharedMemorySegments = new SharedMemorySegments();
 
     for (int i = 1; i < argc; ++i) 
     {
@@ -106,6 +108,7 @@ int main(int argc, char **argv)
         if (loadArgAsBson) 
         {
             bson::serializer::loadAsBson(
+                sharedMemorySegments,
                 filepath, 
                 filenameWithoutExt, 
                 csvPrefix
@@ -114,6 +117,7 @@ int main(int argc, char **argv)
         else if (loadArgAsJson) 
         {
             void *ptr = bson::serializer::loadAsJson(
+                sharedMemorySegments,
                 filepath, 
                 filenameWithoutExt, 
                 csvPrefix
@@ -122,6 +126,7 @@ int main(int argc, char **argv)
         else 
         {
             auto root = wisent::serializer::load(
+                sharedMemorySegments,
                 filepath, 
                 filenameWithoutExt, 
                 csvPrefix, 
@@ -170,6 +175,7 @@ int main(int argc, char **argv)
         {
             std::cout << "as bson" << std::endl;
             bson::serializer::loadAsBson(
+                sharedMemorySegments,
                 filepath, 
                 name, 
                 csvPrefix,
@@ -180,6 +186,7 @@ int main(int argc, char **argv)
         {
             std::cout << "as json" << std::endl;
             void *ptr = bson::serializer::loadAsJson(
+                sharedMemorySegments,
                 filepath, 
                 name, 
                 csvPrefix, 
@@ -189,6 +196,7 @@ int main(int argc, char **argv)
         else {
             std::cout << "as wisent" << std::endl;
             auto root = wisent::serializer::load(
+                sharedMemorySegments,
                 filepath, 
                 name, 
                 csvPrefix, 
@@ -214,7 +222,7 @@ int main(int argc, char **argv)
     {
         auto const &name = req.get_param_value("name");
         std::cout << "unloading dataset '" << name << "'" << std::endl;
-        wisent::serializer::unload(name);
+        wisent::serializer::unload(sharedMemorySegments, name);
         res.set_content("Done.", "text/plain");
         // Todo - change set_content
     });
@@ -223,14 +231,14 @@ int main(int argc, char **argv)
     {
         auto const &name = req.get_param_value("name");
         std::cout << "erasing dataset '" << name << "'" << std::endl;
-        wisent::serializer::free(name);
+        wisent::serializer::free(sharedMemorySegments, name);
         res.set_content("Done.", "text/plain");
     });
 
     svr.Get("/parse", [&](const httplib::Request & req, httplib::Response &res) 
     {
         auto const &name = req.get_param_value("name");
-        auto parsed = wisent::parser::parse(name);
+        auto parsed = wisent::parser::parse(sharedMemorySegments, name);
         res.set_content(parsed, "text/plain");
     }); 
 
@@ -260,7 +268,7 @@ int main(int argc, char **argv)
         // deleting only the datasets loaded with the command line
         // clients manually handle the lifetime of the datasets they request
         std::cout << "Deleting " << name << "..." << std::endl;
-        wisent::serializer::free(name);
+        wisent::serializer::free(sharedMemorySegments, name);
     }
     return 0;
 }
