@@ -31,17 +31,17 @@ class SharedMemorySegment : public ISharedMemorySegment
         assert(!isLoaded());
         object.truncate(size);
         load();
-        return baseAddress();
+        return getBaseAddress();
     }
 
     void *realloc(void *pointer, size_t size) override
     {
         assert(isLoaded());
-        assert(pointer == baseAddress());
+        assert(pointer == getBaseAddress());
         unload();
         object.truncate(size);
         load();
-        return baseAddress();
+        return getBaseAddress();
     }
 
     void load() override
@@ -62,7 +62,7 @@ class SharedMemorySegment : public ISharedMemorySegment
 
     void free(void *pointer) override
     {
-        assert(pointer == baseAddress());
+        assert(pointer == getBaseAddress());
         unload();
         erase();
     }
@@ -78,85 +78,73 @@ class SharedMemorySegment : public ISharedMemorySegment
         return exists() && region.get() != nullptr; 
     }
 
-    void *baseAddress() const override
+    void *getBaseAddress() const override
     {
         assert(isLoaded());
         return region->get_address();
     }
 
-    size_t size() const override
+    size_t getSize() const override
     {
         assert(isLoaded());
         return region->get_size();
     }
 };
 
-class SharedMemorySegments : public ISharedMemorySegments
+namespace SharedMemorySegments
 {
-private:
-    std::unordered_map<std::string, std::unique_ptr<ISharedMemorySegment>> sharedMemorySegments;
-    ISharedMemorySegment *currentSharedMemory;
-
-public: 
-    SharedMemorySegments() 
-        : currentSharedMemory(nullptr)
-        , sharedMemorySegments()
-    {}
-
-    ~SharedMemorySegments() override = default;
-
-    std::unordered_map<std::string, std::unique_ptr<ISharedMemorySegment>> &getSharedMemorySegments() override
+    std::unordered_map<std::string, std::unique_ptr<ISharedMemorySegment>> &getSharedMemorySegments() 
     {
-        return sharedMemorySegments;
+        return sharedMemorySegmentsList;
     }
 
-    ISharedMemorySegment *getCurrentSharedMemory() override
+    ISharedMemorySegment *getCurrentSharedMemory() 
     {
-        return currentSharedMemory;
+        return currentSharedMemoryPtr;
     }
 
-    void setCurrentSharedMemory(ISharedMemorySegment* sharedMemory) override
+    void setCurrentSharedMemory(ISharedMemorySegment* sharedMemory) 
     {
-        currentSharedMemory = sharedMemory;
+        currentSharedMemoryPtr = sharedMemory;
     }
 
-    void *sharedMemoryMalloc(size_t size) override
+    void *sharedMemoryMalloc(size_t size) 
     {
-        if (currentSharedMemory == nullptr) 
+        if (currentSharedMemoryPtr == nullptr) 
         {
             std::cerr << "Cannot malloc memory as currentSharedMemory is nullptr" << std::endl;
         }
-        return currentSharedMemory->malloc(size);
+        return currentSharedMemoryPtr->malloc(size);
     }
 
-    void *sharedMemoryRealloc(void *pointer, size_t size) override
+    void *sharedMemoryRealloc(void *pointer, size_t size) 
     {
-        if (currentSharedMemory == nullptr) 
+        if (currentSharedMemoryPtr == nullptr) 
         {
             std::cerr << "Cannot realloc memory as currentSharedMemory is nullptr" << std::endl;
         }
-        return currentSharedMemory->realloc(pointer, size);
+        return currentSharedMemoryPtr->realloc(pointer, size);
     }
 
-    void sharedMemoryFree(void *pointer) override
+    void sharedMemoryFree(void *pointer) 
     {
-        if (currentSharedMemory == nullptr) 
+        if (currentSharedMemoryPtr == nullptr) 
         {
             std::cerr << "Cannot free memory as currentSharedMemory is nullptr" << std::endl;
         }
-        currentSharedMemory->free(pointer);
+        currentSharedMemoryPtr->free(pointer);
     }
 
-    ISharedMemorySegment *createOrGetMemorySegment(std::string const &name) override
+    ISharedMemorySegment *createOrGetMemorySegment(std::string const &name) 
     {
-        auto it = getSharedMemorySegments().find(name);
-        if (it != getSharedMemorySegments().end()) 
+        auto it = sharedMemorySegmentsList.find(name);
+        if (it != sharedMemorySegmentsList.end()) 
         {
             return it->second.get();
         }
 
-        getSharedMemorySegments().insert(std::make_pair(name, std::make_unique<SharedMemorySegment>(name)));
-        auto it2 = getSharedMemorySegments().find(name);
+        sharedMemorySegmentsList.insert(std::make_pair(name, std::make_unique<SharedMemorySegment>(name)));
+        auto it2 = sharedMemorySegmentsList.find(name);
         return it2->second.get(); 
     }
-}; 
+}

@@ -14,32 +14,32 @@ template <class T> struct SharedMemoryAllocator
 {
     typedef T value_type;
 
-    SharedMemoryAllocator(ISharedMemorySegments *segments) 
-        : sharedMemorySegments(segments), pointer(nullptr), size(0) {}
+    SharedMemoryAllocator() 
+        : pointer(nullptr), size(0) 
+    {}
 
     template <class U>
     SharedMemoryAllocator(const SharedMemoryAllocator<U> &other)
-        : sharedMemorySegments(other.sharedMemorySegments)
-        , pointer(other.pointer)
+        : pointer(other.pointer)
         , size(other.size)
     {}
 
     template <class U>
     SharedMemoryAllocator(SharedMemoryAllocator<U> &&other)
-        : sharedMemorySegments(other.sharedMemorySegments)
-        , pointer(std::move(other.pointer))
+        : pointer(std::move(other.pointer))
         , size(std::move(other.size))
     {}
 
     template <typename U> bool operator==(SharedMemoryAllocator<U> const &other)
     {
-        return sharedMemorySegments == other.sharedMemorySegments;
+        return true;
     }
 
     template <typename U> bool operator!=(SharedMemoryAllocator<U> const &other)
     {
-        return sharedMemorySegments != other.sharedMemorySegments;
+        return false;
     }
+
 
     T *allocate(std::size_t n)
     {
@@ -55,11 +55,11 @@ template <class T> struct SharedMemoryAllocator
             {
                 return static_cast<T *>(pointer);
             }
-            pointer = sharedMemorySegments->sharedMemoryRealloc(pointer, newSize);
+            pointer = SharedMemorySegments::sharedMemoryRealloc(pointer, newSize);
         }
         else 
         {
-            pointer = sharedMemorySegments->sharedMemoryMalloc(newSize);
+            pointer = SharedMemorySegments::sharedMemoryMalloc(newSize);
         }
 
         if (pointer == nullptr) 
@@ -76,16 +76,11 @@ template <class T> struct SharedMemoryAllocator
     }
 
 private:
-    ISharedMemorySegments *sharedMemorySegments;
     void *pointer;
     size_t size;
-
-    template <typename U>
-    friend class SharedMemoryAllocator;
 };
 
 json load(
-    ISharedMemorySegments *sharedMemorySegments,
     std::string const &path, 
     std::string const &csvPrefix,
     bool disableCsvHandling)
@@ -141,28 +136,26 @@ json load(
 }
 
 void *bson::serializer::loadAsBson(
-    ISharedMemorySegments *sharedMemorySegments,
     std::string const &path,
     std::string const &sharedMemoryName,
     std::string const &csvPrefix,
     bool disableCsvHandling, 
     bool forceReload)
 {
-    ISharedMemorySegment *sharedMemory = sharedMemorySegments->createOrGetMemorySegment(sharedMemoryName);
+    ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
 
     if (sharedMemory->isLoaded()) 
     {
         if (!forceReload) 
         {
-            return sharedMemory->baseAddress();
+            return sharedMemory->getBaseAddress();
         }
-        free(sharedMemorySegments, sharedMemoryName);
+        free(sharedMemoryName);
     }
 
-    sharedMemorySegments->setCurrentSharedMemory(sharedMemory);
+    SharedMemorySegments::setCurrentSharedMemory(sharedMemory);
 
     json j = load(
-        sharedMemorySegments,
         path, 
         csvPrefix, 
         disableCsvHandling
@@ -171,36 +164,33 @@ void *bson::serializer::loadAsBson(
 
     static std::vector<std::uint8_t, SharedMemoryAllocator<std::uint8_t>> sharedV(
         v.begin(), 
-        v.end(), 
-        SharedMemoryAllocator<std::uint8_t>(sharedMemorySegments)
+        v.end()
     );
 
     return sharedV.data();
 }
 
 void *bson::serializer::loadAsJson(
-    ISharedMemorySegments *sharedMemorySegments,
     std::string const &path,
     std::string const &sharedMemoryName,
     std::string const &csvPrefix,
     bool disableCsvHandling, 
     bool forceReload)
 {
-    ISharedMemorySegment *sharedMemory = sharedMemorySegments->createOrGetMemorySegment(sharedMemoryName);
+    ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
 
     if (sharedMemory->isLoaded()) 
     {
         if (!forceReload) 
         {
-            return sharedMemory->baseAddress();
+            return sharedMemory->getBaseAddress();
         }
-        free(sharedMemorySegments, sharedMemoryName);
+        free(sharedMemoryName);
     }
 
-    sharedMemorySegments->setCurrentSharedMemory(sharedMemory);
+    SharedMemorySegments::setCurrentSharedMemory(sharedMemory);
 
     json j = load(
-        sharedMemorySegments, 
         path, 
         csvPrefix, 
         disableCsvHandling
@@ -210,27 +200,24 @@ void *bson::serializer::loadAsJson(
 
     static std::basic_string<char, std::char_traits<char>, SharedMemoryAllocator<char>> str(
         ostream.str().begin(), 
-        ostream.str().end(),
-        SharedMemoryAllocator<std::uint8_t>(sharedMemorySegments)
+        ostream.str().end()
     );
 
     return const_cast<void *>(static_cast<const void *>(str.data())); 
 }
 
 void bson::serializer::unload(
-    ISharedMemorySegments *sharedMemorySegments,
     std::string const &sharedMemoryName)
 {
-    ISharedMemorySegment *sharedMemory = sharedMemorySegments->createOrGetMemorySegment(sharedMemoryName);
+    ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
     assert(sharedMemory->isLoaded());
     sharedMemory->unload();
 }
 
 void bson::serializer::free(
-    ISharedMemorySegments *sharedMemorySegments,
     std::string const &sharedMemoryName)
 {
-    ISharedMemorySegment *sharedMemory = sharedMemorySegments->createOrGetMemorySegment(sharedMemoryName);
+    ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
     sharedMemory->erase();
-    sharedMemorySegments->getSharedMemorySegments().erase(sharedMemoryName);
+    SharedMemorySegments::getSharedMemorySegments().erase(sharedMemoryName);
 }

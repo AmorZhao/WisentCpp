@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "../../Src/BsonSerializer/BsonSerializer.hpp"
-#include "../../Src/Helpers/ISharedMemory.hpp"
+#include "../../Src/Helpers/ISharedMemorySegment.hpp"
 #include "helpers/unitTestHelpers.hpp"
 #include <string>
 
@@ -18,7 +18,7 @@ const std::string MockFileName = createTempFile(MockFileContent);
 
 TEST(BsonSerializerTest, LoadAsBson) 
 {
-    ISharedMemorySegment *sharedMemory = SharedMemoryHelpers::createOrGetMemorySegment(MockSharedMemoryName);
+    ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(MockSharedMemoryName);
 
     void* result = bson::serializer::loadAsBson(
         MockFileName, 
@@ -46,7 +46,7 @@ TEST(BsonSerializerTest, LoadAsJson)
 
 TEST(BsonSerializerTest, Unload) 
 {   
-    ISharedMemorySegment *sharedMemory = SharedMemoryHelpers::createOrGetMemorySegment
+    ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment
     ISharedMemorySegment->load();
     ASSERT_TRUE(sharedMemory->isLoaded());
     
@@ -56,11 +56,11 @@ TEST(BsonSerializerTest, Unload)
 
 TEST(BsonSerializerTest, Free) 
 {
-    ISharedMemorySegment *sharedMemory = SharedMemoryHelpers::createOrGetMemorySegment
+    ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment
     sharedMemory->load();
     ASSERT_TRUE(sharedMemory->isLoaded());
     
     bson::serializer::free(MockSharedMemoryName);
     ASSERT_FALSE(sharedMemory->isLoaded());
-    ASSERT_EQ(sharedMemorySegments().count(MockSharedMemoryName), 0);
+    ASSERT_EQ(SharedMemorySegments::getSharedMemorySegments().count(MockSharedMemoryName), 0);
 }

@@ -24,17 +24,17 @@ class MockSharedMemorySegment : public ISharedMemorySegment
         assert(!isLoaded());
         memory.resize(size);
         load(); 
-        return baseAddress();
+        return getBaseAddress();
     }
 
     void *realloc(void *pointer, size_t size) override
     {
         assert(isLoaded());
-        assert(pointer == baseAddress());
+        assert(pointer == getBaseAddress());
         // unload();
         memory.resize(size);
         load();
-        return baseAddress();
+        return getBaseAddress();
     }
 
     void load() override 
@@ -55,7 +55,7 @@ class MockSharedMemorySegment : public ISharedMemorySegment
 
     void free(void *pointer) override
     {
-        // assert(pointer == baseAddress());
+        // assert(pointer == getBaseAddress());
         unload();
         erase();
     }
@@ -70,59 +70,47 @@ class MockSharedMemorySegment : public ISharedMemorySegment
         return isLoadedFlag;
     }
     
-    void *baseAddress() const override 
+    void *getBaseAddress() const override 
     {
         // assert(isLoaded());
         return (void *)memory.data(); 
     }
     
-    size_t size() const override 
+    size_t getSize() const override 
     {
         // assert(isLoaded());
         return memory.size(); 
     }
 };
 
-class MockSharedMemorySegments : public ISharedMemorySegments
+namespace SharedMemorySegments
 {
-private: 
-    std::unordered_map<std::string, std::unique_ptr<ISharedMemorySegment>> sharedMemorySegments;
-    ISharedMemorySegment *currentSharedMemory;
-
-public:
-    MockSharedMemorySegments() 
-        : currentSharedMemory(nullptr)
-        , sharedMemorySegments()
-    {}
-
-    ~MockSharedMemorySegments() override = default;
-
-    std::unordered_map<std::string, std::unique_ptr<ISharedMemorySegment>> &getSharedMemorySegments() override
+    std::unordered_map<std::string, std::unique_ptr<ISharedMemorySegment>> &getSharedMemorySegments()
     {
-        return sharedMemorySegments;
+        return sharedMemorySegmentsList;
     }
 
-    ISharedMemorySegment *getCurrentSharedMemory() override
+    ISharedMemorySegment *getCurrentSharedMemory() 
     {
-        return currentSharedMemory;
+        return currentSharedMemoryPtr;
     }
 
-    void setCurrentSharedMemory(ISharedMemorySegment *sharedMemory) override
+    void setCurrentSharedMemory(ISharedMemorySegment *sharedMemory) 
     {
-        currentSharedMemory = sharedMemory;
+        currentSharedMemoryPtr = sharedMemory;
     }
 
-    void *sharedMemoryMalloc(size_t size) override
+    void *sharedMemoryMalloc(size_t size) 
     {
         return getCurrentSharedMemory()->malloc(size);
     }
 
-    void *sharedMemoryRealloc(void *pointer, size_t size) override
+    void *sharedMemoryRealloc(void *pointer, size_t size) 
     {
         return getCurrentSharedMemory()->realloc(pointer, size);
     }
 
-    void sharedMemoryFree(void *pointer) override
+    void sharedMemoryFree(void *pointer) 
     {
         if (getCurrentSharedMemory() == nullptr) 
         {
@@ -131,7 +119,7 @@ public:
         getCurrentSharedMemory()->free(pointer);
     }
 
-    ISharedMemorySegment *createOrGetMemorySegment(std::string const &name) override
+    ISharedMemorySegment *createOrGetMemorySegment(std::string const &name) 
     {
         auto it = getSharedMemorySegments().find(name);
         if (it != getSharedMemorySegments().end()) 
@@ -144,4 +132,4 @@ public:
         getSharedMemorySegments().insert(std::make_pair(name, std::move(newSegment)));
         return newSegmentPtr;
     }
-}; 
+}

@@ -18,27 +18,41 @@ if (NOT GTest_FOUND)
     FetchContent_MakeAvailable(googletest)
 endif()
 
-include_directories(${Boost_INCLUDE_DIRS})
-set(SOURCE_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/Helpers/ISharedMemorySegment.hpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/Helpers/CsvLoading.hpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/BsonSerializer/BsonSerializer.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentSerializer/WisentSerializer.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/helpers/unitTestHelpers.cpp
+add_executable(UnitTests ${CMAKE_CURRENT_SOURCE_DIR}/GTestMain.cpp)
+
+set(HelperFiles
+  ${CMAKE_CURRENT_SOURCE_DIR}/helpers/unitTestHelpers.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/helpers/MockSharedMemorySegment.cpp
 )
 
-set(TEST_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/GTestMain.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/TestMockSharedMemorySegment.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/TestCsvLoading.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/TestBsonSerializer.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/TestWisentSerializer.cpp
+set(SourceFiles
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/Helpers/ISharedMemorySegment.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/Helpers/CsvLoading.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentCompressor/LZ77.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentCompressor/Huffman.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentCompressor/FiniteStateEntropy.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/BsonSerializer/BsonSerializer.cpp
 )
 
-add_executable(UnitTests ${SOURCE_FILES} ${TEST_SOURCES})
+set(TestFiles
+  ${CMAKE_CURRENT_SOURCE_DIR}/TestMockSharedMemorySegment.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/TestCsvLoading.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/TestCompression.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/TestBsonSerializer.cpp
+)
 
-target_link_libraries(UnitTests GTest::GTest GTest::Main ${Boost_LIBRARIES})
+add_library(Helpers SHARED ${HelperFiles})
+add_library(Source SHARED ${SourceFiles})
+add_library(Tests SHARED ${TestFiles})
+
+target_link_libraries(UnitTests 
+  PRIVATE
+    Helpers
+    Source
+    Tests
+    GTest::GTest
+    GTest::Main
+)
 
 enable_testing()
 

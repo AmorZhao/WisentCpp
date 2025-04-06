@@ -8,23 +8,8 @@ namespace LZ77
 {
     std::vector<uint8_t> compress(
         const std::vector<uint8_t>& input, 
-        int64_t windowSize = 4096, 
-        int64_t lookaheadBufferSize = 18
-    );
-    std::vector<uint8_t> compressFastHash(
-        const std::vector<uint8_t>& input, 
-        int64_t windowSize = 4096, 
-        int64_t lookaheadBufferSize = 18
-    );
-    std::vector<uint8_t> compressFastSuffixArray(
-        const std::vector<uint8_t>& input, 
-        int64_t windowSize = 4096, 
-        int64_t lookaheadBufferSize = 18
-    );
-    std::vector<uint8_t> compressFastSuffixTree(
-        const std::vector<uint8_t>& input, 
-        int64_t windowSize = 4096, 
-        int64_t lookaheadBufferSize = 18
+        int windowSize = 4096, 
+        int lookaheadBufferSize = 18
     );
 
     std::vector<uint8_t> decompress(const std::vector<uint8_t>& input);

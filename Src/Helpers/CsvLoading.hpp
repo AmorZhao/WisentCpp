@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <boost/optional.hpp>  // C++17: std::optional 
+#include <boost/optional.hpp>  // std::optional in C++17
 #include <sys/resource.h>
 #include <iostream>
 #include "../../Include/json.h"
@@ -12,8 +12,6 @@ using json = nlohmann::json;
 static rapidcsv::Document openCsvFile(std::string const &filepath)
 {
     struct rusage usage;
-    // getrusage(RUSAGE_SELF, &usage);
-    // std::cout << "Memory usage: " << usage.ru_maxrss << " KB" << std::endl;
     try {
         rapidcsv::Document doc(
             filepath,
@@ -22,11 +20,6 @@ static rapidcsv::Document openCsvFile(std::string const &filepath)
             rapidcsv::ConverterParams(),
             rapidcsv::LineReaderParams()
         );
-        // getrusage(RUSAGE_SELF, &usage);
-        // std::cout << "Memory usage: " << usage.ru_maxrss << " KB" << std::endl;
-        // auto rows = doc.GetRowCount();
-        // auto cols = doc.GetColumnCount();
-        // std::cout << "Rows: " << rows << ", Columns: " << cols << std::endl;
         return doc;
     } catch (const std::exception &e) {
         std::cerr << "Error opening CSV file: " << e.what() << std::endl;
@@ -152,7 +145,7 @@ static json loadCsvDataToJson(
             ));
         }
     }
-    catch (std::invalid_argument const & /*e*/)
+    catch (std::invalid_argument const &error)
     {
         return json{}; // Return empty JSON array in case of errors
     }

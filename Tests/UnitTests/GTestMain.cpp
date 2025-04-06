@@ -3,9 +3,10 @@
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     ::testing::GTEST_FLAG(filter) = 
-        ":MockSharedMemorySegmentTest.*"
-        ":CsvLoadingTest.*";
-        // ":BsonSerializerTest.*"
+        ":MockSharedMemorySegmentsTest.*"
+        ":CsvLoadingTest.*"
+        ":TestCompression.*"
+        ":BsonSerializerTest.*"; 
         // ":WisentSerializerTest.*"; 
     return RUN_ALL_TESTS();
 }

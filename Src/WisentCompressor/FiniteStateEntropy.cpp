@@ -1,14 +1,3 @@
-/*  The following parts of FSE has been simplified, 
-    We can add some of these features as Todo if needed: 
-    - wksp (workspace / buffer selection)
-    - normalizeM2 (a fallback normalization method)
-    - assert / error handling / ErrorCode
-        (most errors were thrown at runtime)
-    - vectors passed by reference instead of using pointers
-    - simplified way of writting and reading normalizedCounts
-    - omitted unsafe fast decoding mode (when a symbol has probability > 50%)
-*/
-
 #include <iostream>
 #include <cstring>
 #include <vector>

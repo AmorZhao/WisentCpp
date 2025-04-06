@@ -1,5 +1,4 @@
 #include <string>
-#include "../Helpers/ISharedMemorySegment.hpp"
 
 namespace wisent 
 {
@@ -8,7 +7,6 @@ namespace wisent
         std::string query(std::string const& query);
 
         std::string parse(
-            ISharedMemorySegments *sharedMemorySegments,
             std::string const& sharedMemoryName
         );
     }

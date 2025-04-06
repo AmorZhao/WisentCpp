@@ -192,22 +192,21 @@ std::string deserialize(const std::string& buffer)
 }
 
 std::string wisent::parser::parse(
-    ISharedMemorySegments *sharedMemorySegments,
     std::string const& sharedMemoryName)
 {
-    ISharedMemorySegment *sharedMemory = sharedMemorySegments->createOrGetMemorySegment(sharedMemoryName);
+    ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
     if (!sharedMemory->isLoaded()) 
     {
         std::cerr << "Can't parse wisent file: Shared memory segment is not loaded." << std::endl;
         return "";
     }
-    auto baseAddress = sharedMemory->baseAddress();
-    auto size = sharedMemory->size();
+    auto baseAddress = sharedMemory->getBaseAddress();
+    auto size = sharedMemory->getSize();
 
     // std::string buffer(static_cast<char*>(baseAddress), size);
     // auto parseResult = deserialize(buffer);
 
-    return "";
+    return "parseResult";
 }
 
 std::string wisent::parser::query(const std::string& query) 
