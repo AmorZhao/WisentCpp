@@ -28,10 +28,12 @@ set(HelperFiles
 set(SourceFiles
   ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/Helpers/ISharedMemorySegment.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/Helpers/CsvLoading.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentCompressor/LZ77.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentCompressor/Huffman.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentCompressor/FiniteStateEntropy.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/CompressionHelpers/LZ77.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/CompressionHelpers/Huffman.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/CompressionHelpers/FiniteStateEntropy.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/BsonSerializer/BsonSerializer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentSerializer/WisentHelpers.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentSerializer/WisentSerializer.cpp
 )
 
 set(TestFiles
@@ -39,6 +41,7 @@ set(TestFiles
   ${CMAKE_CURRENT_SOURCE_DIR}/TestCsvLoading.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/TestCompression.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/TestBsonSerializer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/TestWisentSerializer.cpp
 )
 
 add_library(Helpers SHARED ${HelperFiles})

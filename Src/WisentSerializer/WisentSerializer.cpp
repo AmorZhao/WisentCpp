@@ -479,8 +479,7 @@ WisentRootExpression *wisent::serializer::load(
 }
 
 
-void wisent::serializer::unload (
-    std::string const &sharedMemoryName)
+void wisent::serializer::unload (std::string const &sharedMemoryName)
 {
     ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
     if (!sharedMemory->isLoaded()) 
@@ -492,12 +491,12 @@ void wisent::serializer::unload (
     std::cout << "Shared memory segment unloaded successfully." << std::endl;
 }
 
-void wisent::serializer::free (
-    std::string const &sharedMemoryName)
+void wisent::serializer::free(std::string const &sharedMemoryName)
 {
     ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
     sharedMemory->erase();
     SharedMemorySegments::getSharedMemorySegments().erase(sharedMemoryName);
+    std::cout << "Shared memory segment erased from list." << std::endl;
 }
 
 extern "C" {
@@ -524,14 +523,12 @@ extern "C" {
         );
     }
 
-    void wisentUnload (
-        char const *sharedMemoryName)
+    void wisentUnload (char const *sharedMemoryName)
     {
         wisent::serializer::unload(sharedMemoryName);
     }
 
-    void wisentFree (
-        char const *sharedMemoryName)
+    void wisentFree (char const *sharedMemoryName)
     {
         wisent::serializer::free(sharedMemoryName);
     }

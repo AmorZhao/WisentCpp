@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include <string>
-#include "../../Src/WisentCompressor/LZ77.hpp"
-#include "../../Src/WisentCompressor/Huffman.hpp"
-#include "../../Src/WisentCompressor/FiniteStateEntropy.hpp"
+#include "../../Src/CompressionHelpers/LZ77.hpp"
+#include "../../Src/CompressionHelpers/Huffman.hpp"
+#include "../../Src/CompressionHelpers/FiniteStateEntropy.hpp"
 
 const int MockLZ77WindowSize = 64;
 const int MockLZ77LookaheadBufferSize = 32;

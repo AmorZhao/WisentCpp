@@ -133,6 +133,10 @@ namespace SharedMemorySegments
             std::cerr << "Cannot free memory as currentSharedMemory is nullptr" << std::endl;
         }
         currentSharedMemoryPtr->free(pointer);
+        if (currentSharedMemoryPtr != nullptr) 
+        {
+            std::cerr << "Free failed" << std::endl;
+        }
     }
 
     ISharedMemorySegment *createOrGetMemorySegment(std::string const &name) 

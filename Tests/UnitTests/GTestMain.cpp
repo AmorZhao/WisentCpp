@@ -6,7 +6,8 @@ int main(int argc, char **argv) {
         ":MockSharedMemorySegmentsTest.*"
         ":CsvLoadingTest.*"
         ":TestCompression.*"
-        ":BsonSerializerTest.*"; 
-        // ":WisentSerializerTest.*"; 
+        ":BsonSerializerTest.*"
+        ":WisentSerializerTest.*"
+        ":WisentCompressorTest.*"; 
     return RUN_ALL_TESTS();
 }

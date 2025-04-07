@@ -219,11 +219,11 @@ int main(int argc, char **argv)
         // Todo - change set_content
     });
 
-    svr.Get("/erase", [&](const httplib::Request &req, httplib::Response &res) 
+    svr.Get("/free", [&](const httplib::Request &req, httplib::Response &res) 
     {
         auto const &name = req.get_param_value("name");
         std::cout << "erasing dataset '" << name << "'" << std::endl;
-        wisent::serializer::free(name);
+        bson::serializer::free(name);
         res.set_content("Done.", "text/plain");
     });
 

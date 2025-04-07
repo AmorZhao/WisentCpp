@@ -31,7 +31,7 @@ class MockSharedMemorySegment : public ISharedMemorySegment
     {
         assert(isLoaded());
         assert(pointer == getBaseAddress());
-        // unload();
+        unload();
         memory.resize(size);
         load();
         return getBaseAddress();
@@ -50,12 +50,11 @@ class MockSharedMemorySegment : public ISharedMemorySegment
 
     void erase() override {
         unload();
-        // mockSharedMemorySegments->getSharedMemorySegments().erase(segmentName);
     }
 
     void free(void *pointer) override
     {
-        // assert(pointer == getBaseAddress());
+        assert(pointer == getBaseAddress());
         unload();
         erase();
     }
@@ -72,13 +71,13 @@ class MockSharedMemorySegment : public ISharedMemorySegment
     
     void *getBaseAddress() const override 
     {
-        // assert(isLoaded());
+        assert(isLoaded());
         return (void *)memory.data(); 
     }
     
     size_t getSize() const override 
     {
-        // assert(isLoaded());
+        assert(isLoaded());
         return memory.size(); 
     }
 };

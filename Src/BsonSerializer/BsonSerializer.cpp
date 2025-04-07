@@ -206,16 +206,14 @@ void *bson::serializer::loadAsJson(
     return const_cast<void *>(static_cast<const void *>(str.data())); 
 }
 
-void bson::serializer::unload(
-    std::string const &sharedMemoryName)
+void bson::serializer::unload(std::string const &sharedMemoryName)
 {
     ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
     assert(sharedMemory->isLoaded());
     sharedMemory->unload();
 }
 
-void bson::serializer::free(
-    std::string const &sharedMemoryName)
+void bson::serializer::free(std::string const &sharedMemoryName)
 {
     ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
     sharedMemory->erase();

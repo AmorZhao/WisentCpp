@@ -203,7 +203,7 @@ std::string wisent::parser::parse(
     auto baseAddress = sharedMemory->getBaseAddress();
     auto size = sharedMemory->getSize();
 
-    // std::string buffer(static_cast<char*>(baseAddress), size);
+    std::string buffer(static_cast<char*>(baseAddress), size);
     // auto parseResult = deserialize(buffer);
 
     return "parseResult";
