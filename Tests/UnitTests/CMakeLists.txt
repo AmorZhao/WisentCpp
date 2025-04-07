@@ -34,6 +34,8 @@ set(SourceFiles
   ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/BsonSerializer/BsonSerializer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentSerializer/WisentHelpers.h
   ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentSerializer/WisentSerializer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentParser/WisentParser.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../Src/WisentCompressor/WisentCompressor.cpp
 )
 
 set(TestFiles

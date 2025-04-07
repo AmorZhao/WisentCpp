@@ -4,11 +4,11 @@
 #include <cstdint>
 #include <vector>
 
-namespace FiniteStateEntropy 
+namespace FSE 
 {
     std::vector<uint8_t> compress(const std::vector<uint8_t>& input, bool verbose = false);
 
     std::vector<uint8_t> decompress(const std::vector<uint8_t>& input, bool verbose = false);
-} // FiniteStateEntropy
+} // FSE
 
 #endif // COMPRESSION_ALGORITHMS_FSE_HPP

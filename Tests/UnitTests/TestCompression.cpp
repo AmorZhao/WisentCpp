@@ -16,7 +16,7 @@ const std::string MockInputString =  // short and easy
 const std::vector<uint8_t> MockInput(MockInputString.begin(), MockInputString.end());
 const int MockInputSize = MockInput.size();
 
-std::vector<uint8_t> genRandomTextInput(int size) 
+static std::vector<uint8_t> genRandomTextInput(int size) 
 {
     std::vector<uint8_t> res;
     const std::string popularSymbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -26,7 +26,7 @@ std::vector<uint8_t> genRandomTextInput(int size)
     return res;
 }
 
-std::vector<uint8_t> genRandomPopularSymbolsInput(int size) // using ascii symbols from 32 to 126
+static std::vector<uint8_t> genRandomPopularSymbolsInput(int size) // using ascii symbols from 32 to 126
 { 
     std::vector<uint8_t> res;
     for (int i = 0; i < size; i++) {

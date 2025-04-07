@@ -4,7 +4,7 @@
 #include <iomanip>
 #include "FiniteStateEntropy.hpp"
 
-namespace FiniteStateEntropy 
+namespace FSE 
 {
     const unsigned DefaultMaxSymbolValue = 255; 
 

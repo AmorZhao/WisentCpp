@@ -3,6 +3,7 @@
 #include "Helpers/CsvLoading.hpp"
 #include "WisentSerializer/WisentSerializer.hpp"
 #include "WisentParser/WisentParser.hpp"
+#include "WisentCompressor/WisentCompressor.hpp"
 #include <chrono>
 #include <iostream>
 #include <map>
@@ -69,7 +70,7 @@ int main(int argc, char **argv)
             {
                 auto start = std::chrono::high_resolution_clock::now();
                 auto doc = openCsvFile(filepath);
-                for (auto const &columnName : doc.GetColumnNames()) // what? 
+                for (auto const &columnName : doc.GetColumnNames())
                 {
                     json column = loadCsvDataToJson<int64_t>(doc, columnName);
                     if (column.is_null()) 
@@ -234,18 +235,36 @@ int main(int argc, char **argv)
         res.set_content(parsed, "text/plain");
     }); 
 
-    // svr.Get("/compress", [&](const httplib::Request &req, httplib::Response &res) 
-    // {
-    //     auto const &name = req.get_param_value("name");
-    //     auto const &compressionType = req.get_param_value("type");
-    //     std::cout << "compressing dataset '" << name << "' with type " << compressionType << std::endl; 
-    //     auto start = std::chrono::high_resolution_clock::now();
-    //     wisent::serializer::compress(name, compressionType);
-    //     auto end = std::chrono::high_resolution_clock::now();
-    //     auto timeDiff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-    //     std::cout << "took " << timeDiff << " ns" << std::endl;
-    //     res.set_content("Done.", "text/plain");
-    // });
+    svr.Get("/compress", [&](const httplib::Request &req, httplib::Response &res) 
+    {
+        std::string const &name = req.get_param_value("name");
+        std::string compressionType = req.get_param_value("type");
+        std::cout << "compressing dataset '" << name << "' with type " << compressionType << std::endl; 
+        
+        std::transform(compressionType.begin(), compressionType.end(), compressionType.begin(), ::tolower);
+        
+        static const std::unordered_map<std::string, wisent::compressor::CompressionType> compressionMap = {
+            {"none", wisent::compressor::CompressionType::NONE},
+            {"rle", wisent::compressor::CompressionType::RLE},
+            {"huffman", wisent::compressor::CompressionType::HUFFMAN},
+            {"lz77", wisent::compressor::CompressionType::LZ77},
+            {"fse", wisent::compressor::CompressionType::FSE}
+        };
+
+        auto it = compressionMap.find(compressionType);
+        if (it == compressionMap.end()) {
+            throw std::invalid_argument("Unknown compression type: " + compressionType);
+        }
+        wisent::compressor::CompressionType enumCompressionType = it->second;
+
+        auto start = std::chrono::high_resolution_clock::now();
+        wisent::compressor::compress(name, enumCompressionType);
+        auto end = std::chrono::high_resolution_clock::now();
+
+        auto timeDiff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+        std::cout << "took " << timeDiff << " ns" << std::endl;
+        res.set_content("Compressed " + name + " in " + std::to_string(timeDiff * 0.000000001) + " s. ", "text/plain");
+    });
 
     svr.Get("/stop", [&](const httplib::Request & /*req*/, httplib::Response & /*res*/) 
     { 

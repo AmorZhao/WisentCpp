@@ -4,6 +4,17 @@ namespace wisent
 {
     namespace compressor 
     {
-        std::string compress(std::string const& query);
+        enum class CompressionType {
+            NONE,
+            RLE,
+            HUFFMAN,
+            LZ77,
+            FSE
+        };
+
+        std::string compress(
+            std::string const& sharedMemoryName, 
+            CompressionType compressionType = CompressionType::NONE
+        );
     }
 }
