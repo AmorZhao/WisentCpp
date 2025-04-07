@@ -79,16 +79,16 @@ class CompressionPipeline
         }
     }
 
-    std::vector<CompressionType> getArgumentVector() const 
+    std::vector<CompressionType> getargumentVectorChain() const 
     {   return argumentVectorChain; }
 
-    std::vector<CompressionType> getTypeBytefield() const 
+    std::vector<CompressionType> getTypeBytefieldChain() const 
     {   return typeBytefieldChain; }
 
-    std::vector<CompressionType> getStructureVector() const 
+    std::vector<CompressionType> getStructureVectorChain() const 
     {   return structureVectorChain; }
 
-    std::vector<CompressionType> getStringBuffer() const 
+    std::vector<CompressionType> getStringBufferChain() const 
     {   return stringBufferChain; } 
 
     bool isValid() const { return isValidPipeline; }

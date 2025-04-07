@@ -266,12 +266,12 @@ int main(int argc, char **argv)
             std::cout << "compressing dataset '" << name << "' with pipeline" << std::endl;
             
             auto start = std::chrono::high_resolution_clock::now();
-            compress(name, pipeline);
+            std::string compressResult = compress(name, pipeline);
             auto end = std::chrono::high_resolution_clock::now();
 
             auto timeDiff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
             std::cout << "took " << timeDiff << " ns" << std::endl;
-            res.set_content("Compressed " + name + " in " + std::to_string(timeDiff * 0.000000001) + " s. ", "text/plain");
+            res.set_content("Compressed " + name + " in " + std::to_string(timeDiff * 0.000000001) + " s. " + compressResult, "text/plain");
             return;
         }
 
@@ -279,12 +279,13 @@ int main(int argc, char **argv)
         std::cout << "compressing dataset '" << name << "' with type " << compressionType << std::endl; 
 
         auto start = std::chrono::high_resolution_clock::now();
-        compress(name, stringToCompressionType(compressionType));
+        std::string compressResult = compress(
+            name, stringToCompressionType(compressionType));
         auto end = std::chrono::high_resolution_clock::now();
 
         auto timeDiff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
         std::cout << "took " << timeDiff << " ns" << std::endl;
-        res.set_content("Compressed " + name + " in " + std::to_string(timeDiff * 0.000000001) + " s. ", "text/plain");
+        res.set_content("Compressed " + name + " in " + std::to_string(timeDiff * 0.000000001) + " s. " + compressResult, "text/plain");
     });
 
     svr.Get("/stop", [&](const httplib::Request & /*req*/, httplib::Response & /*res*/) 

@@ -144,11 +144,14 @@ namespace SharedMemorySegments
         auto it = sharedMemorySegmentsList.find(name);
         if (it != sharedMemorySegmentsList.end()) 
         {
+            setCurrentSharedMemory(it->second.get());
             return it->second.get();
         }
-
-        sharedMemorySegmentsList.insert(std::make_pair(name, std::make_unique<SharedMemorySegment>(name)));
-        auto it2 = sharedMemorySegmentsList.find(name);
-        return it2->second.get(); 
+        auto newSegment = std::make_unique<SharedMemorySegment>(name); 
+        ISharedMemorySegment *rawPointer = newSegment.get();
+        
+        sharedMemorySegmentsList[name] = std::move(newSegment);
+        setCurrentSharedMemory(rawPointer);
+        return rawPointer;
     }
 }
