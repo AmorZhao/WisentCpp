@@ -41,7 +41,7 @@ const std::vector<uint8_t> MockLargeSymbolInput = genRandomPopularSymbolsInput(M
 
 TEST(TestCompression, LZ77_Compression_ReturnsSmallerSize)
 {
-    std::vector<uint8_t> compressed = LZ77::compress(
+    std::vector<uint8_t> compressed = LZ77::LZ77Coder::compress(
         MockInput, 
         MockLZ77WindowSize, 
         MockLZ77LookaheadBufferSize);
@@ -52,10 +52,10 @@ TEST(TestCompression, LZ77_Compression_ReturnsSmallerSize)
 
 TEST(TestCompression, LZ77_Decompression_ReturnsDecodedData)
 {
-    std::vector<uint8_t> compressed = LZ77::compress(
+    std::vector<uint8_t> compressed = LZ77::LZ77Coder::compress(
         MockInput, MockLZ77WindowSize, MockLZ77LookaheadBufferSize);
 
-    std::vector<uint8_t> decompressed = LZ77::decompress(compressed);
+    std::vector<uint8_t> decompressed = LZ77::LZ77Coder::decompress(compressed);
 
     EXPECT_EQ(MockInputSize, decompressed.size());
     EXPECT_EQ(MockInput, decompressed);
@@ -66,7 +66,7 @@ TEST(TestCompression, LZ77_Decompression_ReturnsDecodedData)
 
 TEST(TestCompression, Huffman_Compression_ReturnsSmallerSize)
 {
-    std::vector<uint8_t> compressed = Huffman::compress(MockInput);
+    std::vector<uint8_t> compressed = Huffman::HuffmanCoder::compress(MockInput);
     int compressedSize = compressed.size();
     std::cout << "Compression ratio: " << (double)MockInputSize / compressedSize << std::endl;
     EXPECT_LT(compressedSize, MockInputSize);
@@ -74,8 +74,8 @@ TEST(TestCompression, Huffman_Compression_ReturnsSmallerSize)
 
 TEST(TestCompression, Huffman_Decompression_ReturnsDecodedData)
 {
-    std::vector<uint8_t> compressed = Huffman::compress(MockInput);
-    std::vector<uint8_t> decompressed = Huffman::decompress(compressed);
+    std::vector<uint8_t> compressed = Huffman::HuffmanCoder::compress(MockInput);
+    std::vector<uint8_t> decompressed = Huffman::HuffmanCoder::decompress(compressed);
     EXPECT_EQ(MockInputSize, decompressed.size());
     EXPECT_EQ(MockInput, decompressed);
 
@@ -85,7 +85,7 @@ TEST(TestCompression, Huffman_Decompression_ReturnsDecodedData)
 
 TEST(TestCompression, FSE_Compression_ReturnsSmallerSize) 
 {
-    std::vector<uint8_t> compressed = FiniteStateEntropy::compress(MockInput);
+    std::vector<uint8_t> compressed = FSE::FSECoder::compress(MockInput);
     int compressedSize = compressed.size();
     std::cout << "Compression ratio: " << (double)MockInputSize / compressedSize << std::endl;
     EXPECT_LT(compressedSize, MockInputSize); 
@@ -93,7 +93,7 @@ TEST(TestCompression, FSE_Compression_ReturnsSmallerSize)
 
 TEST(TestCompression, FSE_Compression_ReturnsSmallerSize_RandomTextInput)
 {
-    std::vector<uint8_t> compressed = FiniteStateEntropy::compress(MockLargeTextInput);
+    std::vector<uint8_t> compressed = FSE::FSECoder::compress(MockLargeTextInput);
     int compressedSize = compressed.size();
     std::cout << "Compression ratio: " << (double)MockLargeInputSize / compressedSize << std::endl;
     EXPECT_LT(compressedSize, MockLargeInputSize); 
@@ -101,7 +101,7 @@ TEST(TestCompression, FSE_Compression_ReturnsSmallerSize_RandomTextInput)
 
 TEST(TestCompression, FSE_Compression_ReturnsSmallerSize_RandomPopularSymbolsInput)
 {
-    std::vector<uint8_t> compressed = FiniteStateEntropy::compress(MockLargeSymbolInput);
+    std::vector<uint8_t> compressed = FSE::FSECoder::compress(MockLargeSymbolInput);
     int compressedSize = compressed.size();
     std::cout << "Compression ratio: " << (double)MockLargeInputSize / compressedSize << std::endl;
     EXPECT_LT(compressedSize, MockLargeInputSize); 
@@ -109,8 +109,8 @@ TEST(TestCompression, FSE_Compression_ReturnsSmallerSize_RandomPopularSymbolsInp
 
 TEST(TestCompression, FSE_Decompression_ReturnsDecodedData)
 {
-    std::vector<uint8_t> compressed = FiniteStateEntropy::compress(MockInput);
-    std::vector<uint8_t> decompressed = FiniteStateEntropy::decompress(compressed);
+    std::vector<uint8_t> compressed = FSE::FSECoder::compress(MockInput);
+    std::vector<uint8_t> decompressed = FSE::FSECoder::decompress(compressed);
     EXPECT_EQ(MockInputSize, decompressed.size());
     EXPECT_EQ(MockInput, decompressed);
 
@@ -120,16 +120,16 @@ TEST(TestCompression, FSE_Decompression_ReturnsDecodedData)
 
 TEST(TestCompression, FSE_Decompression_ReturnsDecodedData_RandomPopularTextInput)
 {
-    std::vector<uint8_t> compressed = FiniteStateEntropy::compress(MockLargeTextInput);
-    std::vector<uint8_t> decompressed = FiniteStateEntropy::decompress(compressed);
+    std::vector<uint8_t> compressed = FSE::FSECoder::compress(MockLargeTextInput);
+    std::vector<uint8_t> decompressed = FSE::FSECoder::decompress(compressed);
     EXPECT_EQ(MockLargeInputSize, decompressed.size());
     EXPECT_EQ(MockLargeTextInput, decompressed);
 }
 
 TEST(TestCompression, FSE_Decompression_ReturnsDecodedData_RandomPopularSymbolsInput)
 {
-    std::vector<uint8_t> compressed = FiniteStateEntropy::compress(MockLargeSymbolInput);
-    std::vector<uint8_t> decompressed = FiniteStateEntropy::decompress(compressed);
+    std::vector<uint8_t> compressed = FSE::FSECoder::compress(MockLargeSymbolInput);
+    std::vector<uint8_t> decompressed = FSE::FSECoder::decompress(compressed);
     EXPECT_EQ(MockLargeInputSize, decompressed.size());
     EXPECT_EQ(MockLargeSymbolInput, decompressed);
 }

@@ -4,6 +4,7 @@
 #include "WisentSerializer/WisentSerializer.hpp"
 #include "WisentParser/WisentParser.hpp"
 #include "WisentCompressor/WisentCompressor.hpp"
+#include "WisentCompressor/CompressionPipeline.hpp"
 #include <chrono>
 #include <iostream>
 #include <map>
@@ -235,30 +236,50 @@ int main(int argc, char **argv)
         res.set_content(parsed, "text/plain");
     }); 
 
-    svr.Get("/compress", [&](const httplib::Request &req, httplib::Response &res) 
+    svr.Post("/compress", [&](const httplib::Request &req, httplib::Response &res) 
     {
+        using namespace wisent::compressor;
         std::string const &name = req.get_param_value("name");
+
+        if (!req.body.empty())
+        {
+            json pipelineSpecification; 
+            try {
+                pipelineSpecification = json::parse(req.body);
+            } 
+            catch (const std::exception &e) {
+                std::string errorMessage = "Error parsing request body: " + std::string(e.what());
+                std::cerr << errorMessage << std::endl;
+                res.status = httplib::BadRequest_400; 
+                res.set_content(errorMessage, "text/plain");
+                return;
+            }
+            CompressionPipeline *pipeline = new CompressionPipeline(pipelineSpecification);
+            if (!pipeline->isValid()) 
+            {
+                std::string errorMessage = "Invalid compression pipeline specification.";
+                std::cerr << errorMessage << std::endl;
+                res.status = httplib::BadRequest_400; 
+                res.set_content(errorMessage, "text/plain");
+                return;
+            }
+            std::cout << "compressing dataset '" << name << "' with pipeline" << std::endl;
+            
+            auto start = std::chrono::high_resolution_clock::now();
+            compress(name, pipeline);
+            auto end = std::chrono::high_resolution_clock::now();
+
+            auto timeDiff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+            std::cout << "took " << timeDiff << " ns" << std::endl;
+            res.set_content("Compressed " + name + " in " + std::to_string(timeDiff * 0.000000001) + " s. ", "text/plain");
+            return;
+        }
+
         std::string compressionType = req.get_param_value("type");
         std::cout << "compressing dataset '" << name << "' with type " << compressionType << std::endl; 
-        
-        std::transform(compressionType.begin(), compressionType.end(), compressionType.begin(), ::tolower);
-        
-        static const std::unordered_map<std::string, wisent::compressor::CompressionType> compressionMap = {
-            {"none", wisent::compressor::CompressionType::NONE},
-            {"rle", wisent::compressor::CompressionType::RLE},
-            {"huffman", wisent::compressor::CompressionType::HUFFMAN},
-            {"lz77", wisent::compressor::CompressionType::LZ77},
-            {"fse", wisent::compressor::CompressionType::FSE}
-        };
-
-        auto it = compressionMap.find(compressionType);
-        if (it == compressionMap.end()) {
-            throw std::invalid_argument("Unknown compression type: " + compressionType);
-        }
-        wisent::compressor::CompressionType enumCompressionType = it->second;
 
         auto start = std::chrono::high_resolution_clock::now();
-        wisent::compressor::compress(name, enumCompressionType);
+        compress(name, stringToCompressionType(compressionType));
         auto end = std::chrono::high_resolution_clock::now();
 
         auto timeDiff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();

@@ -1,20 +1,22 @@
 #include <string>
+#include "CompressionPipeline.hpp"
 
 namespace wisent 
 {
     namespace compressor 
     {
-        enum class CompressionType {
-            NONE,
-            RLE,
-            HUFFMAN,
-            LZ77,
-            FSE
-        };
-
         std::string compress(
             std::string const& sharedMemoryName, 
             CompressionType compressionType = CompressionType::NONE
+        );
+
+        std::string compress(
+            std::string const& sharedMemoryName, 
+            CompressionPipeline *pipeline
+        ); 
+
+        std::string decompress(
+            std::string const& sharedMemoryName
         );
     }
 }

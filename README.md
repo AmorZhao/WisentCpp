@@ -33,8 +33,7 @@ WisentCpp/
 │   └── WisentServer
 │
 ├── Tests/
-│   ├── Basic/
-│   ├── Python/
+│   ├── Benchmark/
 │   └── UnitTests/
 │
 ├── client-app/ 

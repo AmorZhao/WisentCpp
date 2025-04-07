@@ -433,7 +433,7 @@ namespace FSE
         }
     }
 
-    std::vector<uint8_t> compress(const std::vector<uint8_t>& input, bool verbose) 
+    std::vector<uint8_t> FSECoder::compress(const std::vector<uint8_t>& input, bool verbose) 
     { 
         std::vector<uint8_t> compressed;
 
@@ -661,7 +661,7 @@ namespace FSE
         return decompressed;
     }
 
-    std::vector<uint8_t> decompress(const std::vector<uint8_t>& input, bool verbose) 
+    std::vector<uint8_t> FSECoder::decompress(const std::vector<uint8_t>& input, bool verbose) 
     {
         //  1. Read frequencies of symbols.
         unsigned maxSymbolValue = DefaultMaxSymbolValue;

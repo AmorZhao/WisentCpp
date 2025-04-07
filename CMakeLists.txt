@@ -40,6 +40,7 @@ set(HelperFiles
 )
 
 set(SourceFiles
+  Src/WisentSerializer/WisentHelpers.h
   Src/WisentSerializer/WisentSerializer.cpp
   Src/WisentParser/WisentParser.cpp
   Src/WisentCompressor/WisentCompressor.cpp

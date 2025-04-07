@@ -4,6 +4,10 @@
 /build*
 Tests/**/build*
 
+# Test
+Tests/Benchmarks/
+Tests/benchmark.sh
+
 /cpm_modules
 
 .DS_Store

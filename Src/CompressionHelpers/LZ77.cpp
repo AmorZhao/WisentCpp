@@ -4,7 +4,7 @@
 
 namespace LZ77 
 {
-    std::vector<uint8_t> compress(
+    std::vector<uint8_t> LZ77Coder::compress(
         const std::vector<uint8_t> &input, 
         int windowSize,
         int lookaheadBufferSize
@@ -53,7 +53,7 @@ namespace LZ77
         return compressed;
     }
 
-    std::vector<uint8_t> decompress(const std::vector<uint8_t> &input)
+    std::vector<uint8_t> LZ77Coder::decompress(const std::vector<uint8_t> &input)
     {
         std::vector<uint8_t> decompressed;
         int codingPosition = 0;

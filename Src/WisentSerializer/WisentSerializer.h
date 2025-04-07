@@ -4,7 +4,6 @@
 #include "../Helpers/ISharedMemorySegment.hpp" 
 
 char* wisentLoad(
-    ISharedMemorySegments *sharedMemorySegments,
     char const* path, 
     char const* sharedMemoryName, 
     char const* csvPrefix, 
@@ -15,12 +14,10 @@ char* wisentLoad(
 );
 
 void wisentUnload(
-    ISharedMemorySegments *sharedMemorySegments,
     char const* sharedMemoryName
 );
 
 void wisentFree(
-    ISharedMemorySegments *sharedMemorySegments,
     char const* sharedMemoryName
 );
 

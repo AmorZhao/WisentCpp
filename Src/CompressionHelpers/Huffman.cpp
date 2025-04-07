@@ -237,7 +237,7 @@ class HuffmanTree
 
 namespace Huffman
 {
-    std::vector<uint8_t> compress(
+    std::vector<uint8_t> HuffmanCoder::compress(
         const std::vector<uint8_t>& input
     ) {    
         HuffmanTree huffmanTree;
@@ -255,7 +255,7 @@ namespace Huffman
         return (stringLength >= 8) ? binaryString : binaryString.substr(0, stringLength);
     }
 
-    std::vector<uint8_t> decompress(
+    std::vector<uint8_t> HuffmanCoder::decompress(
         const std::vector<uint8_t>& input
     ) {
         HuffmanTree huffmanTree;
