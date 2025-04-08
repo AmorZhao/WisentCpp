@@ -79,7 +79,7 @@ class CompressionPipeline
         }
     }
 
-    std::vector<CompressionType> getargumentVectorChain() const 
+    std::vector<CompressionType> getArgumentVectorChain() const 
     {   return argumentVectorChain; }
 
     std::vector<CompressionType> getTypeBytefieldChain() const 

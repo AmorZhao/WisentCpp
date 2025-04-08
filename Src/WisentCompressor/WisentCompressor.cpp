@@ -3,6 +3,7 @@
 #include "../CompressionHelpers/Huffman.hpp"
 #include "../CompressionHelpers/FiniteStateEntropy.hpp"
 #include "../CompressionHelpers/LZ77.hpp"
+#include "CompressionPipeline.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
@@ -11,12 +12,30 @@
 #include <unistd.h>
 
 const size_t BytesPerLong = 8;
+const bool usingBlockSize = false;
+const size_t BlockSize = 1024 * 1024; 
 
 using namespace wisent::compressor;
 
 template <typename Coder>
 auto compressWith(const std::vector<uint8_t>& buffer) 
-{   return Coder::compress(buffer); }
+{
+    if (!usingBlockSize)
+        return Coder::compress(buffer);
+
+    std::vector<uint8_t> compressedData;
+    size_t totalSize = buffer.size();
+    size_t offset = 0;
+    while (offset < totalSize) 
+    {
+        size_t currentChunkSize = std::min(BlockSize, totalSize - offset);
+        std::vector<uint8_t> chunk(buffer.begin() + offset, buffer.begin() + offset + currentChunkSize);
+        auto compressedChunk = Coder::compress(chunk);
+        compressedData.insert(compressedData.end(), compressedChunk.begin(), compressedChunk.end());
+        offset += currentChunkSize;
+    }
+    return compressedData;
+}
 
 template <typename Coder>
 auto decompressWith(const std::vector<uint8_t>& buffer) 
@@ -90,7 +109,7 @@ size_t compressSingleBuffer(
     return compressedSize;
 }
 
-std::string wisent::compressor::compress(
+std::string wisent::compressor::compress(  // compress string buffer only
     std::string const& sharedMemoryName, 
     CompressionType compressionType
 ) {
@@ -152,14 +171,21 @@ size_t compressBufferWithPipeline(
     size_t initialBufferSize
 ) {
     size_t compressedSize = initialBufferSize;
-    for (const auto& compressionType : compressionPipeline) {
+    for (const auto& compressionType : compressionPipeline) 
+    {
+        std::cout << "Compression type: " << static_cast<int>(compressionType) << std::endl;
         compressedSize = compressSingleBuffer(
             buffer,
-            bufferBaseAddress,
+            static_cast<uint8_t*>(bufferBaseAddress) + sizeof(size_t),
             compressionType
         );
     }
-    return initialBufferSize - compressedSize;
+    std::memcpy(  // new buffer size
+        bufferBaseAddress, 
+        &compressedSize, 
+        sizeof(size_t)
+    );
+    return compressedSize + sizeof(size_t);
 }
 
 std::string wisent::compressor::compress(
@@ -192,44 +218,94 @@ std::string wisent::compressor::compress(
     size_t structureVectorSize = structureVector.size();
     size_t stringBufferSize = stringBuffer.size();
 
+    std::vector<CompressionType> argumentVectorChain = pipeline->getArgumentVectorChain();
+    std::vector<CompressionType> typeBytefieldChain = pipeline->getTypeBytefieldChain();
+    std::vector<CompressionType> structureVectorChain = pipeline->getStructureVectorChain();
+    std::vector<CompressionType> stringBufferChain = pipeline->getStringBufferChain();
+
     size_t totalSize = argumentVectorSize + typeBytefieldSize + structureVectorSize + stringBufferSize;
 
-    int64_t saved = compressBufferWithPipeline(
+    size_t saved = 0;
+    std::cout << "compressing argumentVector" << std::endl;
+    size_t newArgumentVectorSize = compressBufferWithPipeline(
         argumentVector,
-        static_cast<uint8_t*>(baseAddress),
-        pipeline->getStringBufferChain(),
+        static_cast<uint8_t*>(baseAddress) + sizeof(size_t),
+        argumentVectorChain,
         argumentVectorSize
     );
+    saved += argumentVectorSize - newArgumentVectorSize;
     
-    saved += compressBufferWithPipeline(
+    std::cout << "compressing typeBytefield" << std::endl;
+    size_t newTypeBytefieldSize = compressBufferWithPipeline(
         typeBytefield,
-        static_cast<uint8_t*>(baseAddress) + argumentVectorSize - saved,
-        pipeline->getTypeBytefieldChain(),
+        static_cast<uint8_t*>(baseAddress) + sizeof(size_t) + argumentVectorSize - saved,
+        typeBytefieldChain,
         typeBytefieldSize
     );
+    saved += typeBytefieldSize - newTypeBytefieldSize;
 
-    saved += compressBufferWithPipeline(
+    std::cout << "compressing structureVector" << std::endl;
+    size_t newStructureVectorSize= compressBufferWithPipeline(
         structureVector,
-        static_cast<uint8_t*>(baseAddress) + argumentVectorSize + typeBytefieldSize - saved,
-        pipeline->getStructureVectorChain(),
+        static_cast<uint8_t*>(baseAddress) + sizeof(size_t) + argumentVectorSize + typeBytefieldSize - saved,
+        structureVectorChain,
         structureVectorSize
     );
+    saved += structureVectorSize - newStructureVectorSize;
 
-    saved += compressBufferWithPipeline(
+    std::cout << "compressing stringBuffer" << std::endl;
+    size_t newStringBufferSize = compressBufferWithPipeline(
         stringBuffer,
-        static_cast<uint8_t*>(baseAddress) + argumentVectorSize + typeBytefieldSize + structureVectorSize - saved,
-        pipeline->getStringBufferChain(),
+        static_cast<uint8_t*>(baseAddress) + sizeof(size_t) + argumentVectorSize + typeBytefieldSize + structureVectorSize - saved,
+        stringBufferChain, 
         stringBufferSize
     );
+    saved += stringBufferSize - newStringBufferSize;
+    if (saved < 0) 
+    {
+        std::string errorMessage = "Error: Compression resulted in even bigger size.";
+        std::cerr << errorMessage << std::endl;
+        return errorMessage;
+    }
+    // Save compressed size
+    size_t dataSize = totalSize - saved;
+    std::memcpy(
+        static_cast<uint8_t*>(baseAddress), 
+        &dataSize, 
+        sizeof(size_t)
+    );
+
+    std::vector<uint8_t> compressionInfo; 
+    compressionInfo.push_back(argumentVectorChain.size());
+    compressionInfo.push_back(typeBytefieldChain.size());
+    compressionInfo.push_back(structureVectorChain.size());
+    compressionInfo.push_back(stringBufferChain.size());
+
+    for (const auto& type : argumentVectorChain) 
+        compressionInfo.push_back(static_cast<uint8_t>(type));
+    for (const auto& type : typeBytefieldChain)
+        compressionInfo.push_back(static_cast<uint8_t>(type));
+    for (const auto& type : structureVectorChain)
+        compressionInfo.push_back(static_cast<uint8_t>(type));
+    for (const auto& type : stringBufferChain)  
+        compressionInfo.push_back(static_cast<uint8_t>(type));
+
+    std::memcpy(
+        static_cast<uint8_t*>(baseAddress) + sizeof(size_t) + dataSize,
+        compressionInfo.data(),
+        compressionInfo.size()
+    );
+
     SharedMemorySegments::sharedMemoryRealloc(
         baseAddress, 
-        totalSize - saved
+        sizeof(size_t) + dataSize + compressionInfo.size()
     );
 
     size_t newSize = SharedMemorySegments::getCurrentSharedMemory()->getSize(); 
 
     std::cout << "Initial total size: " << initialSize << std::endl;
     std::cout << "Compressed total size: " << newSize << std::endl;
+    std::cout << "Added information size: " << compressionInfo.size() << std::endl;
     std::cout << "Overall compression ratio: " << (static_cast<double>(initialSize) / newSize) << std::endl;
     
     return "Compression ratio: " + std::to_string((static_cast<double>(initialSize) / newSize));
