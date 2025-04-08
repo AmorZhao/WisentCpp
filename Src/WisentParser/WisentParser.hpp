@@ -1,4 +1,3 @@
-#include "../WisentSerializer/WisentHelpers.h"
 #include <string>
 
 namespace wisent 
@@ -7,6 +6,8 @@ namespace wisent
     {
         std::string query(std::string const& query);
 
-        std::string parse(std::string const& sharedMemoryName);
+        std::string parse(
+            std::string const& sharedMemoryName
+        );
     }
 }

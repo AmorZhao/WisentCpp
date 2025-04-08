@@ -180,13 +180,13 @@ def main():
     URL="http://localhost:3000"
     datapackageName = "datapackage" + datasetSuffix + ".json"
 
-    # resp = requests.get(url=URL+'/load', params={'name':'datapackage', 'path':'/root/WisentCpp/Data/owid-deaths/' + datapackageName})
-    resp = requests.get(url=URL+'/load', params={'name':'datapackage', 'path':'/root/WisentCpp/Data/opsd-weather/' + datapackageName})
+    # resp = requests.get(url=URL+'/load', params={'name':'datapackage', 'path':'/root/Documents/WisentCpp/Data/owid-deaths/' + datapackageName})
+    resp = requests.get(url=URL+'/load', params={'name':'datapackage', 'path':'/root/Documents/WisentCpp/Data/opsd-weather/' + datapackageName})
 
     print("loading response: " + (resp.text if resp.ok else str(resp.headers)))
     
     # columnName = "Accidents (excl. road) - Death Rates"
-    columnName = "DEA2_temperature"
+    columnName = "DEA2_temperature"   # TODO - fix segfault
         
     remove_shm_from_resource_tracker()
     datapackage = shared_memory.SharedMemory("datapackage")

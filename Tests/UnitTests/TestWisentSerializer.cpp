@@ -1,56 +1,76 @@
 #include <gtest/gtest.h>
 #include "../../Src/WisentSerializer/WisentSerializer.hpp"
-#include "../../Src/Helpers/CsvLoading.hpp"
-#include "../../Src/Helpers/SharedMemorySegment.hpp"
+#include "../../Src/Helpers/ISharedMemorySegment.hpp"
 #include "helpers/unitTestHelpers.hpp"
 #include <string>
-#include <fstream>
 
-TEST(WisentSerializerTest, WisentLoad) {
-    const char* sharedMemoryName = "TestSharedMemory";
-    const char* csvPrefix = "test_prefix";
-    const char* content = R"({"key": "value"})";
-    std::string filename = createTempFile(content);
+class WisentSerializerTest : public ::testing::Test 
+{
+protected:
+    const std::string MockSharedMemoryName = "MockSharedMemory";
 
-    WisentRootExpression* result = wisent::serializer::load(filename.c_str(), sharedMemoryName, csvPrefix);
+    const std::string MockCsvPrefix = "";
+    const std::string MockCsvFileName = "MockCsvFilename.csv";
+    const std::string MockCsvFileContent = "Name,Age\nAlice,30\nBob,25";
+    
+    const std::string MockFileName = "MockFileName.json";
+    const std::string MockFileContent = R"({
+        "Name": "string", 
+        "Age": "int",
+        "data": "MockCsvFilename.csv"
+    })";
+
+    void SetUp() override 
+    {
+        createTempFile(MockCsvFileName, MockCsvFileContent);
+        createTempFile(MockFileName, MockFileContent);
+    }
+
+    void TearDown() override 
+    {
+        std::remove(MockCsvFileName.c_str());
+        std::remove(MockFileName.c_str());
+    }
+};
+
+TEST_F(WisentSerializerTest, WisentLoad) 
+{
+    ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(MockSharedMemoryName);
+
+    WisentRootExpression* result = wisent::serializer::load(
+        MockFileName, 
+        MockSharedMemoryName, 
+        MockCsvPrefix
+    );
     ASSERT_NE(result, nullptr);
 
-    std::remove(filename.c_str());
-    wisent::serializer::free(sharedMemoryName);
+    wisent::serializer::free(MockSharedMemoryName);
 }
 
-TEST(WisentSerializerTest, WisentUnload) {
-    const char* sharedMemoryName = "TestSharedMemory";
-    const char* csvPrefix = "test_prefix";
-    const char* content = R"({"key": "value"})";
-    std::string filename = createTempFile(content);
+TEST_F(WisentSerializerTest, WisentUnload) {
 
-    WisentRootExpression* result = wisent::serializer::load(filename.c_str(), sharedMemoryName, csvPrefix);
-    ASSERT_NE(result, nullptr);
+    ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(MockSharedMemoryName);
 
-    wisent::serializer::unload(sharedMemoryName);
+    WisentRootExpression* result = wisent::serializer::load(
+        MockFileName, 
+        MockSharedMemoryName, 
+        MockCsvPrefix
+    );
 
-    auto& sharedMemory = createOrGetMemorySegment(sharedMemoryName);
-    ASSERT_FALSE(sharedMemory.loaded());
-
-    std::remove(filename.c_str());
-    wisent::serializer::free(sharedMemoryName);
+    wisent::serializer::unload(MockSharedMemoryName);
+    ASSERT_FALSE(sharedMemory->isLoaded());
+    ASSERT_EQ(SharedMemorySegments::getSharedMemorySegments().size(), 1);
 }
 
-TEST(WisentSerializerTest, WisentFree) {
-    const char* sharedMemoryName = "TestSharedMemory";
-    const char* csvPrefix = "test_prefix";
-    const char* content = R"({"key": "value"})";
-    std::string filename = createTempFile(content);
+TEST_F(WisentSerializerTest, WisentFree) {
+    ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(MockSharedMemoryName);
 
-    WisentRootExpression* result = wisent::serializer::load(filename.c_str(), sharedMemoryName, csvPrefix);
-    ASSERT_NE(result, nullptr);
+    WisentRootExpression* result = wisent::serializer::load(
+        MockFileName, 
+        MockSharedMemoryName, 
+        MockCsvPrefix
+    );
 
-    wisent::serializer::free(sharedMemoryName);
-
-    auto& sharedMemory = createOrGetMemorySegment(sharedMemoryName);
-    ASSERT_FALSE(sharedMemory.loaded());
-    ASSERT_EQ(sharedMemorySegments().count(sharedMemoryName), 0);
-
-    std::remove(filename.c_str());
+    wisent::serializer::free(MockSharedMemoryName);
+    ASSERT_EQ(SharedMemorySegments::getSharedMemorySegments().size(), 0);
 }

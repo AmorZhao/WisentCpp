@@ -13,26 +13,32 @@ WisentCpp/
 │
 ├── Include/
 │
-├── Source/
+├── Src/
 │   │
-│   ├── Helpers/
-│   │   │   
+│   ├── Helpers/ 
+│   │   ├── ISharedMemory
 │   │   ├── SharedMemorySegment
 │   │   └── CsvLoading
 │   │
 │   ├── BsonSerializer/
 │   │
 │   ├── WisentSerializer/
-│   │   │
 │   │   ├── WisentHelpers
 │   │   └── WisentSerializer
 │   │
+│   ├── WisentParser/
+│   │
+│   ├── WisentCompressionHelpers/
+│   │
 │   └── WisentServer
 │
-└── Test/
-    ├── Basic/
-    ├── Python/
-    └── UnitTests/
+├── Tests/
+│   ├── Benchmark/
+│   └── UnitTests/
+│
+├── client-app/ 
+│
+└── Misc/
 ```
 
 ## Requirements

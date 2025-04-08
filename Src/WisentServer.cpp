@@ -3,6 +3,8 @@
 #include "Helpers/CsvLoading.hpp"
 #include "WisentSerializer/WisentSerializer.hpp"
 #include "WisentParser/WisentParser.hpp"
+#include "WisentCompressor/WisentCompressor.hpp"
+#include "WisentCompressor/CompressionPipeline.hpp"
 #include <chrono>
 #include <iostream>
 #include <map>
@@ -69,7 +71,7 @@ int main(int argc, char **argv)
             {
                 auto start = std::chrono::high_resolution_clock::now();
                 auto doc = openCsvFile(filepath);
-                for (auto const &columnName : doc.GetColumnNames()) 
+                for (auto const &columnName : doc.GetColumnNames())
                 {
                     json column = loadCsvDataToJson<int64_t>(doc, columnName);
                     if (column.is_null()) 
@@ -151,26 +153,24 @@ int main(int argc, char **argv)
         if (req.has_param("toBson")) 
         {
             auto const &str = req.get_param_value("toBson");
-            serializeToBson = (str.empty() || str == "True" || str == "true" ||
-                               atoi(str.c_str()) > 0);
+            serializeToBson = (str.empty() || str == "True" || str == "true" || atoi(str.c_str()) > 0);
         }
 
         bool serializeToJson = false;
         if (req.has_param("toJson")) 
         {
             auto const &str = req.get_param_value("toJson");
-            serializeToJson = (str.empty() || str == "True" || str == "true" ||
-                               atoi(str.c_str()) > 0);
+            serializeToJson = (str.empty() || str == "True" || str == "true" || atoi(str.c_str()) > 0);
         }
 
-        std::cout << "loading dataset '" << name << "' from '" << filepath << "'" << std::endl;
+        std::cout << "loading dataset '" << name << "' from '" << filepath << "' ";
 
         auto start = std::chrono::high_resolution_clock::now();
         auto filenamePos = filepath.find_last_of("/\\");
         auto csvPrefix = filepath.substr(0, filenamePos + 1);
         if (serializeToBson) 
         {
-            std::cout << "loading as bson" << std::endl;
+            std::cout << "as bson" << std::endl;
             bson::serializer::loadAsBson(
                 filepath, 
                 name, 
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
         }
         else if (serializeToJson) 
         {
-            std::cout << "loading as json" << std::endl;
+            std::cout << "as json" << std::endl;
             void *ptr = bson::serializer::loadAsJson(
                 filepath, 
                 name, 
@@ -189,7 +189,7 @@ int main(int argc, char **argv)
             );
         }
         else {
-            std::cout << "loading " << filepath << std::endl;
+            std::cout << "as wisent" << std::endl;
             auto root = wisent::serializer::load(
                 filepath, 
                 name, 
@@ -221,11 +221,11 @@ int main(int argc, char **argv)
         // Todo - change set_content
     });
 
-    svr.Get("/erase", [&](const httplib::Request &req, httplib::Response &res) 
+    svr.Get("/free", [&](const httplib::Request &req, httplib::Response &res) 
     {
         auto const &name = req.get_param_value("name");
         std::cout << "erasing dataset '" << name << "'" << std::endl;
-        wisent::serializer::free(name);
+        bson::serializer::free(name);
         res.set_content("Done.", "text/plain");
     });
 
@@ -235,6 +235,58 @@ int main(int argc, char **argv)
         auto parsed = wisent::parser::parse(name);
         res.set_content(parsed, "text/plain");
     }); 
+
+    svr.Post("/compress", [&](const httplib::Request &req, httplib::Response &res) 
+    {
+        using namespace wisent::compressor;
+        std::string const &name = req.get_param_value("name");
+
+        if (!req.body.empty())
+        {
+            json pipelineSpecification; 
+            try {
+                pipelineSpecification = json::parse(req.body);
+            } 
+            catch (const std::exception &e) {
+                std::string errorMessage = "Error parsing request body: " + std::string(e.what());
+                std::cerr << errorMessage << std::endl;
+                res.status = httplib::BadRequest_400; 
+                res.set_content(errorMessage, "text/plain");
+                return;
+            }
+            CompressionPipeline *pipeline = new CompressionPipeline(pipelineSpecification);
+            if (!pipeline->isValid()) 
+            {
+                std::string errorMessage = "Invalid compression pipeline specification.";
+                std::cerr << errorMessage << std::endl;
+                res.status = httplib::BadRequest_400; 
+                res.set_content(errorMessage, "text/plain");
+                return;
+            }
+            std::cout << "compressing dataset '" << name << "' with pipeline" << std::endl;
+            
+            auto start = std::chrono::high_resolution_clock::now();
+            std::string compressResult = compress(name, pipeline);
+            auto end = std::chrono::high_resolution_clock::now();
+
+            auto timeDiff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+            std::cout << "took " << timeDiff << " ns" << std::endl;
+            res.set_content("Compressed " + name + " in " + std::to_string(timeDiff * 0.000000001) + " s. " + compressResult, "text/plain");
+            return;
+        }
+
+        std::string compressionType = req.get_param_value("type");
+        std::cout << "compressing dataset '" << name << "' with type " << compressionType << std::endl; 
+
+        auto start = std::chrono::high_resolution_clock::now();
+        std::string compressResult = compress(
+            name, stringToCompressionType(compressionType));
+        auto end = std::chrono::high_resolution_clock::now();
+
+        auto timeDiff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+        std::cout << "took " << timeDiff << " ns" << std::endl;
+        res.set_content("Compressed " + name + " in " + std::to_string(timeDiff * 0.000000001) + " s. " + compressResult, "text/plain");
+    });
 
     svr.Get("/stop", [&](const httplib::Request & /*req*/, httplib::Response & /*res*/) 
     { 

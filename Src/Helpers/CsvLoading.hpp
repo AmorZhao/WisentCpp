@@ -1,4 +1,5 @@
 #pragma once
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <boost/optional.hpp>  // C++17: std::optional 
@@ -12,8 +13,6 @@ using json = nlohmann::json;
 static rapidcsv::Document openCsvFile(std::string const &filepath)
 {
     struct rusage usage;
-    getrusage(RUSAGE_SELF, &usage);
-    std::cout << "Memory usage: " << usage.ru_maxrss << " KB" << std::endl;
     try {
         rapidcsv::Document doc(
             filepath,
@@ -22,13 +21,9 @@ static rapidcsv::Document openCsvFile(std::string const &filepath)
             rapidcsv::ConverterParams(),
             rapidcsv::LineReaderParams()
         );
-        getrusage(RUSAGE_SELF, &usage);
-        std::cout << "Memory usage: " << usage.ru_maxrss << " KB" << std::endl;
-        auto rows = doc.GetRowCount();
-        auto cols = doc.GetColumnCount();
-        std::cout << "Rows: " << rows << ", Columns: " << cols << std::endl;
         return doc;
-    } catch (const std::exception &e) {
+    } 
+    catch (const std::exception &e) {
         std::cerr << "Error opening CSV file: " << e.what() << std::endl;
         throw;
     }
@@ -37,8 +32,8 @@ static rapidcsv::Document openCsvFile(std::string const &filepath)
 template <typename T>
 static std::vector<boost::optional<T>> loadCsvData(
     rapidcsv::Document const &doc,
-    std::string const &columnName)
-{
+    std::string const &columnName
+) {
     std::vector<boost::optional<T>> column;
     try {
         auto numRows = doc.GetRowCount();
@@ -52,7 +47,6 @@ static std::vector<boost::optional<T>> loadCsvData(
                 rowIndex,
                 [](std::string const &str, boost::optional<T> &val)
                 {
-                    // Handle empty strings if T is not std::string
                     if (!std::is_same<T, std::string>::value)
                     {
                         if (str.empty())
@@ -61,37 +55,35 @@ static std::vector<boost::optional<T>> loadCsvData(
                             return;
                         }
                     }
-                    // Convert string to integer
                     if (std::is_same<T, int64_t>::value)
                     {
                         size_t pos;
                         val = json(std::stol(str, &pos));
                         if (pos != str.length())
                         {
-                            throw std::invalid_argument("failed to convert the whole string");
+                            throw std::invalid_argument("failed to convert " + str + " into int");
                         }
                     }
-                    // Convert string to double
                     else if (std::is_same<T, double_t>::value)
                     {
                         size_t pos;
                         val = json(std::stod(str, &pos));
                         if (pos != str.length())
                         {
-                            throw std::invalid_argument("failed to convert the whole string");
+                            throw std::invalid_argument("failed to convert " + str + " into double_t");
                         }
                     }
-                    // Default: store string as-is
-                    else
-                    {
-                        val = json(str); // Store string as JSON
+                    else {
+                        val = json(str);
                     }
                 }
             ));
         }
     }
-    catch (std::invalid_argument const & /*e*/)
+    catch (std::invalid_argument const &e)
     {
+        // load function will try again with different type
+        // std::cerr << "Error opening CSV file: " << e.what() << std::endl;
         return {}; 
     }
     return std::move(column);
@@ -100,8 +92,8 @@ static std::vector<boost::optional<T>> loadCsvData(
 template <typename T>
 static json loadCsvDataToJson(
     rapidcsv::Document const &doc,
-    std::string const &columnName)
-{
+    std::string const &columnName
+) {
     json column(json::value_t::array);
     try {
         auto numRows = doc.GetRowCount();
@@ -114,7 +106,6 @@ static json loadCsvDataToJson(
                 rowIndex,
                 [](std::string const &str, json &val)
                 {
-                    // Handle empty strings if T is not std::string
                     if (!std::is_same<T, std::string>::value)
                     {
                         if (str.empty())
@@ -123,27 +114,24 @@ static json loadCsvDataToJson(
                             return;
                         }
                     }
-                    // Convert string to integer
-                    if (std::is_same<T, int64_t>::value)
-                    {
-                        size_t pos;
-                        val = std::stol(str, &pos);
-                        if (pos != str.length())
-                        {
-                            throw std::invalid_argument("failed to convert the whole string");
-                        }
-                    }
-                    // Convert string to double
-                    else if (std::is_same<T, double_t>::value)
+                    if (std::is_same<T, double_t>::value)
                     {
                         size_t pos;
                         val = std::stod(str, &pos);
                         if (pos != str.length())
                         {
-                            throw std::invalid_argument("failed to convert the whole string");
+                            throw std::invalid_argument("failed to convert " + str + " into double");
                         }
                     }
-                    // Default: store string as-is
+                    else if (std::is_same<T, int64_t>::value)
+                    {
+                        size_t pos;
+                        val = std::stol(str, &pos);
+                        if (pos != str.length())
+                        {
+                            throw std::invalid_argument("failed to convert " + str + " into int");
+                        }
+                    }
                     else
                     {
                         val = str; 
@@ -152,9 +140,11 @@ static json loadCsvDataToJson(
             ));
         }
     }
-    catch (std::invalid_argument const & /*e*/)
+    catch (std::invalid_argument const &e)
     {
-        return json{}; // Return empty JSON array in case of errors
+        // load function will try again with different type
+        // std::cerr << "Error opening CSV file: " << e.what() << std::endl;
+        return json{}; 
     }
     return std::move(column);
 }

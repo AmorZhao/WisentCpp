@@ -1,11 +1,8 @@
 #include "WisentParser.hpp"
-#include "../Helpers/CsvLoading.hpp"
-#include "../Helpers/SharedMemorySegment.hpp"
-#include <string>
+#include "../WisentSerializer/WisentHelpers.h"
+#include "../Helpers/ISharedMemorySegment.hpp"
 #include <iostream>
 #include <vector>
-#include <unordered_map>
-#include <cstring>
 #include <memory>
 #include <fcntl.h>
 #include <unistd.h>
@@ -103,23 +100,23 @@ std::string readArgument(
         strings
     );
 
-    if (auto expr = std::dynamic_pointer_cast<Expression>(argument)) {
-        return expr->toString();
+    if (argumentType == WisentArgumentType::ARGUMENT_TYPE_EXPRESSION) {
+        return  std::static_pointer_cast<Expression>(argument)->toString();
     } 
-    else if (auto symbol = std::dynamic_pointer_cast<Symbol>(argument)) {
-        return symbol->toString();
+    else if (argumentType == WisentArgumentType::ARGUMENT_TYPE_SYMBOL) {
+        return std::static_pointer_cast<Symbol>(argument)->toString();
     } 
-    else if (auto str = std::dynamic_pointer_cast<std::string>(argument)) {
-        return *str;
+    else if (argumentType == WisentArgumentType::ARGUMENT_TYPE_STRING) {
+        return *std::static_pointer_cast<std::string>(argument);
     } 
-    else if (auto dbl = std::dynamic_pointer_cast<double>(argument)) {
-        return std::to_string(*dbl);
+    else if (argumentType == WisentArgumentType::ARGUMENT_TYPE_LONG) {
+        return std::to_string(*std::static_pointer_cast<double>(argument));
     } 
-    else if (auto lng = std::dynamic_pointer_cast<size_t>(argument)) {
-        return std::to_string(*lng);
+    else if (argumentType == WisentArgumentType::ARGUMENT_TYPE_DOUBLE) {
+        return std::to_string(*std::static_pointer_cast<size_t>(argument));
     } 
-    else if (auto bl = std::dynamic_pointer_cast<bool>(argument)) {
-        return *bl ? "true" : "false";
+    else if (argumentType == WisentArgumentType::ARGUMENT_TYPE_BOOL) {
+        return *std::static_pointer_cast<bool>(argument) ? "true" : "false";
     }
 
     return "";
@@ -194,21 +191,22 @@ std::string deserialize(const std::string& buffer)
     return readArgument(0, argumentVector, typeBytefield, structureVector, stringBuffer);
 }
 
-std::string wisent::parser::parse(std::string const& sharedMemoryName)
+std::string wisent::parser::parse(
+    std::string const& sharedMemoryName)
 {
-    auto& sharedMemory = createOrGetMemorySegment(sharedMemoryName);
-    if (!sharedMemory.loaded()) 
+    ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
+    if (!sharedMemory->isLoaded()) 
     {
         std::cerr << "Can't parse wisent file: Shared memory segment is not loaded." << std::endl;
         return "";
     }
-    auto baseAddress = sharedMemory.baseAddress();
-    auto size = sharedMemory.size();
+    auto baseAddress = sharedMemory->getBaseAddress();
+    auto size = sharedMemory->getSize();
 
     std::string buffer(static_cast<char*>(baseAddress), size);
-    auto parseResult = deserialize(buffer);
+    // auto parseResult = deserialize(buffer);
 
-    return parseResult;
+    return "parseResult";
 }
 
 std::string wisent::parser::query(const std::string& query) 
