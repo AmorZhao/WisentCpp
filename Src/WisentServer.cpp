@@ -239,53 +239,80 @@ int main(int argc, char **argv)
     svr.Post("/compress", [&](const httplib::Request &req, httplib::Response &res) 
     {
         using namespace wisent::compressor;
-        std::string const &name = req.get_param_value("name");
+        std::string const &packageName = req.get_param_value("name");
+        std::string const &filepath = req.get_param_value("path");
 
-        if (!req.body.empty())
+        bool loadCSV = true;
+        if (req.has_param("loadCSV")) 
         {
-            json pipelineSpecification; 
-            try {
-                pipelineSpecification = json::parse(req.body);
-            } 
-            catch (const std::exception &e) {
-                std::string errorMessage = "Error parsing request body: " + std::string(e.what());
-                std::cerr << errorMessage << std::endl;
-                res.status = httplib::BadRequest_400; 
-                res.set_content(errorMessage, "text/plain");
-                return;
-            }
-            CompressionPipeline *pipeline = new CompressionPipeline(pipelineSpecification);
-            if (!pipeline->isValid()) 
-            {
-                std::string errorMessage = "Invalid compression pipeline specification.";
-                std::cerr << errorMessage << std::endl;
-                res.status = httplib::BadRequest_400; 
-                res.set_content(errorMessage, "text/plain");
-                return;
-            }
-            std::cout << "compressing dataset '" << name << "' with pipeline" << std::endl;
-            
-            auto start = std::chrono::high_resolution_clock::now();
-            std::string compressResult = compress(name, pipeline);
-            auto end = std::chrono::high_resolution_clock::now();
+            auto const &str = req.get_param_value("loadCSV");
+            loadCSV = (str.empty() || str == "True" || str == "true" || atoi(str.c_str()) > 0);
+        }
 
-            auto timeDiff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-            std::cout << "took " << timeDiff << " ns" << std::endl;
-            res.set_content("Compressed " + name + " in " + std::to_string(timeDiff * 0.000000001) + " s. " + compressResult, "text/plain");
+        if (req.body.empty())
+        {
+            res.status = httplib::BadRequest_400; 
+            res.set_content("Request body contaions no compression information.", "text/plain");
+            return; 
+        }
+
+        json pipelineSpecification; 
+        try {
+            pipelineSpecification = json::parse(req.body);
+        } 
+        catch (const std::exception &e) {
+            std::string errorMessage = "Error parsing request body: " + std::string(e.what());
+            std::cerr << errorMessage << std::endl;
+            res.status = httplib::BadRequest_400; 
+            res.set_content(errorMessage, "text/plain");
             return;
         }
 
-        std::string compressionType = req.get_param_value("type");
-        std::cout << "compressing dataset '" << name << "' with type " << compressionType << std::endl; 
+        std::unordered_map<std::string, CompressionPipeline*> CompressionPipelineMap;
+        auto initializePipelines = [&](const json& pipelineSpecification) 
+        {
+            for (const auto& [columnName, steps] : pipelineSpecification.items()) 
+            {
+                CompressionPipeline::Builder builder;
+                for (const std::string& step : steps) 
+                {
+                    builder.addStep(step);
+                }
+                CompressionPipelineMap[columnName] = new CompressionPipeline(builder.build());
+            }
+        };
+        initializePipelines(pipelineSpecification);
 
+        std::cout << "compressing and loading dataset package '" << packageName << std::endl;
+
+        auto filenamePos = filepath.find_last_of("/\\");
+        auto csvPrefix = filepath.substr(0, filenamePos + 1);
+        
         auto start = std::chrono::high_resolution_clock::now();
-        std::string compressResult = compress(
-            name, stringToCompressionType(compressionType));
+        Result<WisentRootExpression*> compressResult = CompressAndLoadJson(
+            filepath, 
+            packageName, 
+            csvPrefix, 
+            CompressionPipelineMap, 
+            disableRLE,
+            disableCsvHandling || !loadCSV, 
+            forceReload
+        );
         auto end = std::chrono::high_resolution_clock::now();
+
+        if (!compressResult.success()) 
+        {
+            std::string errorMessage = "Error compressing dataset: " + compressResult.error.value();
+            std::cerr << errorMessage << std::endl;
+            res.status = httplib::BadRequest_400; 
+            res.set_content(errorMessage, "text/plain");
+            return;
+        }
 
         auto timeDiff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
         std::cout << "took " << timeDiff << " ns" << std::endl;
-        res.set_content("Compressed " + name + " in " + std::to_string(timeDiff * 0.000000001) + " s. " + compressResult, "text/plain");
+        res.set_content("Compressed " + packageName + " in " + std::to_string(timeDiff * 0.000000001) + " s. ", "text/plain");
+        return;
     });
 
     svr.Get("/stop", [&](const httplib::Request & /*req*/, httplib::Response & /*res*/) 

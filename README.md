@@ -67,7 +67,5 @@ QQ - data preparation
 <br>
 <br>
 
----
 
-This codebase was initialised using the [TheLartians/ModernCppStarter](https://github.com/TheLartians/ModernCppStarter) template. 
 

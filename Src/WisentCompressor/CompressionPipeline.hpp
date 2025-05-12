@@ -1,16 +1,18 @@
 #pragma once
-#include <string>
 #include <iostream>
-#include "../../Include/json.h"
-
-using nlohmann::json; 
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <algorithm>
+#include <stdexcept>
 
 enum class CompressionType {
     NONE,
     RLE,
     HUFFMAN,
     LZ77,
-    FSE
+    FSE, 
+    DELTA
 };
 
 static const std::unordered_map<std::string, CompressionType> compressionAliases = 
@@ -21,7 +23,9 @@ static const std::unordered_map<std::string, CompressionType> compressionAliases
     {"huffman", CompressionType::HUFFMAN},
     {"lz77", CompressionType::LZ77},
     {"fse", CompressionType::FSE},
-    {"finitestateentropy", CompressionType::FSE}
+    {"finitestateentropy", CompressionType::FSE},
+    {"delta", CompressionType::DELTA},
+    {"de", CompressionType::DELTA}
 };
 
 static CompressionType stringToCompressionType(std::string type) 
@@ -37,59 +41,56 @@ static CompressionType stringToCompressionType(std::string type)
 
 class CompressionPipeline 
 {
-    private:
-        std::vector<CompressionType> argumentVectorChain;
-        std::vector<CompressionType> typeBytefieldChain;
-        std::vector<CompressionType> structureVectorChain;
-        std::vector<CompressionType> stringBufferChain;
-        bool isValidPipeline = true; 
+private:
+    std::vector<CompressionType> pipeline;
 
-    public:
-    CompressionPipeline(const json& pipelineSpec) 
+    CompressionPipeline(const std::vector<CompressionType>& steps) : pipeline(steps) {}
+
+    std::string compressionTypeToString(CompressionType type) const 
     {
-        const std::unordered_map<std::string, std::vector<CompressionType>*> chainMap = {
-            {"argumentVector", &argumentVectorChain},
-            {"typeBytefield", &typeBytefieldChain},
-            {"structureVector", &structureVectorChain},
-            {"stringBuffer", &stringBufferChain}
-        };
-
-        for (const auto& pair : chainMap) 
+        switch (type) 
         {
-            const auto& key = pair.first;
-            auto& chain = pair.second;
-            if (!pipelineSpec.contains(key)) 
-            {
-                std::cerr << "Missing compression spec for '" << key << "'" << std::endl;
-                isValidPipeline = false;
-                return;
-            }
-
-            for (const auto& item : pipelineSpec[key]) 
-            {
-                try {
-                    chain->push_back(stringToCompressionType(item));
-                } 
-                catch (const std::exception& e) {
-                    std::cerr << "Invalid compression type in '" << key << "': " << item << std::endl;
-                    isValidPipeline = false;
-                    return;
-                }
-            }
+            case CompressionType::NONE: return "None";
+            case CompressionType::RLE: return "RLE";
+            case CompressionType::HUFFMAN: return "Huffman";
+            case CompressionType::LZ77: return "LZ77";
+            case CompressionType::FSE: return "FSE";
+            case CompressionType::DELTA: return "Delta";
+            default: return "Unknown";
         }
     }
 
-    std::vector<CompressionType> getArgumentVectorChain() const 
-    {   return argumentVectorChain; }
+public:
+    void log() const 
+    {
+        std::cout << "Logging compression pipeline:" << std::endl;
+        for (CompressionType step : pipeline) 
+        {
+            std::cout << " - " << compressionTypeToString(step) << std::endl;
+        }
+    }
 
-    std::vector<CompressionType> getTypeBytefieldChain() const 
-    {   return typeBytefieldChain; }
+    class Builder 
+    {
+    private:
+        std::vector<CompressionType> steps;
 
-    std::vector<CompressionType> getStructureVectorChain() const 
-    {   return structureVectorChain; }
+    public:
+        Builder& addStep(CompressionType type) 
+        {
+            steps.push_back(type);
+            return *this;
+        }
 
-    std::vector<CompressionType> getStringBufferChain() const 
-    {   return stringBufferChain; } 
+        Builder& addStep(const std::string& typeStr) 
+        {
+            steps.push_back(stringToCompressionType(typeStr));
+            return *this;
+        }
 
-    bool isValid() const { return isValidPipeline; }
+        CompressionPipeline build() 
+        {
+            return CompressionPipeline(steps);
+        }
+    };
 };

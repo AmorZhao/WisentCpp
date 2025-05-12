@@ -1,19 +1,14 @@
+# project
 /.vscode
 /.cache
 
+# build
 /build*
 Tests/**/build*
 
 # Test
 Tests/Benchmarks/
 Tests/benchmark.sh
-
-/cpm_modules
-
-.DS_Store
-
-Documentation/Final Report
-
 Misc/Zstd-Compression/test/*
 !Misc/Zstd-Compression/test/original.txt
 
@@ -35,3 +30,7 @@ Misc/Zstd-Compression/test/*
 *.swp
 *.bak
 *.tmp
+
+# tmporary ignorance
+Documentation/Final Report
+Src/BossHelpers/*

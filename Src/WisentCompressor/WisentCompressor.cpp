@@ -1,4 +1,5 @@
 #include "WisentCompressor.hpp"
+#include "../Helpers/CsvLoading.hpp"
 #include "../Helpers/ISharedMemorySegment.hpp"
 #include "../CompressionHelpers/Huffman.hpp"
 #include "../CompressionHelpers/FiniteStateEntropy.hpp"
@@ -6,16 +7,15 @@
 #include "CompressionPipeline.hpp"
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <fcntl.h>
 #include <string>
 #include <unistd.h>
+#include <fstream> 
+#include "../WisentSerializer/WisentSerializer.hpp"
 
 const size_t BytesPerLong = 8;
 const bool usingBlockSize = false;
 const size_t BlockSize = 1024 * 1024; 
-
-using namespace wisent::compressor;
 
 template <typename Coder>
 auto compressWith(const std::vector<uint8_t>& buffer) 
@@ -59,260 +59,187 @@ std::vector<uint8_t> performCompression(
     }
 }
 
-std::tuple<std::string, std::string, std::string, std::string> extractBuffer(
-    const std::string& buffer, 
-    size_t argumentCount, 
-    size_t exprCount
+Result<WisentRootExpression*> wisent::compressor::CompressAndLoadJson(
+    const char* data,
+    size_t length,
+    std::unordered_map<std::string, CompressionPipeline*> &CompressionPipelineMap,
+    bool disableRLE,
+    bool disableCsvHandling, 
+    bool forceReload
 ) {
-    size_t offset = 32; 
-    size_t argumentVectorSize = argumentCount * BytesPerLong; 
-    std::string argumentVector(buffer.data() + offset, argumentVectorSize);
-    // std::cout << "argumentVectorSize: " << argumentVectorSize << std::endl;
-    
-    offset += argumentVectorSize;
-    size_t typeBytefieldSize = argumentCount * BytesPerLong;
-    std::string typeBytefield(buffer.data() + offset, typeBytefieldSize);
-    // std::cout << "typeBytefieldSize: " << typeBytefieldSize << std::endl;
-    
-    offset += typeBytefieldSize;
-    size_t structureVectorSize = exprCount * BytesPerLong * 3;
-    std::string structureVector(buffer.data() + offset, structureVectorSize);
-    // std::cout << "structureVectorSize: " << structureVectorSize << std::endl;
-
-    offset += exprCount * 24;
-    std::string stringBuffer(buffer.data() + offset, buffer.size() - offset);
-    // std::cout << "stringBufferSize: " << initialSize - offset << std::endl;
-
-    return {argumentVector, typeBytefield, structureVector, stringBuffer};
+    Result<WisentRootExpression*> result; 
+    result.setError("Not implemented");
+    return result; 
 }
 
-size_t compressSingleBuffer(
-    const std::string& buffer, 
-    void* baseAddress, 
-    CompressionType compressionType
+Result<WisentRootExpression*> wisent::compressor::CompressAndLoadJson(
+    std::string const& path, 
+    std::string const& sharedMemoryName,
+    std::string const& csvPrefix, 
+    std::unordered_map<std::string, CompressionPipeline*> &CompressionPipelineMap,
+    bool disableRLE,
+    bool disableCsvHandling, 
+    bool forceReload
 ) {
-    std::vector<uint8_t> compressedData = performCompression(
-        compressionType,
-        buffer
-    );
+    Result<WisentRootExpression*> result; 
 
-    std::memcpy(
-        static_cast<uint8_t*>(baseAddress), 
-        compressedData.data(), 
-        compressedData.size()
-    );
-    size_t compressedSize = compressedData.size();
-
-    std::cout << "Initial buffer size: " << buffer.size() << std::endl;
-    std::cout << "Compressed buffer size: " << compressedSize << std::endl;
-    std::cout << "Compression ratio: " << (static_cast<double>(buffer.size()) / compressedSize) << std::endl;
-    return compressedSize;
-}
-
-std::string wisent::compressor::compress(  // compress string buffer only
-    std::string const& sharedMemoryName, 
-    CompressionType compressionType
-) {
     ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
-    if (!sharedMemory->isLoaded()) 
+    if (!forceReload && sharedMemory->exists() && !sharedMemory->isLoaded()) 
     {
-        std::string errorMessage = "Can't compress wisent file: Shared memory segment is not loaded.";
-        std::cerr << errorMessage << std::endl;
-        return errorMessage;
+        sharedMemory->load();
+    }
+    if (sharedMemory->isLoaded()) 
+    {
+        if (!forceReload) 
+        {
+            WisentRootExpression *loadedValue = reinterpret_cast<WisentRootExpression *>(
+                sharedMemory->getBaseAddress()
+            );
+            result.setValue(loadedValue);
+            return result;
+        }
+        sharedMemory->erase();
+        SharedMemorySegments::getSharedMemorySegments().erase(sharedMemoryName);
+    }
+    SharedMemorySegments::setCurrentSharedMemory(sharedMemory);
+
+    std::ifstream ifs(path);
+    if (!ifs.good()) 
+    {
+        std::string errorMessage = "failed to read: " + path;
+        result.setError(errorMessage);
+        return result;
     }
 
-    if (compressionType == CompressionType::NONE) 
-    {
-        std::string message = "No compression applied.";
-        std::cout << message << std::endl;
-        return message;
-    }
-
-    void *baseAddress = sharedMemory->getBaseAddress();
-    size_t initialSize = sharedMemory->getSize();
-    std::string buffer(static_cast<char*>(baseAddress), initialSize);
-
-    size_t argumentCount, exprCount;
-    std::memcpy(&argumentCount, buffer.data(), sizeof(size_t));
-    std::memcpy(&exprCount, buffer.data() + sizeof(size_t), sizeof(size_t));
-
-    auto extractedBuffer = extractBuffer(buffer, argumentCount, exprCount);
-    std::string argumentVector = std::get<0>(extractedBuffer);
-    std::string typeBytefield = std::get<1>(extractedBuffer);
-    std::string structureVector = std::get<2>(extractedBuffer);
-    std::string stringBuffer = std::get<3>(extractedBuffer);
-
-    size_t argumentVectorSize = argumentVector.size();
-    size_t typeBytefieldSize = typeBytefield.size();
-    size_t structureVectorSize = structureVector.size();
-    size_t stringBufferSize = stringBuffer.size();
-
-    size_t compressedSize = compressSingleBuffer(
-        stringBuffer, 
-        static_cast<uint8_t*>(baseAddress) + argumentVectorSize + typeBytefieldSize + structureVectorSize, 
-        compressionType
+    // compress columns
+    // count & calculate the total size needed
+    uint64_t expressionCount = 0;
+    std::vector<uint64_t> argumentCountPerLayer;
+    argumentCountPerLayer.reserve(16);
+    auto _ = json::parse(
+        ifs, 
+        [                   // lambda captures
+            &csvPrefix, 
+            &disableCsvHandling, 
+            &expressionCount,
+            &argumentCountPerLayer, 
+            layerIndex = uint64_t{0},
+            wasKeyValue = std::vector<bool>(16)
+        ](                  // lambda params
+            int depth, 
+            json::parse_event_t event, 
+            json &parsed
+        ) mutable {
+            if (wasKeyValue.size() <= depth) 
+            {
+                wasKeyValue.resize(wasKeyValue.size() * 2, false);
+            }
+            if (argumentCountPerLayer.size() <= layerIndex) 
+            {
+                argumentCountPerLayer.resize(layerIndex + 1, 0);
+            }
+            if (event == json::parse_event_t::key) 
+            {
+                argumentCountPerLayer[layerIndex]++;
+                expressionCount++;
+                wasKeyValue[depth] = true;
+                layerIndex++;
+                return true;
+            }
+            if (event == json::parse_event_t::object_start ||
+                event == json::parse_event_t::array_start) 
+            {
+                argumentCountPerLayer[layerIndex]++;
+                expressionCount++;
+                layerIndex++;
+                return true;
+            }
+            if (event == json::parse_event_t::object_end ||
+                event == json::parse_event_t::array_end) 
+            {
+                layerIndex--;
+                if (wasKeyValue[depth]) {
+                    wasKeyValue[depth] = false;
+                    layerIndex--;
+                }
+                return true;
+            }
+            if (event == json::parse_event_t::value) 
+            {
+                argumentCountPerLayer[layerIndex]++;
+                if (!disableCsvHandling && parsed.is_string()) 
+                {
+                    auto filename = parsed.get<std::string>();
+                    auto extPos = filename.find_last_of(".");
+                    if (extPos != std::string::npos &&
+                        filename.substr(extPos) == ".csv") 
+                    {
+                        std::cout << "Handling csv file: " << filename << std::endl;
+                        auto doc = openCsvFile(csvPrefix + filename);
+                        auto rows = doc.GetRowCount();
+                        auto cols = doc.GetColumnCount();
+                        static const size_t numTableLayers = 2; // Column/Data
+                        if (argumentCountPerLayer.size() <= layerIndex + numTableLayers) 
+                        {
+                            argumentCountPerLayer.resize(layerIndex + numTableLayers + 1, 0);
+                        }
+                        expressionCount++; // Table expression
+                        argumentCountPerLayer[layerIndex + 1] += cols; // Column expressions
+                        expressionCount += cols;
+                        argumentCountPerLayer[layerIndex + 2] += cols * rows; // Column data
+                    }
+                }
+                if (wasKeyValue[depth]) 
+                {
+                    wasKeyValue[depth] = false;
+                    layerIndex--;
+                }
+                return true;
+            }
+            return true;   // never reached
+        }
     );
-    SharedMemorySegments::sharedMemoryRealloc(
-        baseAddress, 
-        argumentVectorSize + typeBytefieldSize + structureVectorSize + compressedSize
+
+    JsonToWisent jsonToWisent(
+        expressionCount,
+        std::move(argumentCountPerLayer),
+        sharedMemory,
+        csvPrefix,
+        disableRLE,
+        disableCsvHandling,
+        false, 
+        false
     );
 
-    std::cout << "Initial total size: " << initialSize << std::endl;
-    std::cout << "Compressed total size: " << argumentVectorSize + typeBytefieldSize + structureVectorSize + compressedSize << std::endl;
-    std::cout << "Overall compression ratio: " << (static_cast<double>(initialSize) / SharedMemorySegments::getCurrentSharedMemory()->getSize()) << std::endl;
-    
-    return "Compression ratio: " + std::to_string((static_cast<double>(stringBuffer.size()) / compressedSize));
+    // 2nd traversal: parse and populate 
+    ifs.seekg(0);
+    json::sax_parse(ifs, &jsonToWisent);
+    ifs.close();
+
+    std::cout << "loaded: " << path << std::endl;
+    result.setValue(jsonToWisent.getRoot());
+
+    return result; 
 }
 
-size_t compressBufferWithPipeline(
-    const std::string& buffer,
-    void* bufferBaseAddress,
-    const std::vector<CompressionType>& compressionPipeline,
-    size_t initialBufferSize
-) {
-    size_t compressedSize = initialBufferSize;
-    for (const auto& compressionType : compressionPipeline) 
-    {
-        std::cout << "Compression type: " << static_cast<int>(compressionType) << std::endl;
-        compressedSize = compressSingleBuffer(
-            buffer,
-            static_cast<uint8_t*>(bufferBaseAddress) + sizeof(size_t),
-            compressionType
-        );
-    }
-    std::memcpy(  // new buffer size
-        bufferBaseAddress, 
-        &compressedSize, 
-        sizeof(size_t)
-    );
-    return compressedSize + sizeof(size_t);
+Result<WisentRootExpression*> wisent::compressor::CompressAndLoadBossExpression(
+    const char* data,
+    size_t length,
+    std::string const& csvPrefix, 
+    std::unordered_map<std::string, CompressionPipeline*> &CompressionPipelineMap,
+    bool disableRLE,
+    bool disableCsvHandling, 
+    bool forceReload
+){
+    Result<WisentRootExpression*> result; 
+    result.setError("Not implemented");
+    return result; 
 }
 
-std::string wisent::compressor::compress(
-    std::string const& sharedMemoryName, 
-    CompressionPipeline *pipeline
-) {
-    ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
-    if (!sharedMemory->isLoaded()) 
-    {
-        std::cerr << "Can't compress wisent file: Shared memory segment is not loaded." << std::endl;
-        return "";
-    }
-
-    void *baseAddress = sharedMemory->getBaseAddress();
-    size_t initialSize = sharedMemory->getSize();
-    std::string buffer(static_cast<char*>(baseAddress), initialSize);
-
-    size_t argumentCount, exprCount;
-    std::memcpy(&argumentCount, buffer.data(), sizeof(size_t));
-    std::memcpy(&exprCount, buffer.data() + sizeof(size_t), sizeof(size_t));
-
-    auto extractedBuffer = extractBuffer(buffer, argumentCount, exprCount);
-    std::string argumentVector = std::get<0>(extractedBuffer);
-    std::string typeBytefield = std::get<1>(extractedBuffer);
-    std::string structureVector = std::get<2>(extractedBuffer);
-    std::string stringBuffer = std::get<3>(extractedBuffer);
-
-    size_t argumentVectorSize = argumentVector.size();
-    size_t typeBytefieldSize = typeBytefield.size();
-    size_t structureVectorSize = structureVector.size();
-    size_t stringBufferSize = stringBuffer.size();
-
-    std::vector<CompressionType> argumentVectorChain = pipeline->getArgumentVectorChain();
-    std::vector<CompressionType> typeBytefieldChain = pipeline->getTypeBytefieldChain();
-    std::vector<CompressionType> structureVectorChain = pipeline->getStructureVectorChain();
-    std::vector<CompressionType> stringBufferChain = pipeline->getStringBufferChain();
-
-    size_t totalSize = argumentVectorSize + typeBytefieldSize + structureVectorSize + stringBufferSize;
-
-    size_t saved = 0;
-    std::cout << "compressing argumentVector" << std::endl;
-    size_t newArgumentVectorSize = compressBufferWithPipeline(
-        argumentVector,
-        static_cast<uint8_t*>(baseAddress) + sizeof(size_t),
-        argumentVectorChain,
-        argumentVectorSize
-    );
-    saved += argumentVectorSize - newArgumentVectorSize;
-    
-    std::cout << "compressing typeBytefield" << std::endl;
-    size_t newTypeBytefieldSize = compressBufferWithPipeline(
-        typeBytefield,
-        static_cast<uint8_t*>(baseAddress) + sizeof(size_t) + argumentVectorSize - saved,
-        typeBytefieldChain,
-        typeBytefieldSize
-    );
-    saved += typeBytefieldSize - newTypeBytefieldSize;
-
-    std::cout << "compressing structureVector" << std::endl;
-    size_t newStructureVectorSize= compressBufferWithPipeline(
-        structureVector,
-        static_cast<uint8_t*>(baseAddress) + sizeof(size_t) + argumentVectorSize + typeBytefieldSize - saved,
-        structureVectorChain,
-        structureVectorSize
-    );
-    saved += structureVectorSize - newStructureVectorSize;
-
-    std::cout << "compressing stringBuffer" << std::endl;
-    size_t newStringBufferSize = compressBufferWithPipeline(
-        stringBuffer,
-        static_cast<uint8_t*>(baseAddress) + sizeof(size_t) + argumentVectorSize + typeBytefieldSize + structureVectorSize - saved,
-        stringBufferChain, 
-        stringBufferSize
-    );
-    saved += stringBufferSize - newStringBufferSize;
-    if (saved < 0) 
-    {
-        std::string errorMessage = "Error: Compression resulted in even bigger size.";
-        std::cerr << errorMessage << std::endl;
-        return errorMessage;
-    }
-    // Save compressed size
-    size_t dataSize = totalSize - saved;
-    std::memcpy(
-        static_cast<uint8_t*>(baseAddress), 
-        &dataSize, 
-        sizeof(size_t)
-    );
-
-    std::vector<uint8_t> compressionInfo; 
-    compressionInfo.push_back(argumentVectorChain.size());
-    compressionInfo.push_back(typeBytefieldChain.size());
-    compressionInfo.push_back(structureVectorChain.size());
-    compressionInfo.push_back(stringBufferChain.size());
-
-    for (const auto& type : argumentVectorChain) 
-        compressionInfo.push_back(static_cast<uint8_t>(type));
-    for (const auto& type : typeBytefieldChain)
-        compressionInfo.push_back(static_cast<uint8_t>(type));
-    for (const auto& type : structureVectorChain)
-        compressionInfo.push_back(static_cast<uint8_t>(type));
-    for (const auto& type : stringBufferChain)  
-        compressionInfo.push_back(static_cast<uint8_t>(type));
-
-    std::memcpy(
-        static_cast<uint8_t*>(baseAddress) + sizeof(size_t) + dataSize,
-        compressionInfo.data(),
-        compressionInfo.size()
-    );
-
-    SharedMemorySegments::sharedMemoryRealloc(
-        baseAddress, 
-        sizeof(size_t) + dataSize + compressionInfo.size()
-    );
-
-    size_t newSize = SharedMemorySegments::getCurrentSharedMemory()->getSize(); 
-
-    std::cout << "Initial total size: " << initialSize << std::endl;
-    std::cout << "Compressed total size: " << newSize << std::endl;
-    std::cout << "Added information size: " << compressionInfo.size() << std::endl;
-    std::cout << "Overall compression ratio: " << (static_cast<double>(initialSize) / newSize) << std::endl;
-    
-    return "Compression ratio: " + std::to_string((static_cast<double>(initialSize) / newSize));
-}
-
-std::string wisent::compressor::decompress(
+Result<std::string> wisent::compressor::decompress(  // Todo - change return type
     std::string const& sharedMemoryName
 ) {
-    return "Not implemented"; 
+    Result<std::string> result; 
+    result.setError("Not implemented");
+    return result; 
 }
