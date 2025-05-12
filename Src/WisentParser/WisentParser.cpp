@@ -8,7 +8,6 @@
 #include <unistd.h>
 
 const size_t BytesPerLong = 8;
-
 class Expression 
 {
     public:

@@ -228,8 +228,19 @@ static void setRLEArgumentFlagOrPropagateTypes(
         }
         return;
     }
-    (*(size_t*)(&getArgumentTypes(root)[argumentOutputIndex])) |= WisentArgumentType_RLE_BIT;
-    (*(size_t*)(&getArgumentTypes(root)[argumentOutputIndex + 1])) = (size_t)size;
+
+    enum WisentArgumentType *types = getArgumentTypes(root);
+    types[argumentOutputIndex] = (enum WisentArgumentType)(types[argumentOutputIndex] | WisentArgumentType_RLE_BIT);
+
+    memmove(
+        &types[argumentOutputIndex + 2],
+        &types[argumentOutputIndex + 1],
+        (root->argumentCount - argumentOutputIndex - 1) * sizeof(enum WisentArgumentType)
+    );
+
+    types[argumentOutputIndex + 1] = (enum WisentArgumentType)size;
+
+    *((uint64_t *)&root->argumentCount) -= (size - 2);
 }
 
 static void setDeltaEncodedFlagOrPropagateTypes(
