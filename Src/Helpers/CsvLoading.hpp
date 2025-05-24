@@ -147,3 +147,63 @@ static json loadCsvDataToJson(
     }
     return std::move(column);
 }
+
+enum class DataType { 
+    Int, 
+    Double, 
+    String, 
+    None 
+};
+
+struct LoadedColumn 
+{
+    DataType type = DataType::None;
+    std::vector<int64_t> intData;
+    std::vector<double_t> doubleData;
+    std::vector<std::string> stringData;
+};
+
+static LoadedColumn tryLoadColumn(
+    const rapidcsv::Document& doc, 
+    const std::string& columnName
+) {
+    LoadedColumn result;
+
+    std::vector<std::optional<long>> columnInt = loadCsvData<int64_t>(doc, columnName);
+    if (!columnInt.empty()) 
+    {
+        result.type = DataType::Int;
+        result.intData.reserve(columnInt.size());
+        for (const std::optional<long>& val : columnInt) 
+        {
+            if (val) result.intData.push_back(*val);
+        }
+        return result;
+    }
+
+    std::vector<std::optional<double>> columnDouble = loadCsvData<double_t>(doc, columnName);
+    if (!columnDouble.empty()) 
+    {
+        result.type = DataType::Double;
+        result.doubleData.reserve(columnDouble.size());
+        for (const std::optional<double>& val : columnDouble) 
+        {
+            if (val) result.doubleData.push_back(*val);
+        }
+        return result;
+    }
+
+    std::vector<std::optional<std::string>> columnString = loadCsvData<std::string>(doc, columnName);
+    if (!columnString.empty()) 
+    {
+        result.type = DataType::String;
+        result.stringData.reserve(columnString.size());
+        for (const std::optional<std::string>& val : columnString) 
+        {
+            if (val) result.stringData.push_back(*val);
+        }
+        return result;
+    }
+
+    return result;
+}
