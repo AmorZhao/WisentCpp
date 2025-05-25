@@ -9,18 +9,6 @@
 
 namespace wisent::algorithms
 {
-
-    CompressionType stringToCompressionType(std::string type)
-    {
-        std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-        auto it = compressionAliases.find(type);
-        if (it == compressionAliases.end()) 
-        {
-            throw std::invalid_argument("Unknown compression type: " + type);
-        }
-        return it->second;
-    }; 
-
     std::vector<uint8_t> performCompression(
         CompressionType type,
         const std::vector<uint8_t>& buffer

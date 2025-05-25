@@ -31,17 +31,40 @@ void handleResponse(
     const std::chrono::high_resolution_clock::time_point &end
 ) {
     if (!result.success()) 
-        {
-            std::string errorMessage = "Error: " + result.error.value();
-            std::cerr << errorMessage << std::endl;
-            res.status = httplib::BadRequest_400; 
-            res.set_content(errorMessage, "text/plain");
-        }
+    {
+        std::string errorMessage = "Error: " + result.error.value();
+        std::cerr << errorMessage << std::endl;
+        res.status = httplib::BadRequest_400; 
+        res.set_content(errorMessage, "text/plain");
+    }
 
     auto timeDiff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
     
-    std::string successMessage = "Success in " + std::to_string(timeDiff * 0.000000001) + " s."
-        + result.warnings.value_or("") + result.value.value_or("");
+    std::string successMessage = "Success in " + std::to_string(timeDiff * 0.000000001) + " s.";
+
+    if (!result.warnings.empty()) 
+    {
+        std::string warningsStr = " Warnings: ";
+        for (const auto& warning : result.warnings) 
+        {
+            warningsStr += warning + "; ";
+        }
+        successMessage += warningsStr;
+    }
+    if (result.value.has_value()) 
+    {
+        if constexpr (std::is_convertible_v<T, std::string> || std::is_same_v<T, std::string>) 
+        {
+            successMessage += " Result: " + result.value.value();
+        } 
+        // else 
+        // {
+        //     std::ostringstream oss;
+        //     oss << result.value.value();
+        //     successMessage += " Result: " + oss.str();
+        // }
+    }
+    
     std::cout << successMessage << std::endl;
     res.set_content(successMessage, "text/plain");
 }; 
