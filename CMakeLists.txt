@@ -32,8 +32,9 @@ endif()
 add_executable(WisentServer Src/WisentServer.cpp)
 
 set(HelperFiles 
-  # Src/Helpers/SharedMemorySegment.cpp 
-  # Src/Helpers/ISharedMemorySegment.hpp
+  Src/Helpers/SharedMemorySegment.cpp 
+  Src/Helpers/ISharedMemorySegment.hpp
+  Src/WisentCompressor/CompressionHelpers/Algorithms.cpp
   Src/WisentCompressor/CompressionHelpers/Delta.cpp
   Src/WisentCompressor/CompressionHelpers/RLE.cpp
   Src/WisentCompressor/CompressionHelpers/LZ77.cpp

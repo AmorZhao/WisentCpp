@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include "CompressionHelpers/Algorithms.hpp"
+#include "../Helpers/Result.hpp"
 
 using namespace wisent::algorithms; 
 
@@ -46,9 +47,9 @@ public:
             return *this;
         }
 
-        Builder& addStep(const std::string& typeStr) 
+        Builder& addStep(const std::string& typeString) 
         {
-            steps.push_back(stringToCompressionType(typeStr));
+            steps.push_back(stringToCompressionType(typeString));
             return *this;
         }
 

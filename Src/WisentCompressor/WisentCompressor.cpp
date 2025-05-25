@@ -1,6 +1,6 @@
 #include "WisentCompressor.hpp"
 #include "../Helpers/CsvLoading.hpp"
-// #include "../Helpers/ISharedMemorySegment.hpp"
+#include "../Helpers/ISharedMemorySegment.hpp"
 #include "../WisentSerializer/WisentSerializer.hpp"
 #include "CompressionPipeline.hpp"
 #include <cstddef>
