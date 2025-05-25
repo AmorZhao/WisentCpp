@@ -9,23 +9,22 @@ namespace wisent
 {
     namespace compressor 
     {
-        Result<WisentRootExpression*> CompressAndLoadJson(
+        Result<std::pair<WisentRootExpression*, size_t>> CompressAndLoadJson(
             const char* data,
-            size_t length,
-            std::unordered_map<std::string, CompressionPipeline*> & CompressionPipelineMap,
+            const size_t length,
+            const std::unordered_map<std::string, std::vector<char>> &preloadedCsvData,
+            const std::unordered_map<std::string, CompressionPipeline*> &CompressionPipelineMap,
             bool disableRLE = false,
-            bool disableCsvHandling = false, 
-            bool forceReload = false
+            bool disableCsvHandling = false
         ); 
 
         Result<WisentRootExpression*> CompressAndLoadJson(
-            std::string const& path, 
-            std::string const& sharedMemoryName,
+            std::string const& filepath, 
+            std::string const& filename,
             std::string const& csvPrefix, 
-            std::unordered_map<std::string, CompressionPipeline*> & CompressionPipelineMap,
-            bool disableRLE = false,
-            bool disableCsvHandling = false, 
-            bool forceReload = false
+            std::unordered_map<std::string, CompressionPipeline*> &CompressionPipelineMap,
+            bool disableRLE,
+            bool disableCsvHandling
         ); 
 
         Result<WisentRootExpression*> CompressAndLoadBossExpression(

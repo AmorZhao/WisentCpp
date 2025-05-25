@@ -31,6 +31,6 @@ Misc/Zstd-Compression/test/*
 *.bak
 *.tmp
 
-# tmporary ignorance
+# temporary ignorance
 Documentation/Final Report
 Src/BossHelpers/*

@@ -1361,7 +1361,7 @@ namespace compressor
         };
 
         struct Delta {
-           static Result<size_t> compress(
+            static Result<size_t> compress(
                 const std::byte* input,
                 const size_t inputSize,
                 std::byte* output

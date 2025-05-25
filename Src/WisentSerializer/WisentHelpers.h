@@ -33,7 +33,8 @@ enum WisentArgumentType : size_t {
     ARGUMENT_TYPE_DOUBLE,
     ARGUMENT_TYPE_STRING,
     ARGUMENT_TYPE_SYMBOL,
-    ARGUMENT_TYPE_EXPRESSION
+    ARGUMENT_TYPE_EXPRESSION, 
+    ARGUMENT_TYPE_COMPRESSED
 };
 
 static size_t const WisentArgumentType_RLE_MINIMUM_SIZE =
@@ -190,6 +191,17 @@ static double *makeDoubleArgument(
 #endif
     getArgumentTypes(root)[argumentOutputIndex] = ARGUMENT_TYPE_DOUBLE;
     return &getExpressionArguments(root)[argumentOutputIndex].asDouble;
+};
+
+static size_t *makeCompressedArgument(
+    struct WisentRootExpression *root,
+    uint64_t argumentOutputIndex)
+{
+#ifdef __cplusplus
+    auto ARGUMENT_TYPE_COMPRESSED = WisentArgumentType::ARGUMENT_TYPE_COMPRESSED;
+#endif
+    getArgumentTypes(root)[argumentOutputIndex] = ARGUMENT_TYPE_COMPRESSED;
+    return &getExpressionArguments(root)[argumentOutputIndex].asString;
 };
 
 /////////////////////////////// Encoding Helpers ///////////////////////////////
@@ -353,6 +365,35 @@ static size_t storeString(
     (*root)->stringArgumentsFillIndex += inputStringLength + 1;
     return result - getStringBuffer(*root);
 };
+
+#ifdef __cplusplus
+extern "C++" {
+#include <vector>
+
+static size_t storeBytes(
+    struct WisentRootExpression **root,
+    const std::vector<uint8_t> &inputBytes,
+    void *(*reallocateFunction)(void *, size_t))
+{
+    size_t inputBytesLength = inputBytes.size();
+    *root = (struct WisentRootExpression*)
+        reallocateFunction(
+            *root,
+            ((char *)(getStringBuffer(*root)) - ((char *)*root)) +
+            (*root)->stringArgumentsFillIndex + inputBytesLength
+        );
+
+    char *dest = getStringBuffer(*root) + (*root)->stringArgumentsFillIndex;
+    if (inputBytesLength > 0) {
+        memcpy(dest, inputBytes.data(), inputBytesLength);
+    }
+
+    size_t offset = (*root)->stringArgumentsFillIndex;
+    (*root)->stringArgumentsFillIndex += inputBytesLength;
+    return offset;
+}
+} // extern "C++"
+#endif
 
 static char const *viewString(
     struct WisentRootExpression *root,
