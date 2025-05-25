@@ -2,11 +2,13 @@
 #include "WisentHelpers.h"
 #include "../Helpers/CsvLoading.hpp"
 #include "../Helpers/ISharedMemorySegment.hpp"
+#include <cstdint>
 #include <string>
 #include <cassert>
 #include <vector>
 #include <sys/resource.h>
 #include "../../Include/json.h"
+#include "../WisentCompressor/CompressionPipeline.hpp"
 
 using json = nlohmann::json;
 
@@ -23,21 +25,20 @@ class JsonToWisent : public json::json_sax_t
     ISharedMemorySegment *sharedMemory;
     std::string const &csvPrefix;
     bool disableRLE;
-    bool enableDeltaEncoding; 
-    bool enableHuffmanEncoding; 
     bool disableCsvHandling;
     uint64_t repeatedArgumentTypeCount; 
+    bool enableColumnCompression; 
+    std::unordered_map<std::string, CompressionPipeline*> compressionPipelineMap; 
 
-  public:    
+  public:
+    // Constructor for serialisation
     JsonToWisent(
         uint64_t expressionCount,
         std::vector<uint64_t> &&argumentCountPerLayer,
         ISharedMemorySegment *sharedMemory,
         std::string const &csvPrefix, 
         bool disableRLE, 
-        bool disableCsvHandling,
-        bool enableDeltaEncoding, 
-        bool enableHuffmanEncoding
+        bool disableCsvHandling
     ): 
         root(nullptr),
         cumulArgCountPerLayer(std::move(argumentCountPerLayer)),
@@ -45,9 +46,41 @@ class JsonToWisent : public json::json_sax_t
         csvPrefix(csvPrefix),
         disableRLE(disableRLE), 
         disableCsvHandling(disableCsvHandling),
-        enableDeltaEncoding(enableDeltaEncoding),
-        enableHuffmanEncoding(enableHuffmanEncoding),
-        repeatedArgumentTypeCount(0)
+        repeatedArgumentTypeCount(0), 
+        enableColumnCompression(false)
+    {
+        std::partial_sum(
+            cumulArgCountPerLayer.begin(),
+            cumulArgCountPerLayer.end(),
+            cumulArgCountPerLayer.begin()
+        );
+        root = allocateExpressionTree(
+            cumulArgCountPerLayer.back(),
+            expressionCount, 
+            SharedMemorySegments::sharedMemoryMalloc
+        );
+        wasKeyValue.resize(cumulArgCountPerLayer.size(), false);
+    }
+
+    // Constructor for compression, pipeline map included
+    JsonToWisent(
+        uint64_t expressionCount,
+        std::vector<uint64_t> &&argumentCountPerLayer,
+        ISharedMemorySegment *sharedMemory,
+        std::string const &csvPrefix, 
+        bool disableRLE, 
+        bool disableCsvHandling,
+        std::unordered_map<std::string, CompressionPipeline*> &compressionPipelineMap
+    ): 
+        root(nullptr),
+        cumulArgCountPerLayer(std::move(argumentCountPerLayer)),
+        sharedMemory(sharedMemory), 
+        csvPrefix(csvPrefix),
+        disableRLE(disableRLE), 
+        disableCsvHandling(disableCsvHandling),
+        repeatedArgumentTypeCount(0), 
+        enableColumnCompression(true),
+        compressionPipelineMap(compressionPipelineMap)
     {
         std::partial_sum(
             cumulArgCountPerLayer.begin(),
@@ -238,6 +271,18 @@ class JsonToWisent : public json::json_sax_t
         applyTypeRLE(argIndex);
     }
 
+    void addCompressedValue(const std::vector<uint8_t>compressedData)  
+    {
+        auto storedString = storeBytes(
+            &root, 
+            compressedData,
+            SharedMemorySegments::sharedMemoryRealloc
+        );
+        uint64_t argIndex = getNextArgumentIndex();
+        *makeCompressedArgument(root, argIndex) = storedString;
+        applyTypeRLE(argIndex);
+    }
+
     void addExpression(size_t expressionIndex)
     {
         uint64_t argIndex = getNextArgumentIndex();
@@ -290,18 +335,35 @@ class JsonToWisent : public json::json_sax_t
         auto doc = openCsvFile(csvPrefix + filename);
         for (auto const &columnName : doc.GetColumnNames()) 
         {
-            if (!handleCsvColumn<int64_t>(doc, columnName, [this](auto val) 
-                    { addLong(val); })) 
+            if (enableColumnCompression) 
             {
-                if (!handleCsvColumn<double_t>(doc, columnName, [this](auto val) 
-                        { addDouble(val); })) 
+                if (compressionPipelineMap.find(columnName) != compressionPipelineMap.end())
                 {
-                    if (!handleCsvColumn<std::string>(doc, columnName, [this](auto const &val) 
-                            { addString(val); })) 
-                    {
-                        throw std::runtime_error(
-                            "failed to handle csv column: '" + columnName + "'"
-                        );
+                    handleCsvColumnWithCompression(
+                        doc, 
+                        columnName, 
+                        compressionPipelineMap[columnName]
+                    );
+                    continue;
+                }
+            }
+
+            if (!handleCsvColumn<int64_t>(
+                    doc, 
+                    columnName, 
+                    [this](auto val) { addLong(val); })
+            ) {
+                if (!handleCsvColumn<double_t>(
+                    doc, 
+                    columnName, 
+                    [this](auto val) { addDouble(val); })
+                ) {
+                    if (!handleCsvColumn<std::string>(
+                        doc, 
+                        columnName, 
+                        [this](auto const &val) { addString(val); })
+                    ) {
+                        throw std::runtime_error("failed to handle csv column: '" + columnName + "'");
                     }
                 }
             }
@@ -321,11 +383,64 @@ class JsonToWisent : public json::json_sax_t
             return false;
         }
         startExpression(columnName);
-        for (auto const &val : column) {
+        for (auto const &val : column) 
+        {
             val ? addValueFunc(*val) : addSymbol("Missing");
         }
         endExpression();
         return true;
+    }
+
+    void handleCsvColumnWithCompression(
+        rapidcsv::Document const &doc,
+        std::string const &columnName, 
+        CompressionPipeline *pipeline)
+    {
+        LoadedColumn columnData = tryLoadColumn(doc, columnName); 
+
+        startExpression(columnName);
+        Result<size_t> result; 
+        std::vector<std::string> dictionary;
+        std::vector<uint32_t> indices;
+        std::vector<uint8_t> encodedData; 
+        switch (columnData.type) 
+        {
+            case DataType::Int:
+            {
+                encodedData = encode_column<int64_t>(
+                    columnData.intData, 
+                    dictionary, 
+                    indices
+                ); 
+                break;
+            }
+            case DataType::Double:
+            {
+                encodedData = encode_column<double>(
+                    columnData.doubleData, 
+                    dictionary, 
+                    indices
+                ); 
+                break;
+            }
+            case DataType::String:
+            {
+                encodedData = encode_column<std::string>(
+                    columnData.stringData, 
+                    dictionary, 
+                    indices
+                ); 
+                break;
+            }
+            default:
+                throw std::runtime_error("Unsupported or None DataType in LoadedColumn");
+        }
+        std::vector<uint8_t> compressed = pipeline->compress(
+            encodedData, 
+            result
+        );
+        addCompressedValue(compressed);
+        endExpression();
     }
 };
 

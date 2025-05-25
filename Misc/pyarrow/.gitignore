@@ -1,0 +1,4 @@
+*.parquet
+*.arrow
+*.feather
+*.orc

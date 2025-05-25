@@ -123,6 +123,8 @@ WisentRootExpression *wisent::serializer::load(
         }
     );
 
+    std::unordered_map<std::string, CompressionPipeline*> dummyMap; 
+
     // initialise Wisent expression tree
     JsonToWisent jsonToWisent(
         expressionCount,
@@ -130,9 +132,7 @@ WisentRootExpression *wisent::serializer::load(
         sharedMemory,
         csvPrefix,
         disableRLE,
-        disableCsvHandling,
-        enableDeltaEncoding, 
-        enableDeltaEncoding
+        disableCsvHandling
     );
 
     // 2nd traversal: parse and populate 

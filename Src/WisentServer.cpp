@@ -1,317 +1,135 @@
-#include "../Include/httplib.h"
 #include "BsonSerializer/BsonSerializer.hpp"
-#include "Helpers/CsvLoading.hpp"
-#include "WisentSerializer/WisentSerializer.hpp"
-#include "WisentParser/WisentParser.hpp"
-#include "WisentCompressor/WisentCompressor.hpp"
+#include "WisentSerializer/WisentHelpers.h"
+// #include "WisentSerializer/WisentSerializer.hpp"
+// #include "WisentParser/WisentParser.hpp"
 #include "WisentCompressor/CompressionPipeline.hpp"
+#include "WisentCompressor/WisentCompressor.hpp"
+#include "ServerHelpers.hpp"
 #include <chrono>
 #include <iostream>
-#include <map>
 #include <string>
-#include <vector>
 
 int main(int argc, char **argv)
 {
-    int httpPort = 3000;
-    bool forceReload = false;
-    bool disableRLE = false;
-    bool disableCsvHandling = false;
-    bool loadArgAsJson = false;
-    bool loadArgAsBson = false;
-    std::vector<std::string> filepaths;
-    std::map<std::string, std::pair<int64_t, int64_t>> averageTimings;
-
-    for (int i = 1; i < argc; ++i) 
-    {
-        if (std::string("--force-reload") == argv[i]) 
-        {
-            forceReload = true;
-            continue;
-        }
-        if (std::string("--disable-rle") == argv[i]) 
-        {
-            disableRLE = true;
-            continue;
-        }
-        if (std::string("--disable-csv-handling") == argv[i]) 
-        {
-            disableCsvHandling = true;
-            continue;
-        }
-        if (std::string("--http-port") == argv[i]) 
-        {
-            httpPort = atoi(argv[++i]);
-            continue;
-        }
-        if (std::string("--load-as-json") == argv[i]) 
-        {
-            loadArgAsJson = true;
-            continue;
-        }
-        if (std::string("--load-as-bson") == argv[i]) 
-        {
-            loadArgAsBson = true;
-            continue;
-        }
-        filepaths.emplace_back(argv[i]);
-    }
-
-    std::vector<std::string> names;
-    names.reserve(filepaths.size());
-    for (auto const &filepath : filepaths) 
-    {
-        auto filenamePos = filepath.find_last_of("/\\");
-        auto filename = filepath.substr(filenamePos + 1);
-        auto extPos = filename.find_last_of(".");
-
-        if (filename.substr(extPos) != ".json") 
-        {
-            if (filename.substr(extPos) == ".csv") 
-            {
-                auto start = std::chrono::high_resolution_clock::now();
-                auto doc = openCsvFile(filepath);
-                for (auto const &columnName : doc.GetColumnNames())
-                {
-                    json column = loadCsvDataToJson<int64_t>(doc, columnName);
-                    if (column.is_null()) 
-                    {
-                        column = loadCsvDataToJson<double_t>(doc, columnName);
-                        if (column.is_null()) 
-                        {
-                            column = loadCsvDataToJson<std::string>(doc, columnName);
-                        }
-                    }
-                    assert(!column.is_null());
-                }
-
-                auto end = std::chrono::high_resolution_clock::now();
-                auto timeDiff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-
-                auto emplaceResult = averageTimings.emplace(filepath, std::make_pair(0L, 0L));
-                auto &count = emplaceResult.first->second.first;
-                auto &avg = emplaceResult.first->second.second;
-                
-                auto total = avg * count;
-                count++;
-                avg = (total + timeDiff) / count;
-
-                std::cout << "took " << timeDiff << " ns (avg:" << avg << ")" << std::endl;
-                continue;
-            }
-            std::cout << "unsupported, not a json file: " << filepath;
-            continue;
-        }
-
-        auto filenameWithoutExt = filename.substr(0, extPos);
-        auto csvPrefix = filepath.substr(0, filenamePos + 1);
-        if (loadArgAsBson) 
-        {
-            bson::serializer::loadAsBson(
-                filepath, 
-                filenameWithoutExt, 
-                csvPrefix
-            );
-        }
-        else if (loadArgAsJson) 
-        {
-            void *ptr = bson::serializer::loadAsJson(
-                filepath, 
-                filenameWithoutExt, 
-                csvPrefix
-            );
-        }
-        else 
-        {
-            auto root = wisent::serializer::load(
-                filepath, 
-                filenameWithoutExt, 
-                csvPrefix, 
-                disableRLE,
-                disableCsvHandling, 
-                forceReload
-            );
-        }
-        names.emplace_back(filenameWithoutExt);
-    }
-
+    int httpPort = 8000;
     httplib::Server svr;
-    svr.Get("/load", [&](const httplib::Request &req, httplib::Response &res) 
+    svr.Get("/serialize", [&](const httplib::Request &req, httplib::Response &res) 
     {
-        auto const &name = req.get_param_value("name");
-        auto const &filepath = req.get_param_value("path");
-        // Todo - fix param parsing
+        std::string filename;
+        std::string filepath;
+        std::string csvPrefix;
+        bool disableRLE = false;
+        bool disableCsvHandling = false;
+        parseReqestParams(
+            req.params, 
+            filename, 
+            filepath, 
+            csvPrefix,
+            disableRLE, 
+            disableCsvHandling
+        );
 
-        bool loadCSV = true;
-        if (req.has_param("loadCSV")) 
-        {
-            auto const &str = req.get_param_value("loadCSV");
-            loadCSV = (str.empty() || str == "True" || str == "true" || atoi(str.c_str()) > 0);
-        }
+        const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+        Result<WisentRootExpression*> serializeResult = makeResult<WisentRootExpression*>(nullptr); 
+        // Result<WisentRootExpression*> serializeResult = wisent::serializer::load(
+        //     filename, 
+        //     filepath, 
+        //     csvPrefix, 
+        //     disableRLE,
+        //     disableCsvHandling
+        // );
+        const std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
 
-        bool serializeToBson = false;
-        if (req.has_param("toBson")) 
-        {
-            auto const &str = req.get_param_value("toBson");
-            serializeToBson = (str.empty() || str == "True" || str == "true" || atoi(str.c_str()) > 0);
-        }
-
-        bool serializeToJson = false;
-        if (req.has_param("toJson")) 
-        {
-            auto const &str = req.get_param_value("toJson");
-            serializeToJson = (str.empty() || str == "True" || str == "true" || atoi(str.c_str()) > 0);
-        }
-
-        std::cout << "loading dataset '" << name << "' from '" << filepath << "' ";
-
-        auto start = std::chrono::high_resolution_clock::now();
-        auto filenamePos = filepath.find_last_of("/\\");
-        auto csvPrefix = filepath.substr(0, filenamePos + 1);
-        if (serializeToBson) 
-        {
-            std::cout << "as bson" << std::endl;
-            bson::serializer::loadAsBson(
-                filepath, 
-                name, 
-                csvPrefix,
-                disableCsvHandling || !loadCSV
-            );
-        }
-        else if (serializeToJson) 
-        {
-            std::cout << "as json" << std::endl;
-            void *ptr = bson::serializer::loadAsJson(
-                filepath, 
-                name, 
-                csvPrefix, 
-                disableCsvHandling || !loadCSV
-            );
-        }
-        else {
-            std::cout << "as wisent" << std::endl;
-            auto root = wisent::serializer::load(
-                filepath, 
-                name, 
-                csvPrefix, 
-                disableRLE,
-                disableCsvHandling || !loadCSV
-            );
-        }
-
-        auto end = std::chrono::high_resolution_clock::now();
-        auto timeDiff =std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        auto it = averageTimings.emplace(name + filepath, std::make_pair(0, 0)).first;
-        auto &count = it->second.first;
-        auto &avg = it->second.second;
-        auto total = avg * count;
-        count++;
-        avg = (total + timeDiff) / count;
-        std::cout << "took " << timeDiff << " ns (avg:" << avg << ")" << std::endl;
-        
-        res.set_content("Loaded " + name + " in " + std::to_string(timeDiff * 0.000000001) + " s. ", "text/plain");
+        handleResponse(
+            res, 
+            serializeResult, 
+            start, 
+            end
+        );
+        return;
     });
 
-    svr.Get("/unload", [&](const httplib::Request &req, httplib::Response &res) 
+    svr.Post("/serialize", [&](const httplib::Request &req, httplib::Response &res) 
     {
-        auto const &name = req.get_param_value("name");
-        std::cout << "unloading dataset '" << name << "'" << std::endl;
-        wisent::serializer::unload(name);
-        res.set_content("Done.", "text/plain");
-        // Todo - change set_content
-    });
+        std::string filename;
+        std::string filepath;
+        std::string csvPrefix; 
+        bool disableRLE = false;
+        bool disableCsvHandling = false;
+        parseReqestParams(
+            req.params, 
+            filename, 
+            filepath, 
+            csvPrefix,
+            disableRLE, 
+            disableCsvHandling
+        );
 
-    svr.Get("/free", [&](const httplib::Request &req, httplib::Response &res) 
-    {
-        auto const &name = req.get_param_value("name");
-        std::cout << "erasing dataset '" << name << "'" << std::endl;
-        bson::serializer::free(name);
-        res.set_content("Done.", "text/plain");
-    });
+        const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+        Result<WisentRootExpression*> serializeResult = makeResult<WisentRootExpression*>(nullptr); 
+        // Result<WisentRootExpression*> serializeResult = wisent::serializer::load(
+        //     filename, 
+        //     filepath, 
+        //     csvPrefix, 
+        //     disableRLE,
+        //     disableCsvHandling
+        // );
+        const std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
 
-    svr.Get("/parse", [&](const httplib::Request & req, httplib::Response &res) 
-    {
-        auto const &name = req.get_param_value("name");
-        auto parsed = wisent::parser::parse(name);
-        res.set_content(parsed, "text/plain");
-    }); 
+        handleResponse(
+            res, 
+            serializeResult, 
+            start, 
+            end
+        );
+        return;
+    });
 
     svr.Post("/compress", [&](const httplib::Request &req, httplib::Response &res) 
     {
-        using namespace wisent::compressor;
-        std::string const &packageName = req.get_param_value("name");
-        std::string const &filepath = req.get_param_value("path");
-
-        bool loadCSV = true;
-        if (req.has_param("loadCSV")) 
-        {
-            auto const &str = req.get_param_value("loadCSV");
-            loadCSV = (str.empty() || str == "True" || str == "true" || atoi(str.c_str()) > 0);
-        }
-
-        if (req.body.empty())
-        {
-            res.status = httplib::BadRequest_400; 
-            res.set_content("Request body contaions no compression information.", "text/plain");
-            return; 
-        }
-
-        json pipelineSpecification; 
-        try {
-            pipelineSpecification = json::parse(req.body);
-        } 
-        catch (const std::exception &e) {
-            std::string errorMessage = "Error parsing request body: " + std::string(e.what());
-            std::cerr << errorMessage << std::endl;
-            res.status = httplib::BadRequest_400; 
-            res.set_content(errorMessage, "text/plain");
-            return;
-        }
-
-        std::unordered_map<std::string, CompressionPipeline*> CompressionPipelineMap;
-        auto initializePipelines = [&](const json& pipelineSpecification) 
-        {
-            for (const auto& [columnName, steps] : pipelineSpecification.items()) 
-            {
-                CompressionPipeline::Builder builder;
-                for (const std::string& step : steps) 
-                {
-                    builder.addStep(step);
-                }
-                CompressionPipelineMap[columnName] = new CompressionPipeline(builder.build());
-            }
-        };
-        initializePipelines(pipelineSpecification);
-
-        std::cout << "compressing and loading dataset package '" << packageName << std::endl;
-
-        auto filenamePos = filepath.find_last_of("/\\");
-        auto csvPrefix = filepath.substr(0, filenamePos + 1);
-        
-        auto start = std::chrono::high_resolution_clock::now();
-        Result<WisentRootExpression*> compressResult = CompressAndLoadJson(
+        std::string filename;
+        std::string filepath;
+        std::string csvPrefix; 
+        bool disableRLE = false;
+        bool disableCsvHandling = false;
+        parseReqestParams(
+            req.params, 
+            filename, 
             filepath, 
-            packageName, 
-            csvPrefix, 
-            CompressionPipelineMap, 
-            disableRLE,
-            disableCsvHandling || !loadCSV, 
-            forceReload
+            csvPrefix,
+            disableRLE, 
+            disableCsvHandling
         );
-        auto end = std::chrono::high_resolution_clock::now();
 
-        if (!compressResult.success()) 
+        Result<std::unordered_map<std::string, CompressionPipeline*>> CompressionPipelineMapResult; 
+        parseCompressionPipeline(
+            req.body, 
+            CompressionPipelineMapResult
+        );
+        if (!CompressionPipelineMapResult.success()) 
         {
-            std::string errorMessage = "Error compressing dataset: " + compressResult.error.value();
-            std::cerr << errorMessage << std::endl;
             res.status = httplib::BadRequest_400; 
-            res.set_content(errorMessage, "text/plain");
+            res.set_content(CompressionPipelineMapResult.getError(), "text/plain");
             return;
         }
+        
+        const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+        Result<WisentRootExpression*> compressResult = wisent::compressor::CompressAndLoadJson(
+            filename, 
+            filepath, 
+            csvPrefix, 
+            CompressionPipelineMapResult.value.value(), 
+            disableRLE,
+            disableCsvHandling
+        );
+        const std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
 
-        auto timeDiff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        std::cout << "took " << timeDiff << " ns" << std::endl;
-        res.set_content("Compressed " + packageName + " in " + std::to_string(timeDiff * 0.000000001) + " s. ", "text/plain");
+        handleResponse(
+            res, 
+            compressResult, 
+            start, 
+            end
+        );
         return;
     });
 
@@ -323,12 +141,5 @@ int main(int argc, char **argv)
     std::cout << "Server running on port " << httpPort << "..." << std::endl;
 
     svr.listen("0.0.0.0", httpPort);
-    for (auto const &name : names) 
-    {
-        // deleting only the datasets loaded with the command line
-        // clients manually handle the lifetime of the datasets they request
-        std::cout << "Deleting " << name << "..." << std::endl;
-        wisent::serializer::free(name);
-    }
     return 0;
 }
