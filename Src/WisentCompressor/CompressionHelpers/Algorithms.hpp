@@ -85,7 +85,7 @@ namespace wisent::algorithms
         // TODO: add type builder for compression pipelines
     };
 
-    struct ColumnChunkMetaData 
+    struct ColumnMetaData 
     {
         std::string columnName;
         uint64_t numerOfValues;
@@ -124,17 +124,17 @@ namespace wisent::algorithms
 
     std::vector<std::vector<uint8_t>> encodeIntColumn(
         const std::vector<int64_t>& column,
-        ColumnChunkMetaData& columnChunkMetaData
+        ColumnMetaData& columnChunkMetaData
     ); 
 
     std::vector<std::vector<uint8_t>> encodeDoubleColumn(
         const std::vector<double>& column,
-        ColumnChunkMetaData& columnChunkMetaData
+        ColumnMetaData& columnChunkMetaData
     ); 
 
     std::vector<std::vector<uint8_t>> encodeStringColumn(
         const std::vector<std::string>& column,
-        ColumnChunkMetaData& columnChunkMetaData
+        ColumnMetaData& columnChunkMetaData
     ); 
 
     // =================== Compression algorithms ===================

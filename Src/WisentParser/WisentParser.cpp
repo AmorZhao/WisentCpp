@@ -1,5 +1,5 @@
 #include "WisentParser.hpp"
-#include "../WisentSerializer/WisentHelpers.h"
+#include "../WisentSerializer/WisentHelpers.hpp"
 #include "../Helpers/ISharedMemorySegment.hpp"
 #include <iostream>
 #include <vector>

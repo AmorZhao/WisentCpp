@@ -1,6 +1,7 @@
 # project
 /.vscode
 /.cache
+/.VSCodeCounter
 
 # build
 /build*
