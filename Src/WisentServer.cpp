@@ -1,5 +1,5 @@
 #include "BsonSerializer/BsonSerializer.hpp"
-#include "WisentSerializer/WisentHelpers.h"
+#include "WisentSerializer/WisentHelpers.hpp"
 // #include "WisentSerializer/WisentSerializer.hpp"
 // #include "WisentParser/WisentParser.hpp"
 #include "WisentCompressor/CompressionPipeline.hpp"

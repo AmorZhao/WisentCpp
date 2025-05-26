@@ -1,5 +1,5 @@
 #pragma once
-#include "WisentHelpers.h"
+#include "WisentHelpers.hpp"
 #include "../Helpers/CsvLoading.hpp"
 #include "../Helpers/ISharedMemorySegment.hpp"
 #include <cstdint>
@@ -271,18 +271,6 @@ class JsonToWisent : public json::json_sax_t
         applyTypeRLE(argIndex);
     }
 
-    void addCompressedValue(const std::vector<uint8_t>compressedData)  
-    {
-        auto storedString = storeBytes(
-            &root, 
-            compressedData,
-            SharedMemorySegments::sharedMemoryRealloc
-        );
-        uint64_t argIndex = getNextArgumentIndex();
-        *makeCompressedArgument(root, argIndex) = storedString;
-        applyTypeRLE(argIndex);
-    }
-
     void addExpression(size_t expressionIndex)
     {
         uint64_t argIndex = getNextArgumentIndex();
@@ -318,6 +306,18 @@ class JsonToWisent : public json::json_sax_t
         argumentIteratorStack.pop_back();
         expressionIndexStack.pop_back();
         cumulArgCountPerLayer[--layerIndex] = expression.endChildOffset;
+    }
+
+    void addCompressedValue(const std::vector<uint8_t>compressedData)  
+    {
+        auto storedString = storeBytes(
+            &root, 
+            compressedData,
+            SharedMemorySegments::sharedMemoryRealloc
+        );
+        uint64_t argIndex = getNextArgumentIndex();
+        *makeCompressedArgument(root, argIndex) = storedString;
+        applyTypeRLE(argIndex);
     }
 
     bool handleCsvFile(std::string const &filename)
@@ -400,10 +400,7 @@ class JsonToWisent : public json::json_sax_t
 
         std::optional<ColumnDataType> columnData = tryLoadColumn(doc, columnName); 
 
-        // TODO: maybe startCompressedColumnExpression?
-        startExpression(columnName);
-
-        ColumnChunkMetaData columnMetaData; 
+        ColumnMetaData columnMetaData; 
         std::vector<std::vector<uint8_t>> pages; 
 
         std::visit([&](auto&& data) 
@@ -433,10 +430,12 @@ class JsonToWisent : public json::json_sax_t
             } 
             else 
             {
-                throw std::runtime_error("Unhandled column data type in visitor.");
+                result.setError("Unhandled column data type in visitor.");
+                return; 
             }
         }, *columnData);
 
+        startCompressedColumnExpression(columnName);
         for (size_t i = 0; i < pages.size(); ++i)
         {
             std::vector<uint8_t> compressedData = pipeline->compress(
@@ -444,12 +443,8 @@ class JsonToWisent : public json::json_sax_t
                 result
             );
             columnMetaData.pageHeaders[i].compressedPageSize = compressedData.size();
-            writeCompressedPage(compressedData);
+            writeCompressedPages(compressedData);
         }
-        
-        // TODO: reserve this space or add it at the end?
-        addColumnMetaData(columnMetaData);
-
-        endExpression();
+        endCompressedColumnExpression();
     }
 };

@@ -2,7 +2,7 @@
 #include <string>
 #include <unordered_map>
 #include "CompressionPipeline.hpp"
-#include "../WisentSerializer/WisentHelpers.h"
+#include "../WisentSerializer/WisentHelpers.hpp"
 #include "../Helpers/Result.hpp"
 
 namespace wisent 

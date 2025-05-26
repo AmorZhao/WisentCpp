@@ -11,16 +11,16 @@ namespace wisent::algorithms
 {
     std::vector<std::vector<uint8_t>> encodeIntColumn(
         const std::vector<int64_t>& column,
-        ColumnChunkMetaData& columnChunkMetaData
+        ColumnMetaData& columnMetaData
     ) {
         std::vector<std::vector<uint8_t>> pages;
         size_t totalValues = 0;
         size_t totalUncompressedSize = 0;
         size_t totalCompressedSize = 0;
 
-        columnChunkMetaData.physicalType = PhysicalType::INT64;
-        columnChunkMetaData.compressionType = CompressionType::NONE;
-        columnChunkMetaData.encodingType.push_back(EncodingType::PLAIN);
+        columnMetaData.physicalType = PhysicalType::INT64;
+        columnMetaData.compressionType = CompressionType::NONE;
+        columnMetaData.encodingType.push_back(EncodingType::PLAIN);
 
         size_t startIndex = 0;
         while (startIndex < column.size()) 
@@ -64,7 +64,7 @@ namespace wisent::algorithms
             pageHeader.statistics = pageStats;
 
             pages.push_back(std::move(pageBuffer));
-            columnChunkMetaData.pageHeaders.push_back(std::move(pageHeader));
+            columnMetaData.pageHeaders.push_back(std::move(pageHeader));
 
             totalValues += numValues;
             totalUncompressedSize += bytesInPage;
@@ -73,18 +73,18 @@ namespace wisent::algorithms
             startIndex = endIndex;
         }
 
-        columnChunkMetaData.numerOfValues = totalValues;
-        columnChunkMetaData.totalUncompressedSize = totalUncompressedSize;
-        columnChunkMetaData.totalCompressedSize = totalCompressedSize;
+        columnMetaData.numerOfValues = totalValues;
+        columnMetaData.totalUncompressedSize = totalUncompressedSize;
+        columnMetaData.totalCompressedSize = totalCompressedSize;
 
         if (!column.empty()) 
         {
             int64_t minVal = *std::min_element(column.begin(), column.end());
             int64_t maxVal = *std::max_element(column.begin(), column.end());
 
-            columnChunkMetaData.statistics.minInt = minVal;
-            columnChunkMetaData.statistics.maxInt = maxVal;
-            columnChunkMetaData.statistics.distinctCount = std::unordered_set<int64_t>(
+            columnMetaData.statistics.minInt = minVal;
+            columnMetaData.statistics.maxInt = maxVal;
+            columnMetaData.statistics.distinctCount = std::unordered_set<int64_t>(
                 column.begin(), column.end()).size();
         }
 
@@ -93,16 +93,16 @@ namespace wisent::algorithms
 
     std::vector<std::vector<uint8_t>> encodeDoubleColumn(
         const std::vector<double>& column,
-        ColumnChunkMetaData& columnChunkMetaData
+        ColumnMetaData& columnMetaData
     ) {
         std::vector<std::vector<uint8_t>> pages;
         size_t startIndex = 0;
         size_t totalValues = 0;
         size_t totalUncompressedSize = 0;
 
-        columnChunkMetaData.physicalType = PhysicalType::DOUBLE;
-        columnChunkMetaData.compressionType = CompressionType::NONE;
-        columnChunkMetaData.encodingType.push_back(EncodingType::PLAIN);
+        columnMetaData.physicalType = PhysicalType::DOUBLE;
+        columnMetaData.compressionType = CompressionType::NONE;
+        columnMetaData.encodingType.push_back(EncodingType::PLAIN);
 
         while (startIndex < column.size()) 
         {
@@ -145,7 +145,7 @@ namespace wisent::algorithms
             header.compressedPageSize = static_cast<uint32_t>(bytesInPage);
             header.statistics = stats;
 
-            columnChunkMetaData.pageHeaders.push_back(header);
+            columnMetaData.pageHeaders.push_back(header);
             pages.push_back(std::move(pageBuffer));
 
             totalValues += numValues;
@@ -153,17 +153,17 @@ namespace wisent::algorithms
             startIndex = endIndex;
         }
 
-        columnChunkMetaData.numerOfValues = totalValues;
-        columnChunkMetaData.totalUncompressedSize = totalUncompressedSize;
-        columnChunkMetaData.totalCompressedSize = totalUncompressedSize;
+        columnMetaData.numerOfValues = totalValues;
+        columnMetaData.totalUncompressedSize = totalUncompressedSize;
+        columnMetaData.totalCompressedSize = totalUncompressedSize;
 
         if (!column.empty()) 
         {
             double minVal = *std::min_element(column.begin(), column.end());
             double maxVal = *std::max_element(column.begin(), column.end());
-            columnChunkMetaData.statistics.minDouble = minVal;
-            columnChunkMetaData.statistics.maxDouble = maxVal;
-            columnChunkMetaData.statistics.distinctCount = std::unordered_set<double>(column.begin(), column.end()).size();
+            columnMetaData.statistics.minDouble = minVal;
+            columnMetaData.statistics.maxDouble = maxVal;
+            columnMetaData.statistics.distinctCount = std::unordered_set<double>(column.begin(), column.end()).size();
         }
 
         return pages;
@@ -172,16 +172,16 @@ namespace wisent::algorithms
 
     std::vector<std::vector<uint8_t>> encodeStringColumn(
         const std::vector<std::string>& column,
-        ColumnChunkMetaData& columnChunkMetaData
+        ColumnMetaData& columnMetaData
     ) {
         std::vector<std::vector<uint8_t>> pages;
         size_t startIndex = 0;
         size_t totalValues = 0;
         size_t totalUncompressedSize = 0;
 
-        columnChunkMetaData.physicalType = PhysicalType::BYTE_ARRAY;
-        columnChunkMetaData.compressionType = CompressionType::NONE;
-        columnChunkMetaData.encodingType.push_back(EncodingType::PLAIN);
+        columnMetaData.physicalType = PhysicalType::BYTE_ARRAY;
+        columnMetaData.compressionType = CompressionType::NONE;
+        columnMetaData.encodingType.push_back(EncodingType::PLAIN);
 
         while (startIndex < column.size()) 
         {
@@ -227,7 +227,7 @@ namespace wisent::algorithms
             header.compressedPageSize = static_cast<uint32_t>(bytesInPage);
             header.statistics = stats;
 
-            columnChunkMetaData.pageHeaders.push_back(header);
+            columnMetaData.pageHeaders.push_back(header);
             pages.push_back(std::move(pageBuffer));
 
             totalValues += numValues;
@@ -235,9 +235,9 @@ namespace wisent::algorithms
             startIndex = endIndex;
         }
 
-        columnChunkMetaData.numerOfValues = totalValues;
-        columnChunkMetaData.totalUncompressedSize = totalUncompressedSize;
-        columnChunkMetaData.totalCompressedSize = totalUncompressedSize;
+        columnMetaData.numerOfValues = totalValues;
+        columnMetaData.totalUncompressedSize = totalUncompressedSize;
+        columnMetaData.totalCompressedSize = totalUncompressedSize;
 
         return pages;
     }; 
