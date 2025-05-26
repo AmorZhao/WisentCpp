@@ -1,5 +1,10 @@
 #include "WisentSerializer.hpp"
-#include "../Helpers/Result.hpp"
+// #include "../Helpers/Result.hpp"
+#include <cstdint>
+#include <string>
+#include <cassert>
+#include <vector>
+#include "JsonToWisent.hpp"
 
 WisentRootExpression *wisent::serializer::load(
     std::string const &path,
