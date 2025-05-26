@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <optional>  // C++17: std::optional 
+#include <variant>   // C++17: std::variant
 #include <sys/resource.h>
 #include <iostream>
 #include "../../Include/json.h"
@@ -155,55 +156,100 @@ enum class DataType {
     None 
 };
 
-struct LoadedColumn 
-{
-    DataType type = DataType::None;
-    std::vector<int64_t> intData;
-    std::vector<double_t> doubleData;
-    std::vector<std::string> stringData;
-};
+// struct LoadedColumn 
+// {
+//     DataType type = DataType::None;
+//     std::vector<int64_t> intData;
+//     std::vector<double> doubleData;
+//     std::vector<std::string> stringData;
+// };
 
-static LoadedColumn tryLoadColumn(
+using ColumnDataType = std::variant<
+    std::vector<int64_t>, 
+    std::vector<double>, 
+    std::vector<std::string>
+>;
+
+static std::optional<ColumnDataType> tryLoadColumn(
     const rapidcsv::Document& doc, 
     const std::string& columnName
 ) {
-    LoadedColumn result;
-
-    std::vector<std::optional<long>> columnInt = loadCsvData<int64_t>(doc, columnName);
-    if (!columnInt.empty()) 
-    {
-        result.type = DataType::Int;
-        result.intData.reserve(columnInt.size());
-        for (const std::optional<long>& val : columnInt) 
-        {
-            if (val) result.intData.push_back(*val);
+    std::vector<std::optional<int64_t>> columnInt = loadCsvData<int64_t>(doc, columnName);
+    if (!columnInt.empty()) {
+        std::vector<int64_t> intData;
+        intData.reserve(columnInt.size());
+        for (const auto& val : columnInt) {
+            if (val) intData.push_back(*val);
         }
-        return result;
+        return intData;
     }
 
-    std::vector<std::optional<double>> columnDouble = loadCsvData<double_t>(doc, columnName);
-    if (!columnDouble.empty()) 
-    {
-        result.type = DataType::Double;
-        result.doubleData.reserve(columnDouble.size());
-        for (const std::optional<double>& val : columnDouble) 
-        {
-            if (val) result.doubleData.push_back(*val);
+    std::vector<std::optional<double>> columnDouble = loadCsvData<double>(doc, columnName);
+    if (!columnDouble.empty()) {
+        std::vector<double> doubleData;
+        doubleData.reserve(columnDouble.size());
+        for (const auto& val : columnDouble) {
+            if (val) doubleData.push_back(*val);
         }
-        return result;
+        return doubleData;
     }
 
     std::vector<std::optional<std::string>> columnString = loadCsvData<std::string>(doc, columnName);
-    if (!columnString.empty()) 
-    {
-        result.type = DataType::String;
-        result.stringData.reserve(columnString.size());
-        for (const std::optional<std::string>& val : columnString) 
-        {
-            if (val) result.stringData.push_back(*val);
+    if (!columnString.empty()) {
+        std::vector<std::string> stringData;
+        stringData.reserve(columnString.size());
+        for (const auto& val : columnString) {
+            if (val) stringData.push_back(*val);
         }
-        return result;
+        return stringData;
     }
 
-    return result;
+    return std::nullopt;
 }
+
+
+
+// static LoadedColumn tryLoadColumn(
+//     const rapidcsv::Document& doc, 
+//     const std::string& columnName
+// ) {
+//     LoadedColumn result;
+
+//     std::vector<std::optional<long>> columnInt = loadCsvData<int64_t>(doc, columnName);
+//     if (!columnInt.empty()) 
+//     {
+//         result.type = DataType::Int;
+//         result.intData.reserve(columnInt.size());
+//         for (const std::optional<long>& val : columnInt) 
+//         {
+//             if (val) result.intData.push_back(*val);
+//         }
+//         return result;
+//     }
+
+//     std::vector<std::optional<double>> columnDouble = loadCsvData<double_t>(doc, columnName);
+//     if (!columnDouble.empty()) 
+//     {
+//         result.type = DataType::Double;
+//         result.doubleData.reserve(columnDouble.size());
+//         for (const std::optional<double>& val : columnDouble) 
+//         {
+//             if (val) result.doubleData.push_back(*val);
+//         }
+//         return result;
+//     }
+
+//     std::vector<std::optional<std::string>> columnString = loadCsvData<std::string>(doc, columnName);
+//     if (!columnString.empty()) 
+//     {
+//         result.type = DataType::String;
+//         result.stringData.reserve(columnString.size());
+//         for (const std::optional<std::string>& val : columnString) 
+//         {
+//             if (val) result.stringData.push_back(*val);
+//         }
+//         return result;
+//     }
+
+//     return result;
+// }
