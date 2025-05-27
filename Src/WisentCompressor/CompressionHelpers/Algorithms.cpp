@@ -20,7 +20,7 @@ namespace wisent::algorithms
 
         columnMetaData.physicalType = PhysicalType::INT64;
         columnMetaData.compressionType = CompressionType::NONE;
-        columnMetaData.encodingType.push_back(EncodingType::PLAIN);
+        columnMetaData.encodingType = EncodingType::PLAIN;
 
         size_t startIndex = 0;
         while (startIndex < column.size()) 
@@ -49,11 +49,13 @@ namespace wisent::algorithms
 
             size_t numValues = endIndex - startIndex;
 
-            PageStatistics pageStats;
+            Statistics pageStats;
             pageStats.minInt = minVal;
             pageStats.maxInt = maxVal;
             pageStats.distinctCount = std::unordered_set<int64_t>(
-                column.begin() + startIndex, column.begin() + endIndex).size();
+                column.begin() + startIndex, 
+                column.begin() + endIndex
+            ).size();
 
             PageHeader pageHeader;
             pageHeader.pageType = PageType::DATA_PAGE;
@@ -61,7 +63,7 @@ namespace wisent::algorithms
             pageHeader.firstRowIndex = static_cast<int64_t>(startIndex);
             pageHeader.uncompressedPageSize = static_cast<uint32_t>(pageBuffer.size());
             pageHeader.compressedPageSize = pageHeader.uncompressedPageSize;
-            pageHeader.statistics = pageStats;
+            pageHeader.pageStatistics = pageStats;
 
             pages.push_back(std::move(pageBuffer));
             columnMetaData.pageHeaders.push_back(std::move(pageHeader));
@@ -82,9 +84,9 @@ namespace wisent::algorithms
             int64_t minVal = *std::min_element(column.begin(), column.end());
             int64_t maxVal = *std::max_element(column.begin(), column.end());
 
-            columnMetaData.statistics.minInt = minVal;
-            columnMetaData.statistics.maxInt = maxVal;
-            columnMetaData.statistics.distinctCount = std::unordered_set<int64_t>(
+            columnMetaData.columnStatistics.minInt = minVal;
+            columnMetaData.columnStatistics.maxInt = maxVal;
+            columnMetaData.columnStatistics.distinctCount = std::unordered_set<int64_t>(
                 column.begin(), column.end()).size();
         }
 
@@ -102,7 +104,7 @@ namespace wisent::algorithms
 
         columnMetaData.physicalType = PhysicalType::DOUBLE;
         columnMetaData.compressionType = CompressionType::NONE;
-        columnMetaData.encodingType.push_back(EncodingType::PLAIN);
+        columnMetaData.encodingType = EncodingType::PLAIN;
 
         while (startIndex < column.size()) 
         {
@@ -131,7 +133,7 @@ namespace wisent::algorithms
 
             size_t numValues = endIndex - startIndex;
 
-            PageStatistics stats;
+            Statistics stats;
             stats.minDouble = minVal;
             stats.maxDouble = maxVal;
             stats.distinctCount = std::unordered_set<double>(
@@ -143,7 +145,7 @@ namespace wisent::algorithms
             header.firstRowIndex = static_cast<int64_t>(startIndex);
             header.uncompressedPageSize = static_cast<uint32_t>(bytesInPage);
             header.compressedPageSize = static_cast<uint32_t>(bytesInPage);
-            header.statistics = stats;
+            header.pageStatistics = stats;
 
             columnMetaData.pageHeaders.push_back(header);
             pages.push_back(std::move(pageBuffer));
@@ -161,14 +163,13 @@ namespace wisent::algorithms
         {
             double minVal = *std::min_element(column.begin(), column.end());
             double maxVal = *std::max_element(column.begin(), column.end());
-            columnMetaData.statistics.minDouble = minVal;
-            columnMetaData.statistics.maxDouble = maxVal;
-            columnMetaData.statistics.distinctCount = std::unordered_set<double>(column.begin(), column.end()).size();
+            columnMetaData.columnStatistics.minDouble = minVal;
+            columnMetaData.columnStatistics.maxDouble = maxVal;
+            columnMetaData.columnStatistics.distinctCount = std::unordered_set<double>(column.begin(), column.end()).size();
         }
 
         return pages;
     }; 
-
 
     std::vector<std::vector<uint8_t>> encodeStringColumn(
         const std::vector<std::string>& column,
@@ -181,7 +182,7 @@ namespace wisent::algorithms
 
         columnMetaData.physicalType = PhysicalType::BYTE_ARRAY;
         columnMetaData.compressionType = CompressionType::NONE;
-        columnMetaData.encodingType.push_back(EncodingType::PLAIN);
+        columnMetaData.encodingType = EncodingType::PLAIN;
 
         while (startIndex < column.size()) 
         {
@@ -215,7 +216,7 @@ namespace wisent::algorithms
 
             size_t numValues = endIndex - startIndex;
 
-            PageStatistics stats;
+            Statistics stats;
             stats.distinctCount = std::unordered_set<std::string>(
                 column.begin() + startIndex, column.begin() + endIndex).size();
 
@@ -225,7 +226,7 @@ namespace wisent::algorithms
             header.firstRowIndex = static_cast<int64_t>(startIndex);
             header.uncompressedPageSize = static_cast<uint32_t>(bytesInPage);
             header.compressedPageSize = static_cast<uint32_t>(bytesInPage);
-            header.statistics = stats;
+            header.pageStatistics = stats;
 
             columnMetaData.pageHeaders.push_back(header);
             pages.push_back(std::move(pageBuffer));

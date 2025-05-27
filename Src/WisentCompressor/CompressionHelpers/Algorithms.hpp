@@ -8,6 +8,8 @@
 
 namespace wisent::algorithms
 {
+    // ===================== Encoding algorithms ==================
+    
     constexpr size_t DEFAULT_PAGE_SIZE = 1024 * 1024;   // 1 MB
 
     // constexpr size_t MIN_PAGE_SIZE = 64 * 1024;         // 64 KB
@@ -16,7 +18,7 @@ namespace wisent::algorithms
     constexpr size_t SIZE_OF_INT64 = sizeof(int64_t);      // 8 bytes
     constexpr size_t SIZE_OF_DOUBLE = sizeof(double);      // 8 bytes
 
-    enum class PageType {
+    enum class PageType : size_t {
         DATA_PAGE,
         // DATA_PAGE_V2,
         DICTIONARY_PAGE
@@ -24,7 +26,7 @@ namespace wisent::algorithms
         // BLOOM_FILTER_PAGE
     };
 
-    struct PageStatistics 
+    struct Statistics   // size = 4 x 8 byte values
     {
         std::optional<int64_t> nullCount;
         std::optional<int64_t> distinctCount;
@@ -41,21 +43,23 @@ namespace wisent::algorithms
 
     struct PageHeader 
     {
-        PageType pageType;
+        PageType pageType;  
 
-        uint32_t numberOfValues;
+        uint64_t numberOfValues;
         std::optional<int64_t> firstRowIndex;
 
-        uint32_t uncompressedPageSize;
-        uint32_t compressedPageSize; 
+        uint64_t uncompressedPageSize;
+        uint64_t compressedPageSize; 
 
-        std::optional<PageStatistics> statistics;
+        std::optional<Statistics> pageStatistics;  // 4 arguments
 
         bool isDictionaryPage = false;
-        std::optional<uint32_t> dictionaryPageSize;
+        std::optional<uint64_t> dictionaryPageSize;
+
+        size_t *byteArrayOffset = nullptr; 
     };
 
-    enum class EncodingType {
+    enum class EncodingType : size_t {
         PLAIN,                      // 0
         RLE,                        // 1    
         BIT_PACKED,                 // 2
@@ -65,7 +69,7 @@ namespace wisent::algorithms
         DELTA_BYTE_ARRAY,           // 6 
     };
 
-    enum class PhysicalType {
+    enum class PhysicalType : size_t {
         // INT32,
         INT64,
         // FLOAT,
@@ -75,7 +79,7 @@ namespace wisent::algorithms
         BOOLEAN
     };
 
-    enum class CompressionType {
+    enum class CompressionType : size_t {
         NONE,
         DELTA,
         RLE,
@@ -87,19 +91,18 @@ namespace wisent::algorithms
 
     struct ColumnMetaData 
     {
-        std::string columnName;
-        uint64_t numerOfValues;
+        std::string columnName;  // head
 
+        uint64_t numerOfValues;
         uint64_t totalUncompressedSize;
         uint64_t totalCompressedSize;
 
         PhysicalType physicalType;
-        std::vector<EncodingType> encodingType;
+        EncodingType encodingType;
         CompressionType compressionType;
       
-        PageStatistics statistics;
-
-        std::optional<uint32_t> dictionary_page_offset;
+        Statistics columnStatistics;
+        // std::optional<uint32_t> dictionary_page_offset;
 
         std::vector<PageHeader> pageHeaders;
 
@@ -138,6 +141,7 @@ namespace wisent::algorithms
     ); 
 
     // =================== Compression algorithms ===================
+    
     static const std::unordered_map<std::string, CompressionType> compressionAliases = 
     {
         {"none", CompressionType::NONE},
