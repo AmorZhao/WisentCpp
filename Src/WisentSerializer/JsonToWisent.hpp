@@ -201,7 +201,7 @@ class JsonToWisent : public json::json_sax_t
   private:
     uint64_t getNextArgumentIndex()
     {
-        return getExpressionSubexpressions(root)[expressionIndexStack.back()].startChildOffset + argumentIteratorStack.back()++;
+        return getSubexpressionsBuffer(root)[expressionIndexStack.back()].startChildOffset + argumentIteratorStack.back()++;
     }
 
     void applyTypeRLE(std::uint64_t argIndex)
@@ -213,7 +213,7 @@ class JsonToWisent : public json::json_sax_t
             repeatedArgumentTypeCount = 1;
             return;
         }
-        if (getArgumentTypes(root)[argIndex - 1] != getArgumentTypes(root)[argIndex]) 
+        if (getArgumentTypesBuffer(root)[argIndex - 1] != getArgumentTypesBuffer(root)[argIndex]) 
         {
             resetTypeRLE(argIndex);
             repeatedArgumentTypeCount = 1;
@@ -249,7 +249,7 @@ class JsonToWisent : public json::json_sax_t
 
     void addString(std::string const &input)
     {
-        auto storedString = storeString(
+        size_t storedString = storeString(
             &root, 
             input.c_str(), 
             SharedMemorySegments::sharedMemoryRealloc
@@ -261,7 +261,7 @@ class JsonToWisent : public json::json_sax_t
 
     void addSymbol(std::string const &symbol)
     {
-        auto storedString = storeString(
+        size_t storedString = storeString(
             &root, 
             symbol.c_str(), 
             SharedMemorySegments::sharedMemoryRealloc
@@ -280,16 +280,17 @@ class JsonToWisent : public json::json_sax_t
 
     void startExpression(std::string const &head)
     {
-        auto expressionIndex = nextExpressionIndex++;
+        uint64_t expressionIndex = nextExpressionIndex++;
         addExpression(expressionIndex);
-        auto storedString = storeString(
+        size_t storedString = storeString(
             &root, 
             head.c_str(), 
             SharedMemorySegments::sharedMemoryRealloc
         );
-        auto startChildOffset = cumulArgCountPerLayer[layerIndex++];
+        unsigned long startChildOffset = cumulArgCountPerLayer[layerIndex++];
         *makeExpression(root, expressionIndex) = WisentExpression{
-            storedString, startChildOffset,
+            storedString, 
+            startChildOffset,
             0 // not known yet; set during endExpression()
         };
         argumentIteratorStack.push_back(0);
@@ -298,8 +299,8 @@ class JsonToWisent : public json::json_sax_t
 
     void endExpression()
     {
-        auto &expression =
-            getExpressionSubexpressions(root)[expressionIndexStack.back()];
+        WisentExpression &expression =
+            getSubexpressionsBuffer(root)[expressionIndexStack.back()];
         expression.endChildOffset =
             expression.startChildOffset + argumentIteratorStack.back();
         resetTypeRLE(expression.endChildOffset);
@@ -435,7 +436,7 @@ class JsonToWisent : public json::json_sax_t
             }
         }, *columnData);
 
-        startCompressedColumnExpression(columnName);
+        startCompressedColumnExpression(columnName, columnMetaData);
         for (size_t i = 0; i < pages.size(); ++i)
         {
             std::vector<uint8_t> compressedData = pipeline->compress(
@@ -443,8 +444,7 @@ class JsonToWisent : public json::json_sax_t
                 result
             );
             columnMetaData.pageHeaders[i].compressedPageSize = compressedData.size();
-            writeCompressedPages(compressedData);
         }
-        endCompressedColumnExpression();
+        endCompressedColumnExpression(columnMetaData);
     }
 };
