@@ -2,7 +2,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <boost/optional.hpp>  // C++17: std::optional 
+#include <optional>  // C++17: std::optional 
+#include <variant>   // C++17: std::variant
 #include <sys/resource.h>
 #include <iostream>
 #include "../../Include/json.h"
@@ -12,7 +13,6 @@ using json = nlohmann::json;
 
 static rapidcsv::Document openCsvFile(std::string const &filepath)
 {
-    struct rusage usage;
     try {
         rapidcsv::Document doc(
             filepath,
@@ -30,11 +30,11 @@ static rapidcsv::Document openCsvFile(std::string const &filepath)
 }
 
 template <typename T>
-static std::vector<boost::optional<T>> loadCsvData(
+static std::vector<std::optional<T>> loadCsvData(
     rapidcsv::Document const &doc,
     std::string const &columnName
 ) {
-    std::vector<boost::optional<T>> column;
+    std::vector<std::optional<T>> column;
     try {
         auto numRows = doc.GetRowCount();
         column.reserve(numRows);
@@ -42,10 +42,10 @@ static std::vector<boost::optional<T>> loadCsvData(
 
         for (auto rowIndex = 0L; rowIndex < numRows; ++rowIndex)
         {
-            column.emplace_back(doc.GetCell<boost::optional<T>>(
+            column.emplace_back(doc.GetCell<std::optional<T>>(
                 columnIndex,
                 rowIndex,
-                [](std::string const &str, boost::optional<T> &val)
+                [](std::string const &str, std::optional<T> &val)
                 {
                     if (!std::is_same<T, std::string>::value)
                     {
@@ -147,4 +147,48 @@ static json loadCsvDataToJson(
         return json{}; 
     }
     return std::move(column);
+}
+
+using ColumnDataType = std::variant<
+    std::vector<int64_t>, 
+    std::vector<double>, 
+    std::vector<std::string>
+>;
+
+static std::optional<ColumnDataType> tryLoadColumn(
+    const rapidcsv::Document& doc, 
+    const std::string& columnName
+) {
+    auto filterValid = [](auto&& input) 
+    {
+        using T = typename std::decay_t<decltype(input)>::value_type::value_type;
+
+        std::vector<T> result;
+        result.reserve(input.size());
+        
+        for (auto& val : input) 
+        {
+            if (val) result.emplace_back(std::move(*val));
+        }
+        return result;
+    };
+
+    if (std::vector<std::optional<int64_t>> columnInt = loadCsvData<int64_t>(doc, columnName); 
+        !columnInt.empty()) 
+    {
+        return ColumnDataType{std::move(filterValid(columnInt))};
+    }
+
+    if (std::vector<std::optional<double>> columnDouble = loadCsvData<double>(doc, columnName); 
+        !columnDouble.empty()) 
+    {
+        return ColumnDataType{std::move(filterValid(columnDouble))};
+    }
+
+    if (std::vector<std::optional<std::string>> columnString = loadCsvData<std::string>(doc, columnName); 
+        !columnString.empty()) 
+    {
+        return ColumnDataType{std::move(filterValid(columnString))};
+    }
+    return std::nullopt;
 }

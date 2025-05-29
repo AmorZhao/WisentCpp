@@ -1,95 +1,61 @@
 #pragma once
-#include <string>
 #include <iostream>
-#include "../../Include/json.h"
+#include <vector>
+#include <string>
+#include "CompressionHelpers/Algorithms.hpp"
+#include "../Helpers/Result.hpp"
 
-using nlohmann::json; 
-
-enum class CompressionType {
-    NONE,
-    RLE,
-    HUFFMAN,
-    LZ77,
-    FSE
-};
-
-static const std::unordered_map<std::string, CompressionType> compressionAliases = 
-{
-    {"none", CompressionType::NONE},
-    {"rle", CompressionType::RLE},
-    {"runlengthencoding", CompressionType::RLE},
-    {"huffman", CompressionType::HUFFMAN},
-    {"lz77", CompressionType::LZ77},
-    {"fse", CompressionType::FSE},
-    {"finitestateentropy", CompressionType::FSE}
-};
-
-static CompressionType stringToCompressionType(std::string type) 
-{
-    std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-    auto it = compressionAliases.find(type);
-    if (it == compressionAliases.end()) 
-    {
-        throw std::invalid_argument("Unknown compression type: " + type);
-    }
-    return it->second;
-}
+using namespace wisent::algorithms; 
 
 class CompressionPipeline 
 {
-    private:
-        std::vector<CompressionType> argumentVectorChain;
-        std::vector<CompressionType> typeBytefieldChain;
-        std::vector<CompressionType> structureVectorChain;
-        std::vector<CompressionType> stringBufferChain;
-        bool isValidPipeline = true; 
+private:
+    std::vector<CompressionType> pipeline;
 
-    public:
-    CompressionPipeline(const json& pipelineSpec) 
+    CompressionPipeline(const std::vector<CompressionType>& steps) : pipeline(steps) {}
+
+public:
+    void log() const 
     {
-        const std::unordered_map<std::string, std::vector<CompressionType>*> chainMap = {
-            {"argumentVector", &argumentVectorChain},
-            {"typeBytefield", &typeBytefieldChain},
-            {"structureVector", &structureVectorChain},
-            {"stringBuffer", &stringBufferChain}
-        };
-
-        for (const auto& pair : chainMap) 
+        std::cout << "Logging compression pipeline:" << std::endl;
+        for (CompressionType step : pipeline) 
         {
-            const auto& key = pair.first;
-            auto& chain = pair.second;
-            if (!pipelineSpec.contains(key)) 
-            {
-                std::cerr << "Missing compression spec for '" << key << "'" << std::endl;
-                isValidPipeline = false;
-                return;
-            }
-
-            for (const auto& item : pipelineSpec[key]) 
-            {
-                try {
-                    chain->push_back(stringToCompressionType(item));
-                } 
-                catch (const std::exception& e) {
-                    std::cerr << "Invalid compression type in '" << key << "': " << item << std::endl;
-                    isValidPipeline = false;
-                    return;
-                }
-            }
+            std::cout << " - " << compressionTypeToString(step) << std::endl;
         }
     }
 
-    std::vector<CompressionType> getArgumentVectorChain() const 
-    {   return argumentVectorChain; }
+    std::vector<uint8_t> compress(
+        const std::vector<uint8_t>& data, 
+        Result<size_t>& result
+    ) const {
+        for (CompressionType type : pipeline) 
+        {
+            auto compressedData = performCompression(type, data);
+        }
+        return data;
+    }
 
-    std::vector<CompressionType> getTypeBytefieldChain() const 
-    {   return typeBytefieldChain; }
+    class Builder 
+    {
+    private:
+        std::vector<CompressionType> steps;
 
-    std::vector<CompressionType> getStructureVectorChain() const 
-    {   return structureVectorChain; }
+    public:
+        Builder& addStep(CompressionType type) 
+        {
+            steps.push_back(type);
+            return *this;
+        }
 
-    std::vector<CompressionType> getStringBufferChain() const 
-    {   return stringBufferChain; } 
+        Builder& addStep(const std::string& typeString) 
+        {
+            steps.push_back(stringToCompressionType(typeString));
+            return *this;
+        }
 
-    bool isValid() const { return isValidPipeline; }
+        CompressionPipeline build() 
+        {
+            return CompressionPipeline(steps);
+        }
+    };
 };

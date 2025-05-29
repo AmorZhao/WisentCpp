@@ -6,7 +6,7 @@ project(
   LANGUAGES CXX
 )
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fstandalone-debug")
 # set(CMAKE_CXX_EXTENSIONS NO)
@@ -34,17 +34,20 @@ add_executable(WisentServer Src/WisentServer.cpp)
 set(HelperFiles 
   Src/Helpers/SharedMemorySegment.cpp 
   Src/Helpers/ISharedMemorySegment.hpp
-  Src/CompressionHelpers/FiniteStateEntropy.cpp
-  Src/CompressionHelpers/Huffman.cpp
-  Src/CompressionHelpers/LZ77.cpp
+  Src/WisentCompressor/CompressionHelpers/Algorithms.cpp
+  Src/WisentCompressor/CompressionHelpers/Delta.cpp
+  Src/WisentCompressor/CompressionHelpers/RLE.cpp
+  Src/WisentCompressor/CompressionHelpers/LZ77.cpp
+  # Src/WisentCompressor/CompressionHelpers/Huffman.cpp
+  # Src/WisentCompressor/CompressionHelpers/FSE.cpp
 )
 
 set(SourceFiles
-  Src/WisentSerializer/WisentHelpers.h
   Src/WisentSerializer/WisentSerializer.cpp
-  Src/WisentParser/WisentParser.cpp
+  # Src/WisentParser/WisentParser.cpp
   Src/WisentCompressor/WisentCompressor.cpp
   Src/BsonSerializer/BsonSerializer.cpp
+  Src/ServerHelpers.cpp
 )
 
 add_library(Helpers SHARED ${HelperFiles})

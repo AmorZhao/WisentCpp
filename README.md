@@ -14,7 +14,8 @@ WisentCpp/
 ├── Include/
 │
 ├── Src/
-│   │
+│   ├── BossHelpers/
+│   ├── CompressionHelpers/
 │   ├── Helpers/ 
 │   │   ├── ISharedMemory
 │   │   ├── SharedMemorySegment
@@ -26,9 +27,11 @@ WisentCpp/
 │   │   ├── WisentHelpers
 │   │   └── WisentSerializer
 │   │
-│   ├── WisentParser/
+│   ├── WisentCompressor/
+│   │   ├── CompressionPipeline
+│   │   └── WisentCompressor
 │   │
-│   ├── WisentCompressionHelpers/
+│   ├── WisentParser/
 │   │
 │   └── WisentServer
 │
@@ -36,9 +39,9 @@ WisentCpp/
 │   ├── Benchmark/
 │   └── UnitTests/
 │
-├── client-app/ 
-│
 └── Misc/
+    ├── client-app/ 
+    └── Wisent-standalone/
 ```
 
 ## Requirements
@@ -49,25 +52,19 @@ Clang >= 3.4
 cmake >= 3.10
 ```
 
-QQ - [this stack overflow post](https://stackoverflow.com/questions/30714175/clang-3-4-c14-support)
-
 
 ## Run locally 
 
 ### Build project
 
 ```
-./test_build.sh
+./build_server.sh
 ./build/WisentServer
 ```
 
-QQ - data preparation
-
 <br>
 <br>
 <br>
 
----
 
-This codebase was initialised using the [TheLartians/ModernCppStarter](https://github.com/TheLartians/ModernCppStarter) template. 
 
