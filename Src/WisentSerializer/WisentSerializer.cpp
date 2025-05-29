@@ -1,43 +1,43 @@
 #include "WisentSerializer.hpp"
-// #include "../Helpers/Result.hpp"
 #include <cstdint>
 #include <string>
 #include <cassert>
 #include <vector>
 #include "JsonToWisent.hpp"
 
-WisentRootExpression *wisent::serializer::load(
-    std::string const &path,
+Result<WisentRootExpression*> wisent::serializer::load(
+    std::string const &filepath,
     std::string const &sharedMemoryName,
     std::string const &csvPrefix, 
     bool disableRLE,
     bool disableCsvHandling, 
-    bool enableDeltaEncoding, 
-    bool enableHuffmanEncoding,
-    bool forceReload)
-{
+    bool forceReload
+) {
+    Result<WisentRootExpression*> result; 
+
     ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
-    if (!forceReload && sharedMemory->exists() && !sharedMemory->isLoaded()) 
-    {
-        sharedMemory->load();
-    }
+    // if (!forceReload && sharedMemory->exists() && !sharedMemory->isLoaded()) 
+    // {
+    //     sharedMemory->load();
+    // }
     if (sharedMemory->isLoaded()) 
     {
-        if (!forceReload) 
-        {
-            return reinterpret_cast<WisentRootExpression *>(
-                sharedMemory->getBaseAddress()
-            );
-        }
+        // if (!forceReload) 
+        // {
+        //     return reinterpret_cast<WisentRootExpression *>(
+        //         sharedMemory->getBaseAddress()
+        //     );
+        // }
         free(sharedMemoryName);
     }
     SharedMemorySegments::setCurrentSharedMemory(sharedMemory);
 
-    std::ifstream ifs(path);
+    std::ifstream ifs(filepath);
     if (!ifs.good()) 
     {
-        std::cout << "failed to read: " << path << std::endl;
-        throw std::runtime_error("failed to read: " + path);
+        std::string errorMessage = "failed to read: " + filepath;
+        result.setError(errorMessage);
+        return result;
     }
 
     // 1st traversal: count & calculate the total size needed
@@ -145,8 +145,9 @@ WisentRootExpression *wisent::serializer::load(
     json::sax_parse(ifs, &jsonToWisent);
     ifs.close();
 
-    std::cout << "loaded: " << path << std::endl;
-    return jsonToWisent.getRoot();
+    std::cout << "loaded: " << filepath << std::endl;
+    result.setValue(jsonToWisent.getRoot());
+    return result; 
 }
 
 void wisent::serializer::unload (std::string const &sharedMemoryName)
@@ -167,39 +168,4 @@ void wisent::serializer::free(std::string const &sharedMemoryName)
     sharedMemory->erase();
     SharedMemorySegments::getSharedMemorySegments().erase(sharedMemoryName);
     std::cout << "Shared memory segment erased from list." << std::endl;
-}
-
-extern "C" {
-    char *wisentLoad (
-        char const *path, 
-        char const *sharedMemoryName, 
-        char const *csvPrefix, 
-        bool disableRLE, 
-        bool disableCsvHandling,
-        bool enableDeltaEncoding, 
-        bool enableHuffmanEncoding) 
-    {
-        return reinterpret_cast<char *>(
-            wisent::serializer::load(
-                path,
-                sharedMemoryName,
-                csvPrefix,
-                disableRLE,
-                disableCsvHandling,
-                enableDeltaEncoding, 
-                enableHuffmanEncoding, 
-                false // forceReload
-            )
-        );
-    }
-
-    void wisentUnload (char const *sharedMemoryName)
-    {
-        wisent::serializer::unload(sharedMemoryName);
-    }
-
-    void wisentFree (char const *sharedMemoryName)
-    {
-        wisent::serializer::free(sharedMemoryName);
-    }
 }

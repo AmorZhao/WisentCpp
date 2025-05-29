@@ -1,9 +1,9 @@
 #include "BsonSerializer/BsonSerializer.hpp"
 #include "WisentSerializer/WisentHelpers.hpp"
-// #include "WisentSerializer/WisentSerializer.hpp"
-// #include "WisentParser/WisentParser.hpp"
+#include "WisentSerializer/WisentSerializer.hpp"
 #include "WisentCompressor/CompressionPipeline.hpp"
 #include "WisentCompressor/WisentCompressor.hpp"
+// #include "WisentParser/WisentParser.hpp"
 #include "ServerHelpers.hpp"
 #include <chrono>
 #include <iostream>
@@ -30,14 +30,13 @@ int main(int argc, char **argv)
         );
 
         const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-        Result<WisentRootExpression*> serializeResult = makeResult<WisentRootExpression*>(nullptr); 
-        // Result<WisentRootExpression*> serializeResult = wisent::serializer::load(
-        //     filename, 
-        //     filepath, 
-        //     csvPrefix, 
-        //     disableRLE,
-        //     disableCsvHandling
-        // );
+        Result<WisentRootExpression*> serializeResult = wisent::serializer::load(
+            filepath, 
+            filename, 
+            csvPrefix, 
+            disableRLE,
+            disableCsvHandling
+        );
         const std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
 
         handleResponse(

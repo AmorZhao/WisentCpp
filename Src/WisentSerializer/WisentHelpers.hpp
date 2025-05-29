@@ -31,7 +31,7 @@ enum WisentArgumentType : size_t {
     ARGUMENT_TYPE_STRING,
     ARGUMENT_TYPE_SYMBOL,
     ARGUMENT_TYPE_EXPRESSION, 
-    ARGUMENT_TYPE_COMPRESSED
+    ARGUMENT_TYPE_BYTE_ARRAY
 };
 
 static size_t const WisentArgumentType_RLE_MINIMUM_SIZE =
@@ -46,9 +46,18 @@ static size_t const WisentArgumentType_DELTA_ENCODED_BIT =
     0x40; // Second-highest bit for delta encoding
 
 struct WisentExpression {
+    /*
+     * The index offset in the string buffer
+     * (relative to the start of the string buffer)
+     * where the expression head's name (string) is stored. 
+    */
     uint64_t symbolNameOffset;
-    uint64_t startChildOffset;
-    uint64_t endChildOffset;
+
+    // The index of the first child in the arguments buffer
+    uint64_t firstChildOffset;
+
+    // The index of the last child in the arguments buffer
+    uint64_t lastChildOffset;
 };
 
 /**
@@ -91,25 +100,25 @@ struct WisentRootExpression
 /* │   originalAddress (void*)                                            │   */
 /* │   stringBufferBytesWritten (size_t) ← Indicates how much of the      │   */
 /* │                                         string buffer is used        │   */
-/* ├──────────────────────────────────────────────────────────────────────┤   */
-/* │                            arguments[]                               │   */
-/* │                                                                      │   */
-/* │ ┌────────────────────────────────────────────────────────────────┐   │   */
-/* │ │ Argument Values:                                               │       */
-/* │ │   [WisentArgumentValue x argumentCount]                        │◄──── getArgumentsBuffer(root)  */
-/* │ └────────────────────────────────────────────────────────────────┘       */
-/* │ ┌────────────────────────────────────────────────────────────────┐       */
-/* │ │ Argument Types:                                                │       */
-/* │ │   [WisentArgumentType x argumentCount]                         │◄───── getArgumentTypesBuffer(root) */
-/* │ └────────────────────────────────────────────────────────────────┘       */
-/* │ ┌────────────────────────────────────────────────────────────────┐       */
-/* │ │ Expressions (subtree structure):                               │       */
+/* ├──────────────────────────────────────────────────────────────────────┤                                 */
+/* │                            arguments[]                               │  Part Extraction functions:     */
+/* │                                                                      │   each gives the first          */
+/* │ ┌────────────────────────────────────────────────────────────────┐   │   char* in the buffer           */
+/* │ │ Argument Values:                                               │                                     */
+/* │ │   [WisentArgumentValue x argumentCount]                        │◄──── getArgumentsBuffer(root)       */
+/* │ └────────────────────────────────────────────────────────────────┘                                     */
+/* │ ┌────────────────────────────────────────────────────────────────┐                                     */
+/* │ │ Argument Types:                                                │                                     */
+/* │ │   [WisentArgumentType x argumentCount]                         │◄───── getArgumentTypesBuffer(root)  */
+/* │ └────────────────────────────────────────────────────────────────┘                                     */
+/* │ ┌────────────────────────────────────────────────────────────────┐                                     */
+/* │ │ Expressions (subtree structure):                               │                                     */
 /* │ │   [WisentExpression x expressionCount]                         │◄───── getSubexpressionsBuffer(root) */
-/* │ └────────────────────────────────────────────────────────────────┘       */
-/* │ ┌────────────────────────────────────────────────────────────────┐       */
-/* │ │ String Buffer:                                                 │       */
-/* │ │   [stringBufferBytesWritten]                                   │◄───── getStringBuffer(root) */
-/* │ └────────────────────────────────────────────────────────────────┘       */
+/* │ └────────────────────────────────────────────────────────────────┘                                     */
+/* │ ┌────────────────────────────────────────────────────────────────┐                                     */
+/* │ │ String Buffer:                                                 │                                     */
+/* │ │   [stringBufferBytesWritten]                                   │◄───── getStringBuffer(root)         */
+/* │ └────────────────────────────────────────────────────────────────┘                                     */
 /* └──────────────────────────────────────────────────────────────────────┘   */
 /*                                                                            */
 /******************************************************************************/
@@ -231,17 +240,19 @@ inline double *makeDoubleArgument(
     return &getArgumentsBuffer(root)[argumentOutputIndex].asDouble;
 };
 
-inline size_t *makeBinaryArgument(
+inline size_t *makeByteArrayArgument(
     WisentRootExpression *root,
     uint64_t argumentOutputIndex
 ) {
-    getArgumentTypesBuffer(root)[argumentOutputIndex] = WisentArgumentType::ARGUMENT_TYPE_COMPRESSED;
+    getArgumentTypesBuffer(root)[argumentOutputIndex] = WisentArgumentType::ARGUMENT_TYPE_BYTE_ARRAY;
     return &getArgumentsBuffer(root)[argumentOutputIndex].asString;
 };
 
 /////////////////////////////// Encoding Helpers ///////////////////////////////
 
-static void setRLEArgumentFlagOrPropagateTypes(   // TODO: revisit
+/// TODO: revisit
+
+static void setRLEArgumentFlagOrPropagateTypes(   
     WisentRootExpression *root,
     uint64_t argumentOutputIndex, 
     uint64_t size
@@ -322,9 +333,9 @@ inline double *makeDoubleArgumentsRun(
 
 inline WisentExpression *makeExpression(
     WisentRootExpression *root, 
-    uint64_t expressionOutputI
+    uint64_t argumentOutputIndex
 ) {
-    return &getSubexpressionsBuffer(root)[expressionOutputI];
+    return &getSubexpressionsBuffer(root)[argumentOutputIndex];
 }
 
 /*******************************************************************************************/
@@ -391,7 +402,7 @@ inline size_t storeString(
     return destination - stringBufferStart;  // offset 
 }
 
-// same as storeString, but for byte arrays
+// same as storeString(), but for byte arrays
 inline size_t storeBytes(
     WisentRootExpression **root,
     const std::vector<uint8_t> &inputBytes,
