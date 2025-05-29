@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <cstdint>
 #include <unordered_map>
 #include <string>
 #include <vector>
@@ -28,11 +29,11 @@ namespace wisent::algorithms
 
     struct Statistics   // size = 4 x 8 byte values
     {
-        std::optional<int64_t> nullCount;
-        std::optional<int64_t> distinctCount;
+        int64_t nullCount;
+        int64_t distinctCount;
 
-        // std::optional<std::string> minString;
-        // std::optional<std::string> maxString;
+        std::optional<std::string> minString;
+        std::optional<std::string> maxString;
 
         std::optional<int64_t> minInt;
         std::optional<int64_t> maxInt;
@@ -41,22 +42,24 @@ namespace wisent::algorithms
         std::optional<double> maxDouble;
     };
 
+    constexpr size_t EXPRESSION_COUNT_PER_PAGE_HEADER = 11; // or 12 for dictionary pages
     struct PageHeader 
     {
         PageType pageType;  
 
         uint64_t numberOfValues;
-        std::optional<int64_t> firstRowIndex;
+        uint64_t firstRowIndex;
 
         uint64_t uncompressedPageSize;
         uint64_t compressedPageSize; 
 
-        std::optional<Statistics> pageStatistics;  // 4 arguments
+        Statistics pageStatistics;  // 4 arguments
 
         bool isDictionaryPage = false;
         std::optional<uint64_t> dictionaryPageSize;
 
-        size_t *byteArrayOffset = nullptr; 
+        // uint64_t *byteArrayOffset; 
+        std::vector<uint8_t> byteArray; 
     };
 
     enum class EncodingType : size_t {
@@ -89,23 +92,24 @@ namespace wisent::algorithms
         // TODO: add type builder for compression pipelines
     };
 
+    // (excluding page header expressions)
+    constexpr size_t KEY_VALUE_PAIR_PER_COLUMNMETADATA = 7;
     struct ColumnMetaData 
     {
         std::string columnName;  // head
 
-        uint64_t numerOfValues;
+        uint64_t numberOfValues;
         uint64_t totalUncompressedSize;
         uint64_t totalCompressedSize;
 
         PhysicalType physicalType;
         EncodingType encodingType;
         CompressionType compressionType;
-      
-        Statistics columnStatistics;
-        // std::optional<uint32_t> dictionary_page_offset;
 
-        std::vector<PageHeader> pageHeaders;
+        std::vector<PageHeader> pageHeaders; 
 
+        // optional: columnar statistics
+        // optional: dictionary offset
         // optional: bloom filtering
     };
 

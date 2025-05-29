@@ -192,4 +192,3 @@ static std::optional<ColumnDataType> tryLoadColumn(
     }
     return std::nullopt;
 }
-

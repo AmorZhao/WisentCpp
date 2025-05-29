@@ -1,5 +1,6 @@
 #pragma once
 #include "WisentHelpers.hpp"
+#include "../Helpers/Result.hpp"
 #include <string>
 #include <cassert>
 #include <sys/resource.h>
@@ -8,14 +9,12 @@ namespace wisent
 {
     namespace serializer 
     {
-        WisentRootExpression* load(
+        Result<WisentRootExpression*> load(
             std::string const& path, 
             std::string const& sharedMemoryName,
             std::string const& csvPrefix, 
             bool disableRLE = false,
             bool disableCsvHandling = false, 
-            bool enableDeltaEncoding = false,
-            bool enableHuffmanEncoding = false, 
             bool forceReload = false
         );
 
