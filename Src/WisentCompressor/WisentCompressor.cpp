@@ -433,13 +433,10 @@ Result<WisentRootExpression*> CompressAndLoadJson(
 }
 
 Result<WisentRootExpression*> wisent::compressor::CompressAndLoadBossExpression(
-    const char* data,
-    size_t length,
-    std::string const& csvPrefix, 
-    std::unordered_map<std::string, CompressionPipeline*> &compressionPipelineMap,
-    bool disableRLE,
-    bool disableCsvHandling, 
-    bool forceReload
+    boss::Expression &&input, 
+    std::unordered_map<std::string, CompressionPipeline*> &compressionPipelineMap, 
+    bool dictEncodeStrings,
+    bool dictEncodeDoublesAndLongs
 ) {
     Result<WisentRootExpression*> result; 
     result.setError("Not implemented");

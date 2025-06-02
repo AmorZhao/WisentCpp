@@ -5,6 +5,7 @@
 #include "CompressionPipeline.hpp"
 #include "../WisentSerializer/WisentHelpers.hpp"
 #include "../WisentSerializer/JsonToWisent.hpp"
+#include "../WisentSerializer/BossHelpers/BossExpression.hpp"
 
 namespace wisent 
 {
@@ -28,13 +29,10 @@ namespace wisent
         ); 
 
         Result<WisentRootExpression*> CompressAndLoadBossExpression(
-            const char* data,
-            size_t length,
-            std::string const& csvPrefix, 
-            std::unordered_map<std::string, CompressionPipeline*> &compressionPipelineMap,
-            bool disableRLE = false,
-            bool disableCsvHandling = false, 
-            bool forceReload = false
+            boss::Expression &&input, 
+            std::unordered_map<std::string, CompressionPipeline*> &compressionPipelineMap, 
+            bool dictEncodeStrings = true,
+            bool dictEncodeDoublesAndLongs = false
         );
     }
 }

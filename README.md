@@ -12,10 +12,11 @@ WisentCpp/
 │   └── WisentExample/
 │
 ├── Include/
+│   ├── httplib.h
+│   ├── nlohmann/json.h
+│   └── rapidcsv.h
 │
 ├── Src/
-│   ├── BossHelpers/
-│   ├── CompressionHelpers/
 │   ├── Helpers/ 
 │   │   ├── ISharedMemory
 │   │   ├── SharedMemorySegment
@@ -24,12 +25,25 @@ WisentCpp/
 │   ├── BsonSerializer/
 │   │
 │   ├── WisentSerializer/
-│   │   ├── WisentHelpers
-│   │   └── WisentSerializer
+│   │   ├── WisentHelpers.hpp
+│   │   ├── JsonToWisent.hpp
+│   │   ├── WisentSerializer (serializer functions)
+│   │   │   
+│   │   └── BossHelpers/
+│   │       ├── BossExpression.hpp
+│   │       ├── BossSerializerHelpers.hpp (BOSS equivalent to WisentHelpers.hpp)
+│   │       └── BossSerializedExpression.hpp (BOSS equivalent to JsonToWisent.hpp)
 │   │
 │   ├── WisentCompressor/
-│   │   ├── CompressionPipeline
-│   │   └── WisentCompressor
+│   │   ├── CompressionHelpers/
+│   │   │   ├── Algorithms (overall wrapper)
+│   │   │   └── ...(other compression algorithm implementations)
+│   │   │
+│   │   ├── CompressionPipeline.hpp 
+│   │   ├── WisentCompressor (compressor functions)
+│   │   │
+│   │   └── BossHelpers/
+│   │       └── BossCompressedExpression.hpp (BOSS equivalent to JsonToWisent.hpp)
 │   │
 │   ├── WisentParser/
 │   │

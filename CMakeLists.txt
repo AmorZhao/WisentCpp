@@ -43,10 +43,10 @@ set(HelperFiles
 )
 
 set(SourceFiles
-  Src/WisentSerializer/WisentSerializer.cpp
-  # Src/WisentParser/WisentParser.cpp
-  Src/WisentCompressor/WisentCompressor.cpp
   Src/BsonSerializer/BsonSerializer.cpp
+  Src/WisentSerializer/WisentSerializer.cpp
+  Src/WisentCompressor/WisentCompressor.cpp
+  # Src/WisentParser/WisentParser.cpp
   Src/ServerHelpers.cpp
 )
 

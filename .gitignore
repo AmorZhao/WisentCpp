@@ -34,4 +34,3 @@ Misc/Zstd-Compression/test/*
 
 # temporary ignorance
 Documentation/Final Report
-Src/BossHelpers/*
