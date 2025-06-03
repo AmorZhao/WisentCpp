@@ -14,6 +14,7 @@ load(
     Result<boss::serialization::SerializedExpression<Allocate, Reallocate, Free>*> result;
 
     using SerializedExpression = boss::serialization::SerializedExpression<Allocate, Reallocate, Free>;
+    
     auto serializedExpression = new SerializedExpression(
         std::move(input), 
         dictEncodeStrings, 

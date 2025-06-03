@@ -1,9 +1,9 @@
 #include "WisentSerializer.hpp"
+#include "JsonToWisent.hpp"
 #include <cstdint>
 #include <string>
 #include <cassert>
 #include <vector>
-#include "JsonToWisent.hpp"
 
 Result<WisentRootExpression*> wisent::serializer::load(
     std::string const &filepath,
@@ -127,8 +127,6 @@ Result<WisentRootExpression*> wisent::serializer::load(
             return true;   // never reached
         }
     );
-
-    std::unordered_map<std::string, CompressionPipeline*> dummyMap; 
 
     // initialise Wisent expression tree
     JsonToWisent jsonToWisent(

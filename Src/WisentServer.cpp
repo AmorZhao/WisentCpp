@@ -48,42 +48,6 @@ int main(int argc, char **argv)
         return;
     });
 
-    svr.Post("/serialize", [&](const httplib::Request &req, httplib::Response &res) 
-    {
-        std::string filename;
-        std::string filepath;
-        std::string csvPrefix; 
-        bool disableRLE = false;
-        bool disableCsvHandling = false;
-        parseReqestParams(
-            req.params, 
-            filename, 
-            filepath, 
-            csvPrefix,
-            disableRLE, 
-            disableCsvHandling
-        );
-
-        const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-        Result<WisentRootExpression*> serializeResult = makeResult<WisentRootExpression*>(nullptr); 
-        // Result<WisentRootExpression*> serializeResult = wisent::serializer::load(
-        //     filename, 
-        //     filepath, 
-        //     csvPrefix, 
-        //     disableRLE,
-        //     disableCsvHandling
-        // );
-        const std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-
-        handleResponse(
-            res, 
-            serializeResult, 
-            start, 
-            end
-        );
-        return;
-    });
-
     svr.Post("/compress", [&](const httplib::Request &req, httplib::Response &res) 
     {
         std::string filename;
