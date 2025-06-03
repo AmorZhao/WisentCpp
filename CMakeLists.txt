@@ -45,6 +45,7 @@ set(HelperFiles
 set(SourceFiles
   Src/BsonSerializer/BsonSerializer.cpp
   Src/WisentSerializer/WisentSerializer.cpp
+  # Src/WisentSerializer/BossHelpers/BossSerializer.cpp
   Src/WisentCompressor/WisentCompressor.cpp
   # Src/WisentParser/WisentParser.cpp
   Src/ServerHelpers.cpp

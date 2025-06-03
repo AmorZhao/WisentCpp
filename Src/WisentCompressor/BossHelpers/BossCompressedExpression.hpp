@@ -3,11 +3,11 @@
 #include "../CompressionHelpers/Algorithms.hpp"
 
 /*
- * BossCompressedExpression inherits from boss::serialization::SerializedExpression
- * and makes the following changes: 
- *  - CountArguments functions takes into account the number of arguments *after* compression 
- *  - FlattenedArguments function splits, encode and compress the span vectors 
- *    as specified in the compression pipeline map
+ *  BossCompressedExpression inherits from boss::serialization::SerializedExpression
+ *  and makes the following changes: 
+ *   - CountArguments functions takes into account the number of arguments *after* compression 
+ *   - FlattenedArguments function splits, encode and compress the span vectors 
+ *     as specified in the compression pipeline map
  */
 
 using namespace boss::serialization;
@@ -57,9 +57,9 @@ struct BossCompressedExpression : SerializedExpression<allocateFunction, realloc
     Expression *expressionsBuffer() const { return getExpressionSubexpressions(root); }
     Argument *spanDictionariesBuffer() const { return getSpanDictionaries(root); }
 
-    //////////////////////////////// Count Unique Arguments /////////////////////////////
-
     #pragma region counter_functions
+
+    //////////////////////////////// Count Unique Arguments /////////////////////////////
 
     // construct dictionary
     #pragma region count_unique_arguments
@@ -595,6 +595,169 @@ struct BossCompressedExpression : SerializedExpression<allocateFunction, realloc
 
     #pragma endregion counter_functions
 
+    //////////////////////////////// Compression Helpers ///////////////////////////////
+
+    #pragma region convert_spans_to_single_span
+    boss::ComplexExpression convertSpansToSingleSpan(boss::ComplexExpression &&e)
+    {
+        auto [head, statics, dynamics, spans] = std::move(e).decompose();
+        std::transform(
+            std::make_move_iterator(dynamics.begin()), std::make_move_iterator(dynamics.end()), dynamics.begin(),
+            [](auto &&arg) {
+                auto [cHead, cStatics, cDynamics, cSpans] = std::move(std::get<boss::ComplexExpression>(arg)).decompose();
+                std::transform(
+                    std::make_move_iterator(cDynamics.begin()), 
+                    std::make_move_iterator(cDynamics.end()),
+                    cDynamics.begin(), 
+                    [](auto &&lArg) 
+                    {
+                        auto [lHead, lStatics, lDynamics, lSpans] = std::move(std::get<boss::ComplexExpression>(lArg)).decompose();
+                        boss::expressions::ExpressionSpanArguments newSpanArgs;
+                        std::vector<bool> boolData;
+                        std::vector<int8_t> charData;
+                        std::vector<int32_t> intData;
+                        std::vector<int64_t> longData;
+                        std::vector<float> floatData;
+                        std::vector<double> doubleData;
+                        std::vector<std::string> stringData;
+                        std::vector<boss::Symbol> symbolData;
+                        std::for_each(lSpans.begin(), lSpans.end(), [&](auto const &spanArg) {
+                            if (std::holds_alternative<boss::Span<bool>>(spanArg)) {
+                                // std::cout << "BOOL" << std::endl;
+                                auto const &typedSpan = std::get<boss::Span<bool>>(spanArg);
+                                for (size_t i = 0; i < typedSpan.size(); i++) {
+                                    boolData.push_back(typedSpan[i]);
+                                }
+                            }
+                            else if (std::holds_alternative<boss::Span<bool const>>(spanArg)) {
+                                auto const &typedSpan = std::get<boss::Span<bool const>>(spanArg);
+                                for (size_t i = 0; i < typedSpan.size(); i++) {
+                                    boolData.push_back(typedSpan[i]);
+                                }
+                            }
+                            else if (std::holds_alternative<boss::Span<int8_t>>(spanArg)) {
+                                auto const &typedSpan = std::get<boss::Span<int8_t>>(spanArg);
+                                for (size_t i = 0; i < typedSpan.size(); i++) {
+                                    charData.push_back(typedSpan[i]);
+                                }
+                            }
+                            else if (std::holds_alternative<boss::Span<int8_t const>>(spanArg)) {
+                                auto const &typedSpan = std::get<boss::Span<int8_t const>>(spanArg);
+                                for (size_t i = 0; i < typedSpan.size(); i++) {
+                                    charData.push_back(typedSpan[i]);
+                                }
+                            }
+                            else if (std::holds_alternative<boss::Span<int32_t>>(spanArg)) {
+                                auto const &typedSpan = std::get<boss::Span<int32_t>>(spanArg);
+                                for (size_t i = 0; i < typedSpan.size(); i++) {
+                                    intData.push_back(typedSpan[i]);
+                                }
+                            }
+                            else if (std::holds_alternative<boss::Span<int32_t const>>(spanArg)) {
+                                auto const &typedSpan = std::get<boss::Span<int32_t const>>(spanArg);
+                                for (size_t i = 0; i < typedSpan.size(); i++) {
+                                    intData.push_back(typedSpan[i]);
+                                }
+                            }
+                            else if (std::holds_alternative<boss::Span<int64_t>>(spanArg)) {
+                                auto const &typedSpan = std::get<boss::Span<int64_t>>(spanArg);
+                                for (size_t i = 0; i < typedSpan.size(); i++) {
+                                    longData.push_back(typedSpan[i]);
+                                }
+                            }
+                            else if (std::holds_alternative<boss::Span<int64_t const>>(spanArg)) {
+                                auto const &typedSpan = std::get<boss::Span<int64_t const>>(spanArg);
+                                for (size_t i = 0; i < typedSpan.size(); i++) {
+                                    longData.push_back(typedSpan[i]);
+                                }
+                            }
+                            else if (std::holds_alternative<boss::Span<float>>(spanArg)) {
+                                auto const &typedSpan = std::get<boss::Span<float>>(spanArg);
+                                for (size_t i = 0; i < typedSpan.size(); i++) {
+                                    floatData.push_back(typedSpan[i]);
+                                }
+                            }
+                            else if (std::holds_alternative<boss::Span<float const>>(spanArg)) {
+                                auto const &typedSpan = std::get<boss::Span<float const>>(spanArg);
+                                for (size_t i = 0; i < typedSpan.size(); i++) {
+                                    floatData.push_back(typedSpan[i]);
+                                }
+                            }
+                            else if (std::holds_alternative<boss::Span<double>>(spanArg)) {
+                                auto const &typedSpan = std::get<boss::Span<double>>(spanArg);
+                                for (size_t i = 0; i < typedSpan.size(); i++) {
+                                    doubleData.push_back(typedSpan[i]);
+                                }
+                            }
+                            else if (std::holds_alternative<boss::Span<double const>>(spanArg)) {
+                                auto const &typedSpan = std::get<boss::Span<double const>>(spanArg);
+                                for (size_t i = 0; i < typedSpan.size(); i++) {
+                                    doubleData.push_back(typedSpan[i]);
+                                }
+                            }
+                            else if (std::holds_alternative<boss::Span<std::string>>(spanArg)) {
+                                // std::cout << "STRING" << std::endl;
+                                auto const &typedSpan = std::get<boss::Span<std::string>>(spanArg);
+                                for (size_t i = 0; i < typedSpan.size(); i++) {
+                                    stringData.push_back(typedSpan[i]);
+                                }
+                            }
+                            else if (std::holds_alternative<boss::Span<std::string const>>(spanArg)) {
+                                auto const &typedSpan = std::get<boss::Span<std::string const>>(spanArg);
+                                for (size_t i = 0; i < typedSpan.size(); i++) {
+                                    stringData.push_back(typedSpan[i]);
+                                }
+                            }
+                            else if (std::holds_alternative<boss::Span<boss::Symbol>>(spanArg)) {
+                                auto const &typedSpan = std::get<boss::Span<boss::Symbol>>(spanArg);
+                                for (size_t i = 0; i < typedSpan.size(); i++) {
+                                    symbolData.push_back(typedSpan[i]);
+                                }
+                            }
+                            else if (std::holds_alternative<boss::Span<boss::Symbol const>>(spanArg)) {
+                                auto const &typedSpan = std::get<boss::Span<boss::Symbol const>>(spanArg);
+                                for (size_t i = 0; i < typedSpan.size(); i++) {
+                                    symbolData.push_back(typedSpan[i]);
+                                }
+                            }
+                            else {
+                                // std::cout << "WHAT" << std::endl;
+                            }
+                        });
+                        if (boolData.size() > 0) {
+                            newSpanArgs.push_back(boss::Span<bool>(std::move(boolData)));
+                        }
+                        else if (charData.size() > 0) {
+                            newSpanArgs.push_back(boss::Span<int8_t>(std::move(charData)));
+                        }
+                        else if (intData.size() > 0) {
+                            newSpanArgs.push_back(boss::Span<int32_t>(std::move(intData)));
+                        }
+                        else if (longData.size() > 0) {
+                            newSpanArgs.push_back(boss::Span<int64_t>(std::move(longData)));
+                        }
+                        else if (floatData.size() > 0) {
+                            newSpanArgs.push_back(boss::Span<float>(std::move(floatData)));
+                        }
+                        else if (doubleData.size() > 0) {
+                            newSpanArgs.push_back(boss::Span<double>(std::move(doubleData)));
+                        }
+                        else if (stringData.size() > 0) {
+                            newSpanArgs.push_back(boss::Span<std::string>(std::move(stringData)));
+                        }
+                        else if (symbolData.size() > 0) {
+                            newSpanArgs.push_back(boss::Span<boss::Symbol>(std::move(symbolData)));
+                        }
+                        return boss::ComplexExpression(std::move(lHead), std::move(lStatics),
+                                                        std::move(lDynamics), std::move(newSpanArgs));
+                    });
+                return boss::ComplexExpression(std::move(cHead), std::move(cStatics), std::move(cDynamics),
+                                            std::move(cSpans));
+            });
+        return boss::ComplexExpression(std::move(head), std::move(statics), std::move(dynamics), std::move(spans));
+    }
+    #pragma endregion convert_spans_to_single_span
+
     //////////////////////////////// Flatten Arguments /////////////////////////////////
 
     #pragma region flatten_arguments
@@ -633,79 +796,17 @@ struct BossCompressedExpression : SerializedExpression<allocateFunction, realloc
                     });
     }
 
-    // template <typename TupleLike, uint64_t... Is>
-    //   static void incSpanArgumentsInTuple(size_t& spanI, TupleLike const& tuple,
-    //                                         std::index_sequence<Is...> /*unused*/) {
-    //     (incSpanArguments(std::get<Is>(tuple), spanI), ...);
-    //   }
-
-    //   static void incSpanDynamicsArguments(boss::Expression const& input, size_t& spanI) {
-    //     return std::visit(
-    // 		      [&spanI](auto& input) {
-    //           if constexpr(std::is_same_v<std::decay_t<decltype(input)>,
-    //           boss::ComplexExpression>) {
-    //             std::for_each(input.getDynamicArguments().begin(),
-    // 			  input.getDynamicArguments().end(),
-    // 			  [&spanI](auto const& argument) {
-    // 			    incSpanDynamicsArguments(argument, spanI);
-    // 			  });
-    // 	    std::for_each(
-    // 			  input.getSpanArguments().begin(), input.getSpanArguments().end(),
-    // 			  [&spanI](auto const& argument) {
-    // 			    spanI++;
-    // 			  });
-    //           }
-    //         },
-    //         input);
-    //   }
-
     uint64_t countArgumentsPacked(boss::ComplexExpression const &expression, SpanDictionary &spanDict)
     {
         size_t spanI = 0;
         return countArgumentsPacked(expression, spanDict, spanI);
     }
 
-    // bool countArgumentsPackedAtLevel(boss::ComplexExpression const& expression, uint64_t& count,
-    // SpanDictionary& spanDict, size_t& spanI, int64_t level) {
-    //   if (level == 1) {
-    //     countUniqueArgumentsStaticsAndSpans(input, dict, spanI);
-    //     return true;
-    //   }
-    //   bool recurse = false;
-    //   std::visit(
-    // 	       [&count, &dict, &spanI, &level, &recurse](auto& input) {
-    // 		 if constexpr(std::is_same_v<std::decay_t<decltype(input)>, boss::ComplexExpression>) {
-    // 	     	   std::for_each(input.getDynamicArguments().begin(),
-    // 				 input.getDynamicArguments().end(),
-    // 				 [&count, &dict, &spanI, &level, &recurse](auto const& argument) {
-    // 				   recurse |= countArgumentsPackedAtLevel(argument, dict, spanI, level - 1);
-    // 				 });
-    // 		 }
-    // 	       },
-    // 	       input);
-    //   return recurse;
-    // }
-
-    // uint64_t countArgumentsPackedDynamics(boss::ComplexExpression const& expression,
-    // SpanDictionary& spanDict, size_t spanIInput) {
-    //   uint64_t dynamicsCount = expression.getDynamicArguments().size();
-    //   std::for_each(expression.getDynamicArguments().begin(),
-    // 		  expression.getDynamicArguments().end(),
-    // 		  [&spanI](auto const& argument) {
-    // 		    incSpanArguments(argument, spanI);
-    // 		  });
-    //   return dynamicsCount;
-    // }
-
     uint64_t countArgumentsPacked(boss::ComplexExpression const &expression, SpanDictionary &spanDict, size_t spanIInput)
     {
         size_t spanI = spanIInput;
         uint64_t staticsCount = std::tuple_size_v<std::decay_t<decltype(expression.getStaticArguments())>>;
         uint64_t dynamicsCount = expression.getDynamicArguments().size();
-        // incSpanArgumentsInTuple(spanI,
-        // 			    expression.getStaticArguments(),
-        // 			    std::make_index_sequence<std::tuple_size_v<
-        // 			    std::decay_t<decltype(expression.getStaticArguments())>>>());
 
         uint64_t spansCount = std::accumulate(
             expression.getSpanArguments().begin(), expression.getSpanArguments().end(), uint64_t(0),
