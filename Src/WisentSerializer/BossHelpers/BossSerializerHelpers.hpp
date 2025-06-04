@@ -120,7 +120,7 @@ struct PortableBossRootExpression {
 
 //////////////////////////////// Part Extraction ///////////////////////////////
 
-PortableBossRootExpression *getDummySerializedExpression();
+// PortableBossRootExpression *getDummySerializedExpression();
 
 static union PortableBossArgumentValue *getExpressionArguments(PortableBossRootExpression *root) 
 {
