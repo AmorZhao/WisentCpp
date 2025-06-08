@@ -1,13 +1,12 @@
 #include "ServerHelpers.hpp"
 #include "BsonSerializer/BsonSerializer.hpp"
 #include "Helpers/CsvLoading.hpp"
-#include "WisentParser/WisentParser.hpp"
 #include "WisentCompressor/CompressionPipeline.hpp"
 #include <fstream>
 #include <string>
 #include <filesystem>
 
-void parseReqestParams(
+void parseRequestParams(
     const httplib::Params &params, 
     std::string &filename, 
     std::string &filepath, 

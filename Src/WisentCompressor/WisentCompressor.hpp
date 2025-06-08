@@ -2,9 +2,9 @@
 #include <string>
 #include <unordered_map>
 #include "../Helpers/Result.hpp"
+#include "../Helpers/WisentHelpers/WisentHelpers.hpp"
+#include "../Helpers/BossHelpers/BossExpression.hpp"
 #include "CompressionPipeline.hpp"
-#include "../WisentSerializer/WisentHelpers.hpp"
-#include "../WisentSerializer/BossHelpers/BossExpression.hpp"
 
 namespace wisent 
 {

@@ -1,5 +1,5 @@
 #include "WisentCompressor.hpp"
-#include "../WisentSerializer/JsonToWisent.hpp"
+#include "../Helpers/WisentHelpers/JsonToWisent.hpp"
 #include "../Helpers/CsvLoading.hpp"
 #include "../Helpers/ISharedMemorySegment.hpp"
 #include "CompressionPipeline.hpp"

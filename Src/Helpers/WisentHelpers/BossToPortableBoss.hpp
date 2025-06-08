@@ -28,9 +28,8 @@
  */
 
 // #include "BOSS.hpp"
-#include "BossExpression.hpp"
-// #include "BossSerializerHelpers.hpp"
-#include "../WisentHelpers.hpp"
+#include "../BossHelpers/BossExpression.hpp"
+#include "WisentHelpers.hpp"
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
@@ -114,7 +113,8 @@ template <void *(*allocateFunction)(size_t) = std::malloc,
 struct SerializedExpression 
 {
     using BOSSArgumentPair =
-        std::pair<boss::expressions::ExpressionArguments, boss::expressions::ExpressionSpanArguments>;
+        std::pair<boss::expressions::ExpressionArguments, 
+                  boss::expressions::ExpressionSpanArguments>;
 
     // using DictKey = std::variant<bool, int8_t, int32_t, int64_t, float_t, double_t>;
     using DictKey = std::variant<int64_t, double_t, std::string>;
@@ -188,9 +188,12 @@ struct SerializedExpression
     }
 
     template <typename TupleLike, uint64_t... Is>
-    static void countUniqueArgumentsInTuple(SpanDictionary &dict, size_t &spanI, TupleLike const &tuple,
-                                            std::index_sequence<Is...> /*unused*/)
-    {
+    static void countUniqueArgumentsInTuple(
+        SpanDictionary &dict, 
+        size_t &spanI, 
+        TupleLike const &tuple,
+        std::index_sequence<Is...> /*unused*/
+    ) {
         (countUniqueArgumentsStaticsAndSpans(std::get<Is>(tuple), dict, spanI), ...);
     };
 
@@ -205,9 +208,12 @@ struct SerializedExpression
         return std::move(res);
     };
 
-    static bool countUniqueArgumentsAtLevel(boss::Expression const &input, SpanDictionary &dict, size_t &spanI,
-                                            int64_t level)
-    {
+    static bool countUniqueArgumentsAtLevel(
+        boss::Expression const &input, 
+        SpanDictionary &dict, 
+        size_t &spanI,
+        int64_t level
+    ) {
         if (level == 1) {
             countUniqueArgumentsStaticsAndSpans(input, dict, spanI);
             return true;
@@ -228,8 +234,11 @@ struct SerializedExpression
         return recurse;
     };
 
-    static void countUniqueArgumentsStaticsAndSpans(boss::Expression const &input, SpanDictionary &dict, size_t &spanI)
-    {
+    static void countUniqueArgumentsStaticsAndSpans(
+        boss::Expression const &input, 
+        SpanDictionary &dict, 
+        size_t &spanI
+    ) {
         std::visit(
             [&dict, &spanI](auto &input) {
                 if constexpr (std::is_same_v<std::decay_t<decltype(input)>, boss::ComplexExpression>) {
@@ -389,9 +398,13 @@ struct SerializedExpression
         return count;
     };
 
-    static bool countArgumentBytesDictAtLevel(boss::Expression const &input, uint64_t &count, SpanDictionary &dict,
-                                              size_t &spanI, int64_t level)
-    {
+    static bool countArgumentBytesDictAtLevel(
+        boss::Expression const &input, 
+        uint64_t &count, 
+        SpanDictionary &dict,
+        size_t &spanI, 
+        int64_t level
+    ) {
         if (level == 1) {
             count += countArgumentBytesDictStaticsAndSpans(input, dict, spanI);
             return true;
@@ -412,9 +425,11 @@ struct SerializedExpression
         return recurse;
     };
 
-    static uint64_t countArgumentBytesDictStaticsAndSpans(boss::Expression const &input, SpanDictionary &dict,
-                                                          size_t &spanI)
-    {
+    static uint64_t countArgumentBytesDictStaticsAndSpans(
+        boss::Expression const &input, 
+        SpanDictionary &dict,
+        size_t &spanI
+    ) {
         return std::visit(
             [&dict, &spanI](auto &input) -> size_t {
                 if constexpr (std::is_same_v<std::decay_t<decltype(input)>, boss::ComplexExpression>) {
@@ -621,44 +636,44 @@ struct SerializedExpression
                         input.getSpanArguments().begin(), 
                         input.getSpanArguments().end(), uint64_t(0),
                         [&](size_t runningSum, auto const &argument) -> uint64_t {
-                            return runningSum +
-                                    std::visit(
-                                        [&](auto const &argument) -> uint64_t {
-                                            if constexpr (std::is_same_v<std::decay_t<decltype(argument)>, boss::Span<std::string>>) 
-                                            {
-                                                return std::accumulate(
-                                                    argument.begin(), argument.end(), uint64_t(0),
-                                                    [&](uint64_t innerRunningSum, auto const &stringArgument) -> uint64_t {
-                                                        uint64_t resRunningSum =
-                                                            innerRunningSum +
-                                                            (!dictEncodeStrings * (strlen(stringArgument.c_str()) + 1)); 
-                                                        if (dictEncodeStrings && stringSet.find(stringArgument) == stringSet.end()) 
-                                                        {
-                                                            stringSet.insert(stringArgument);
-                                                            resRunningSum += strlen(stringArgument.c_str()) + 1;
-                                                        }
-                                                        return resRunningSum;
-                                                    });
-                                            }
-                                            else if constexpr (std::is_same_v<std::decay_t<decltype(argument)>, boss::Span<boss::Symbol>>) 
-                                            {
-                                                return std::accumulate(
-                                                    argument.begin(), argument.end(), uint64_t(0),
-                                                    [&](uint64_t innerRunningSum, auto const &stringArgument) -> uint64_t {
-                                                        uint64_t resRunningSum = 
-                                                            innerRunningSum + 
-                                                            (!dictEncodeStrings * (strlen(stringArgument.getName().c_str()) + 1));
-                                                        if (dictEncodeStrings && stringSet.find(stringArgument.getName()) == stringSet.end()) 
-                                                        {
-                                                            stringSet.insert(stringArgument.getName());
-                                                            resRunningSum += strlen(stringArgument.getName().c_str()) + 1;
-                                                        }
-                                                        return resRunningSum;
-                                                    });
-                                            }
-                                            return 0;
-                                       },
-                                       std::forward<decltype(argument)>(argument));
+                            return runningSum + std::visit(
+                                    [&](auto const &argument) -> uint64_t 
+                                    {
+                                        if constexpr (std::is_same_v<std::decay_t<decltype(argument)>, boss::Span<std::string>>) 
+                                        {
+                                            return std::accumulate(
+                                                argument.begin(), argument.end(), uint64_t(0),
+                                                [&](uint64_t innerRunningSum, auto const &stringArgument) -> uint64_t {
+                                                    uint64_t resRunningSum =
+                                                        innerRunningSum +
+                                                        (!dictEncodeStrings * (strlen(stringArgument.c_str()) + 1)); 
+                                                    if (dictEncodeStrings && stringSet.find(stringArgument) == stringSet.end()) 
+                                                    {
+                                                        stringSet.insert(stringArgument);
+                                                        resRunningSum += strlen(stringArgument.c_str()) + 1;
+                                                    }
+                                                    return resRunningSum;
+                                                });
+                                        }
+                                        else if constexpr (std::is_same_v<std::decay_t<decltype(argument)>, boss::Span<boss::Symbol>>) 
+                                        {
+                                            return std::accumulate(
+                                                argument.begin(), argument.end(), uint64_t(0),
+                                                [&](uint64_t innerRunningSum, auto const &stringArgument) -> uint64_t {
+                                                    uint64_t resRunningSum = 
+                                                        innerRunningSum + 
+                                                        (!dictEncodeStrings * (strlen(stringArgument.getName().c_str()) + 1));
+                                                    if (dictEncodeStrings && stringSet.find(stringArgument.getName()) == stringSet.end()) 
+                                                    {
+                                                        stringSet.insert(stringArgument.getName());
+                                                        resRunningSum += strlen(stringArgument.getName().c_str()) + 1;
+                                                    }
+                                                    return resRunningSum;
+                                                });
+                                        }
+                                        return 0;
+                                    },
+                                    std::forward<decltype(argument)>(argument));
                         });
 
                     return headBytes + staticArgsBytes + dynamicArgsBytes + spanArgsBytes;
@@ -788,8 +803,11 @@ struct SerializedExpression
     //   return dynamicsCount;
     // }
 
-    uint64_t countArgumentsPacked(boss::ComplexExpression const &expression, SpanDictionary &spanDict, size_t spanIInput)
-    {
+    uint64_t countArgumentsPacked(
+        boss::ComplexExpression const &expression, 
+        SpanDictionary &spanDict, 
+        size_t spanIInput
+    ) {
         size_t spanI = spanIInput;
         uint64_t staticsCount = std::tuple_size_v<std::decay_t<decltype(expression.getStaticArguments())>>;
         uint64_t dynamicsCount = expression.getDynamicArguments().size();
@@ -799,15 +817,23 @@ struct SerializedExpression
         // 			    std::decay_t<decltype(expression.getStaticArguments())>>>());
 
         uint64_t spansCount = std::accumulate(
-            expression.getSpanArguments().begin(), expression.getSpanArguments().end(), uint64_t(0),
-            [&spanDict, &spanI](uint64_t runningSum, auto const &spanArg) -> uint64_t {
+            expression.getSpanArguments().begin(), 
+            expression.getSpanArguments().end(), uint64_t(0),
+            [&spanDict, &spanI](uint64_t runningSum, auto const &spanArg) -> uint64_t 
+            {
                 return runningSum + std::visit(
-                        [&](auto const &spanArgument) -> uint64_t {
+                        [&](auto const &spanArgument) -> uint64_t 
+                        {
                             uint64_t spanSize = spanArgument.size();
                             auto const &arg0 = spanArgument[0];
-                            uint64_t valsPerArg = static_cast<uint64_t>(
-                                sizeof(arg0) > sizeof(Argument) ? 1 : sizeof(Argument) / sizeof(arg0));
-                            if (spanDict.find(spanI) != spanDict.end()) {
+                            uint64_t valsPerArg = 
+                                static_cast<uint64_t>(
+                                    sizeof(arg0) > sizeof(Argument) 
+                                    ? 1 
+                                    : sizeof(Argument) / sizeof(arg0)
+                                );
+                            if (spanDict.find(spanI) != spanDict.end()) 
+                            {
                                 auto &dict = spanDict[spanI];
                                 valsPerArg = sizeof(Argument) / getArgumentSizeFromDictSize(dict);
                             }
@@ -881,16 +907,20 @@ struct SerializedExpression
         std::unordered_map<std::string, size_t> &stringMap, 
         bool dictEncodeStrings
     ) {
-        auto const nextLayerTypeOffset = typeOutputI + std::accumulate(
-                                        inputs.begin(), inputs.end(), 0, 
-                                        [this](auto count, auto const &expression) {
-                                            return count + countArgumentTypes(expression);
-                                        });
-        auto const nextLayerOffset = argumentOutputI + std::accumulate(
-                                        inputs.begin(), inputs.end(), 0,
-                                        [this, &spanDict, spanI](auto count, auto const &expression) {
-                                            return count + countArgumentsPacked(expression, spanDict, spanI);
-                                        });
+        auto const nextLayerTypeOffset = 
+            typeOutputI 
+            + std::accumulate(
+                inputs.begin(), inputs.end(), 0, 
+                [this](auto count, auto const &expression) {
+                    return count + countArgumentTypes(expression);
+                });
+        auto const nextLayerOffset = 
+            argumentOutputI 
+            + std::accumulate(
+                inputs.begin(), inputs.end(), 0,
+                [this, &spanDict, spanI](auto count, auto const &expression) {
+                    return count + countArgumentsPacked(expression, spanDict, spanI);
+                });
         auto children = std::vector<boss::ComplexExpression>();
         auto childrenCountRunningSum = 0UL;
         auto childrenTypeCountRunningSum = 0UL;
@@ -1734,8 +1764,11 @@ struct SerializedExpression
     #pragma endregion Add_Index_To_Stream
 
     #pragma region Deserialization
-    BOSSArgumentPair deserializeArguments(uint64_t startChildOffset, uint64_t endChildOffset,
-                                          uint64_t startChildTypeOffset, uint64_t endChildTypeOffset) const
+    BOSSArgumentPair deserializeArguments(
+            uint64_t startChildOffset, 
+            uint64_t endChildOffset,
+            uint64_t startChildTypeOffset, 
+            uint64_t endChildTypeOffset) const
     {
         boss::expressions::ExpressionArguments arguments;
         boss::expressions::ExpressionSpanArguments spanArguments;

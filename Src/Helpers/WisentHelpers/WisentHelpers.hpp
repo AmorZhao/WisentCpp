@@ -43,17 +43,17 @@ constexpr uint64_t PortableBossArgument_STRING_SIZE = sizeof(WisentString);
 constexpr uint64_t PortableBossArgument_EXPRESSION_SIZE = sizeof(WisentExpressionIndex);
 
 enum WisentArgumentType : size_t {
-    ARGUMENT_TYPE_BOOL,
-    ARGUMENT_TYPE_CHAR,
-    ARGUMENT_TYPE_SHORT,
-    ARGUMENT_TYPE_INT,
-    ARGUMENT_TYPE_LONG,
-    ARGUMENT_TYPE_FLOAT,
-    ARGUMENT_TYPE_DOUBLE,
-    ARGUMENT_TYPE_STRING,
-    ARGUMENT_TYPE_SYMBOL,
-    ARGUMENT_TYPE_EXPRESSION,
-    ARGUMENT_TYPE_BYTE_ARRAY
+    ARGUMENT_TYPE_BOOL,         // 0
+    ARGUMENT_TYPE_CHAR,         // 1
+    ARGUMENT_TYPE_SHORT,        // 2
+    ARGUMENT_TYPE_INT,          // 3
+    ARGUMENT_TYPE_LONG,         // 4
+    ARGUMENT_TYPE_FLOAT,        // 5
+    ARGUMENT_TYPE_DOUBLE,       // 6
+    ARGUMENT_TYPE_STRING,       // 7
+    ARGUMENT_TYPE_SYMBOL,       // 8
+    ARGUMENT_TYPE_EXPRESSION,   // 9
+    ARGUMENT_TYPE_BYTE_ARRAY    // 10
 };
 
 static size_t const WisentArgumentType_RLE_MINIMUM_SIZE =
@@ -1084,6 +1084,8 @@ inline const char* viewString(
     return getStringBuffer(root) + inputStringOffset;
 };
 
+// Portable Boss version of storeString, storeBytes and viewString
+
 static size_t storeString(
     PortableBossRootExpression **root, 
     char const *inputString
@@ -1099,7 +1101,7 @@ static size_t storeString(
     return destination - getStringBuffer(*root);
 };
 
-static size_t storeStringReallocation(
+static size_t storeString(
     PortableBossRootExpression **root,
     char const *inputString,
     void *(*reallocateFunction)(void *, size_t)

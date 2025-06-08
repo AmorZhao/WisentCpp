@@ -1,5 +1,5 @@
 #include "WisentSerializer.hpp"
-#include "JsonToWisent.hpp"
+#include "../Helpers/WisentHelpers/JsonToWisent.hpp"
 #include <cstdint>
 #include <string>
 #include <cassert>

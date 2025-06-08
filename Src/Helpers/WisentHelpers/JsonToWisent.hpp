@@ -1,14 +1,14 @@
 #pragma once
 #include "WisentHelpers.hpp"
-#include "../Helpers/CsvLoading.hpp"
-#include "../Helpers/ISharedMemorySegment.hpp"
-#include "../WisentCompressor/CompressionHelpers/Algorithms.hpp"
+#include "../CsvLoading.hpp"
+#include "../ISharedMemorySegment.hpp"
+#include "../CompressionHelpers/Algorithms.hpp"
 #include <cstdint>
 #include <string>
 #include <cassert>
 #include <vector>
 #include <sys/resource.h>
-#include "../../Include/json.h"
+#include "../../../Include/json.h"
 
 using json = nlohmann::json;
 using namespace wisent::algorithms; 

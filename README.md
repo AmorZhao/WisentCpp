@@ -8,7 +8,7 @@ WisentCpp/
 ├── Data/ 
 │
 ├── Documentation/
-│   ├── Report/
+│   ├── Reports/
 │   └── WisentExample/
 │
 ├── Include/
@@ -17,35 +17,34 @@ WisentCpp/
 │   └── rapidcsv.h
 │
 ├── Src/
-│   ├── Helpers/ 
+│   ├── Helpers/
 │   │   ├── ISharedMemory
 │   │   ├── SharedMemorySegment
-│   │   └── CsvLoading
+│   │   ├── CsvLoading
+│   │   ├── BossHelpers/
+│   │   │   ├── BossExpression.hpp                  # defines BOSS expressions
+│   │   │   └── BossEngine                          # constructs or evaluates BOSS Expressions
+│   │   │
+│   │   ├── WisentHelpers/
+│   │   │   ├── WisentHelpers.hpp                   # for Wisent & PortableBoss
+│   │   │   ├── JsonToWisent.hpp                    # for Wisent serializer & compressor
+│   │   │   ├── BossToPortableBoss.hpp              # BOSS equivalent to JsonToWisent (serializer)
+│   │   │   └── BossToCompressedPortableBoss.hpp    # BOSS equivalent to JsonToWisent (compressor)
+│   │   │
+│   │   └── CompressionHelpers/
+│   │       ├── Algorithms                          # engine for all algorithms
+│   │       └── ... (other compression algorithm implementations)
 │   │
 │   ├── BsonSerializer/
 │   │
 │   ├── WisentSerializer/
-│   │   ├── WisentHelpers.hpp
-│   │   ├── JsonToWisent.hpp
-│   │   ├── WisentSerializer (serializer functions)
-│   │   │   
-│   │   └── BossHelpers/
-│   │       ├── BossExpression.hpp
-│   │       ├── BossSerializerHelpers.hpp (BOSS equivalent to WisentHelpers.hpp)
-│   │       └── BossSerializedExpression.hpp (BOSS equivalent to JsonToWisent.hpp)
+│   │   ├── WisentSerializer
+│   │   └── BossSerializer
 │   │
 │   ├── WisentCompressor/
-│   │   ├── CompressionHelpers/
-│   │   │   ├── Algorithms (overall wrapper)
-│   │   │   └── ...(other compression algorithm implementations)
-│   │   │
-│   │   ├── CompressionPipeline.hpp 
-│   │   ├── WisentCompressor (compressor functions)
-│   │   │
-│   │   └── BossHelpers/
-│   │       └── BossCompressedExpression.hpp (BOSS equivalent to JsonToWisent.hpp)
-│   │
-│   ├── WisentParser/
+│   │   ├── CompressionPipeline.hpp                 # builder for compression algorithms
+│   │   ├── WisentCompressor
+│   │   └── BossCompressor
 │   │
 │   └── WisentServer
 │

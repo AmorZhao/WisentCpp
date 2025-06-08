@@ -1,6 +1,6 @@
 #pragma once
-#include "BossSerializedExpression.hpp"
-#include "../../Helpers/Result.hpp"
+#include "../Helpers/WisentHelpers/BossToPortableBoss.hpp"
+#include "../Helpers/Result.hpp"
 #include <cassert>
 #include <sys/resource.h>
 

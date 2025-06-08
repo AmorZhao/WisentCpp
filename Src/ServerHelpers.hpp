@@ -1,8 +1,8 @@
+#pragma once
 #include "../Include/httplib.h"
-#include "WisentParser/WisentParser.hpp"
 #include "WisentCompressor/CompressionPipeline.hpp"
 
-void parseReqestParams(
+void parseRequestParams(
     const httplib::Params &params, 
     std::string &filename, 
     std::string &filepath, 
@@ -57,12 +57,6 @@ void handleResponse(
         {
             successMessage += " Result: " + result.value.value();
         } 
-        // else 
-        // {
-        //     std::ostringstream oss;
-        //     oss << result.value.value();
-        //     successMessage += " Result: " + oss.str();
-        // }
     }
     
     std::cout << successMessage << std::endl;

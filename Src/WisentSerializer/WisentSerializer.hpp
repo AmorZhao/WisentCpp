@@ -1,5 +1,5 @@
 #pragma once
-#include "WisentHelpers.hpp"
+#include "../Helpers/WisentHelpers/WisentHelpers.hpp"
 #include "../Helpers/Result.hpp"
 #include <string>
 #include <cassert>

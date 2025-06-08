@@ -33,21 +33,20 @@ add_executable(WisentServer Src/WisentServer.cpp)
 
 set(HelperFiles 
   Src/Helpers/SharedMemorySegment.cpp 
-  Src/Helpers/ISharedMemorySegment.hpp
-  Src/WisentCompressor/CompressionHelpers/Algorithms.cpp
-  Src/WisentCompressor/CompressionHelpers/Delta.cpp
-  Src/WisentCompressor/CompressionHelpers/RLE.cpp
-  Src/WisentCompressor/CompressionHelpers/LZ77.cpp
-  # Src/WisentCompressor/CompressionHelpers/Huffman.cpp
-  # Src/WisentCompressor/CompressionHelpers/FSE.cpp
+  Src/Helpers/CompressionHelpers/Algorithms.cpp
+  Src/Helpers/CompressionHelpers/Delta.cpp
+  Src/Helpers/CompressionHelpers/RLE.cpp
+  Src/Helpers/CompressionHelpers/LZ77.cpp
+  # Src/Helpers/CompressionHelpers/Huffman.cpp
+  # Src/Helpers/CompressionHelpers/FSE.cpp
+  Src/Helpers/BossHelpers/BossEngine.cpp
 )
 
 set(SourceFiles
   Src/BsonSerializer/BsonSerializer.cpp
   Src/WisentSerializer/WisentSerializer.cpp
-  Src/WisentSerializer/BossHelpers/BossSerializer.cpp
+  Src/WisentSerializer/BossSerializer.cpp
   Src/WisentCompressor/WisentCompressor.cpp
-  # Src/WisentParser/WisentParser.cpp
   Src/ServerHelpers.cpp
 )
 
