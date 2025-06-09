@@ -260,14 +260,3 @@ Result<WisentRootExpression*> wisent::compressor::CompressAndLoadJson(
     result.setValue(jsonToWisent.getRoot());
     return result; 
 }
-
-Result<WisentRootExpression*> wisent::compressor::CompressAndLoadBossExpression(
-    boss::Expression &&input, 
-    std::unordered_map<std::string, CompressionPipeline*> &compressionPipelineMap, 
-    bool dictEncodeStrings,
-    bool dictEncodeDoublesAndLongs
-) {
-    Result<WisentRootExpression*> result; 
-    result.setError("Not implemented");
-    return result; 
-}

@@ -1,5 +1,9 @@
-#include "BossSerializer.hpp"
+#include "BossCompressor.hpp"
 #include "../Helpers/ISharedMemorySegment.hpp"
+#include <fcntl.h>
+#include <string>
+#include <unistd.h>
+#include <unordered_map>
 
 template <
     void* (*Allocate)(size_t),
@@ -7,15 +11,16 @@ template <
     void  (*Free)(void*)
 >
 Result<boss::serialization::SerializedBossExpression<Allocate, Reallocate, Free>*>
-wisent::serializer::load(
-    boss::Expression&& input,
-    std::string const &sharedMemoryName,
+wisent::compressor::CompressAndLoadBossExpression(
+    boss::Expression &&input, 
+    std::unordered_map<std::string, CompressionPipeline*> &compressionPipelineMap, 
+    std::string const &sharedMemoryName, 
     bool dictEncodeStrings,
     bool dictEncodeDoublesAndLongs, 
     bool forceReload
-) {
+) {    
     Result<boss::serialization::SerializedBossExpression<Allocate, Reallocate, Free>*> result;
-    
+
     ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
     if (!forceReload && sharedMemory->exists() && !sharedMemory->isLoaded()) 
     {
@@ -44,10 +49,11 @@ wisent::serializer::load(
     
     auto serializedBossExpression = new SerializedBossExpression(
         std::move(input), 
+        compressionPipelineMap,
         dictEncodeStrings, 
         dictEncodeDoublesAndLongs
     );
 
     result.setValue(serializedBossExpression);
-    return result;
+    return result; 
 }

@@ -457,26 +457,26 @@ class JsonToWisent : public json::json_sax_t
      * Column metadata is handled as if it was a subexpression
      *
      * "ColumnName": {
-     *     "numberOfValues": "<columnMetadata.numerOfValues>",
+     *     "numberOfValues":        "<columnMetadata.numerOfValues>",
      *     "totalUncompressedSize": "<columnMetadata.totalUncompressedSize>",
-     *     "totalCompressedSize": "<columnMetadata.totalCompressedSize>",
-     *     "physicalType": "<columnMetadata.physicalType>",
-     *     "encodingType": "<columnMetadata.encodingType>",
-     *     "compressionType": "<columnMetadata.compressionType>",
+     *     "totalCompressedSize":   "<columnMetadata.totalCompressedSize>",
+     *     "physicalType":          "<columnMetadata.physicalType>",
+     *     "encodingType":          "<columnMetadata.encodingType>",
+     *     "compressionType":       "<columnMetadata.compressionType>",
      *     "pages": [
      *       {
-     *         "pageType": "<pageHeader.pageType>",
-     *         "numberOfValues": "<pageHeader.numberOfValues>",
-     *         "firstRowIndex": "<pageHeader.firstRowIndex>",
+     *         "pageType":          "<pageHeader.pageType>",
+     *         "numberOfValues":    "<pageHeader.numberOfValues>",
+     *         "firstRowIndex":     "<pageHeader.firstRowIndex>",
      *         "uncompressedPageSize": "<pageHeader.uncompressedPageSize>",
      *         "compressedPageSize": "<pageHeader.compressedPageSize>",
-     *         "nullCount": "<pageHeader.pageStatistics.nullCount>"
-     *         "distinctCount": "<pageHeader.pageStatistics.distinctCount>"
-     *         "minValue": "<pageHeader.pageStatistics.minInt/minDouble/minString>",
-     *         "maxValue": "<pageHeader.pageStatistics.maxInt/maxDouble/maxString>",
-     *         "isDictionaryPage": "<pageHeader.isDictionaryPage>",
+     *         "nullCount":         "<pageHeader.pageStatistics.nullCount>"
+     *         "distinctCount":     "<pageHeader.pageStatistics.distinctCount>"
+     *         "minValue":          "<pageHeader.pageStatistics.minInt/minDouble/minString>",
+     *         "maxValue":          "<pageHeader.pageStatistics.maxInt/maxDouble/maxString>",
+     *         "isDictionaryPage":  "<pageHeader.isDictionaryPage>",
      *         "dictionaryPageSize": "<pageHeader.dictionaryPageSize>" / "missing",
-     *         "byteArrayOffset": "<pageHeader.byteArrayOffset>"   // (compressed data pointer)
+     *         "byteArrayOffset":   "<pageHeader.byteArrayOffset>"   // (compressed data pointer)
      *       }, 
      *       ...
      *     ]

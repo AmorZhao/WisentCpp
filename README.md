@@ -28,8 +28,7 @@ WisentCpp/
 │   │   ├── WisentHelpers/
 │   │   │   ├── WisentHelpers.hpp                   # for Wisent & PortableBoss
 │   │   │   ├── JsonToWisent.hpp                    # for Wisent serializer & compressor
-│   │   │   ├── BossToPortableBoss.hpp              # BOSS equivalent to JsonToWisent (serializer)
-│   │   │   └── BossToCompressedPortableBoss.hpp    # BOSS equivalent to JsonToWisent (compressor)
+│   │   │   └── BossToPortableBoss.hpp              # for BOSS serializer & compressor
 │   │   │
 │   │   └── CompressionHelpers/
 │   │       ├── Algorithms                          # engine for all algorithms

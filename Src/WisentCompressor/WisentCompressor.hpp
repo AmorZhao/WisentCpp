@@ -3,7 +3,6 @@
 #include <unordered_map>
 #include "../Helpers/Result.hpp"
 #include "../Helpers/WisentHelpers/WisentHelpers.hpp"
-#include "../Helpers/BossHelpers/BossExpression.hpp"
 #include "CompressionPipeline.hpp"
 
 namespace wisent 
@@ -19,12 +18,5 @@ namespace wisent
             bool disableCsvHandling = false, 
             bool forceReload = false
         ); 
-
-        Result<WisentRootExpression*> CompressAndLoadBossExpression(
-            boss::Expression &&input, 
-            std::unordered_map<std::string, CompressionPipeline*> &compressionPipelineMap, 
-            bool dictEncodeStrings = true,
-            bool dictEncodeDoublesAndLongs = false
-        );
     }
 }

@@ -16,18 +16,21 @@ Result<WisentRootExpression*> wisent::serializer::load(
     Result<WisentRootExpression*> result; 
 
     ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
-    // if (!forceReload && sharedMemory->exists() && !sharedMemory->isLoaded()) 
-    // {
-    //     sharedMemory->load();
-    // }
+    if (!forceReload && sharedMemory->exists() && !sharedMemory->isLoaded()) 
+    {
+        sharedMemory->load();
+    }
     if (sharedMemory->isLoaded()) 
     {
-        // if (!forceReload) 
-        // {
-        //     return reinterpret_cast<WisentRootExpression *>(
-        //         sharedMemory->getBaseAddress()
-        //     );
-        // }
+        if (!forceReload) 
+        {
+            result.setValue(
+                reinterpret_cast<WisentRootExpression *>(
+                    sharedMemory->getBaseAddress()
+                )
+            );
+            return result; 
+        }
         free(sharedMemoryName);
     }
     SharedMemorySegments::setCurrentSharedMemory(sharedMemory);
