@@ -1,9 +1,10 @@
+#include "Helpers/BossHelpers/BossExpression.hpp"
+#include "Helpers/BossHelpers/BossEngine.hpp"
+#include "Helpers/WisentHelpers/WisentHelpers.hpp"
 #include "BsonSerializer/BsonSerializer.hpp"
-#include "WisentSerializer/WisentHelpers.hpp"
 #include "WisentSerializer/WisentSerializer.hpp"
 #include "WisentCompressor/CompressionPipeline.hpp"
 #include "WisentCompressor/WisentCompressor.hpp"
-// #include "WisentParser/WisentParser.hpp"
 #include "ServerHelpers.hpp"
 #include <chrono>
 #include <iostream>
@@ -20,7 +21,7 @@ int main(int argc, char **argv)
         std::string csvPrefix;
         bool disableRLE = false;
         bool disableCsvHandling = false;
-        parseReqestParams(
+        parseRequestParams(
             req.params, 
             filename, 
             filepath, 
@@ -48,42 +49,6 @@ int main(int argc, char **argv)
         return;
     });
 
-    svr.Post("/serialize", [&](const httplib::Request &req, httplib::Response &res) 
-    {
-        std::string filename;
-        std::string filepath;
-        std::string csvPrefix; 
-        bool disableRLE = false;
-        bool disableCsvHandling = false;
-        parseReqestParams(
-            req.params, 
-            filename, 
-            filepath, 
-            csvPrefix,
-            disableRLE, 
-            disableCsvHandling
-        );
-
-        const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-        Result<WisentRootExpression*> serializeResult = makeResult<WisentRootExpression*>(nullptr); 
-        // Result<WisentRootExpression*> serializeResult = wisent::serializer::load(
-        //     filename, 
-        //     filepath, 
-        //     csvPrefix, 
-        //     disableRLE,
-        //     disableCsvHandling
-        // );
-        const std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-
-        handleResponse(
-            res, 
-            serializeResult, 
-            start, 
-            end
-        );
-        return;
-    });
-
     svr.Post("/compress", [&](const httplib::Request &req, httplib::Response &res) 
     {
         std::string filename;
@@ -91,7 +56,7 @@ int main(int argc, char **argv)
         std::string csvPrefix; 
         bool disableRLE = false;
         bool disableCsvHandling = false;
-        parseReqestParams(
+        parseRequestParams(
             req.params, 
             filename, 
             filepath, 
@@ -126,6 +91,41 @@ int main(int argc, char **argv)
         handleResponse(
             res, 
             compressResult, 
+            start, 
+            end
+        );
+        return;
+    });
+
+    svr.Get("/loadBoss", [&](const httplib::Request &req, httplib::Response &res) 
+    {
+        std::string filename;
+        std::string filepath;
+        std::string csvPrefix;
+        bool disableRLE = false;
+        bool disableCsvHandling = false;
+        parseRequestParams(
+            req.params, 
+            filename, 
+            filepath, 
+            csvPrefix,
+            disableRLE, 
+            disableCsvHandling
+        );
+
+        const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+        Result<WisentRootExpression*> loadResult = wisent::serializer::load(
+            filepath, 
+            filename, 
+            csvPrefix, 
+            disableRLE,
+            disableCsvHandling
+        );
+        const std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+
+        handleResponse(
+            res, 
+            loadResult, 
             start, 
             end
         );

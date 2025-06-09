@@ -1,4 +1,5 @@
 #include "WisentCompressor.hpp"
+#include "../Helpers/WisentHelpers/JsonToWisent.hpp"
 #include "../Helpers/CsvLoading.hpp"
 #include "../Helpers/ISharedMemorySegment.hpp"
 #include "CompressionPipeline.hpp"
@@ -70,25 +71,26 @@ Result<WisentRootExpression*> wisent::compressor::CompressAndLoadJson(
     std::string const& csvPrefix, 
     std::unordered_map<std::string, CompressionPipeline*> &compressionPipelineMap,
     bool disableRLE,
-    bool disableCsvHandling
+    bool disableCsvHandling, 
+    bool forceReload
 ) {
     Result<WisentRootExpression*> result; 
 
     ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(filename);
-    // if (!forceReload && sharedMemory->exists() && !sharedMemory->isLoaded()) 
-    // {
-    //     sharedMemory->load();
-    // }
+    if (!forceReload && sharedMemory->exists() && !sharedMemory->isLoaded()) 
+    {
+        sharedMemory->load();
+    }
     if (sharedMemory->isLoaded()) 
     {
-        // if (!forceReload) 
-        // {
-        //     WisentRootExpression *loadedValue = reinterpret_cast<WisentRootExpression *>(
-        //         sharedMemory->getBaseAddress()
-        //     );
-        //     result.setValue(loadedValue);
-        //     return result;
-        // }
+        if (!forceReload) 
+        {
+            WisentRootExpression *loadedValue = reinterpret_cast<WisentRootExpression *>(
+                sharedMemory->getBaseAddress()
+            );
+            result.setValue(loadedValue);
+            return result;
+        }
         sharedMemory->erase();
         SharedMemorySegments::getSharedMemorySegments().erase(filename);
     }
@@ -256,192 +258,5 @@ Result<WisentRootExpression*> wisent::compressor::CompressAndLoadJson(
     ifs.close();
 
     result.setValue(jsonToWisent.getRoot());
-    return result; 
-}
-
-// use preloaded json and csv files
-Result<WisentRootExpression*> CompressAndLoadJson(
-    std::string const &filename,
-    json const &preloadedJsonFile,
-    const std::unordered_map<std::string, rapidcsv::Document> &preloadedCsvData,
-    const std::unordered_map<std::string, CompressionPipeline*> &compressionPipelineMap,
-    bool disableRLE = false,
-    bool disableCsvHandling = false
-) {
-    Result<WisentRootExpression*> result; 
-
-    // compress columns
-    // count & calculate the total size needed
-    uint64_t expressionCount = 0;
-    std::vector<uint64_t> argumentCountPerLayer;
-    argumentCountPerLayer.reserve(16);
-    std::unordered_map<std::string, ColumnMetaData> processedColumns; 
-
-    json _ = json::parse(
-        preloadedJsonFile, 
-        [                   // lambda captures
-            &preloadedCsvData, 
-            &disableCsvHandling, 
-            &expressionCount,
-            &argumentCountPerLayer, 
-            &compressionPipelineMap,
-            &processedColumns,
-            layerIndex = uint64_t{0},
-            wasKeyValue = std::vector<bool>(16), 
-            result
-        ](                  // lambda params
-            int depth, 
-            json::parse_event_t event, 
-            json &parsed
-        ) mutable {
-            if (wasKeyValue.size() <= depth) 
-            {
-                wasKeyValue.resize(wasKeyValue.size() * 2, false);
-            }
-            if (argumentCountPerLayer.size() <= layerIndex) 
-            {
-                argumentCountPerLayer.resize(layerIndex + 1, 0);
-            }
-            if (event == json::parse_event_t::key) 
-            {
-                argumentCountPerLayer[layerIndex]++;
-                expressionCount++;
-                wasKeyValue[depth] = true;
-                layerIndex++;
-                return true;
-            }
-            if (event == json::parse_event_t::object_start ||
-                event == json::parse_event_t::array_start) 
-            {
-                argumentCountPerLayer[layerIndex]++;
-                expressionCount++;
-                layerIndex++;
-                return true;
-            }
-            if (event == json::parse_event_t::object_end ||
-                event == json::parse_event_t::array_end) 
-            {
-                layerIndex--;
-                if (wasKeyValue[depth]) {
-                    wasKeyValue[depth] = false;
-                    layerIndex--;
-                }
-                return true;
-            }
-            if (event == json::parse_event_t::value) 
-            {
-                argumentCountPerLayer[layerIndex]++;
-                if (!disableCsvHandling && parsed.is_string()) 
-                {
-                    auto filename = parsed.get<std::string>();
-                    auto extPos = filename.find_last_of(".");
-                    if (extPos != std::string::npos && filename.substr(extPos) == ".csv") 
-                    {
-                        if (preloadedCsvData.find(filename) == preloadedCsvData.end()) 
-                        {
-                            std::string warningMessage = "CSV file not preloaded: " + filename;
-                            result.setError(warningMessage);
-                            return true; 
-                        }
-                        const rapidcsv::Document doc = preloadedCsvData.at(filename);
-                        size_t rows = doc.GetRowCount();
-                        size_t cols = doc.GetColumnCount();
-
-                        expressionCount++; // Table expression
-                        argumentCountPerLayer[layerIndex + 1] += cols; // Columns layer
-                        expressionCount += cols;
-
-                        const size_t NumTableLayers = 2; // ColumnName & Data
-                        if (argumentCountPerLayer.size() <= layerIndex + NumTableLayers) 
-                        {
-                            argumentCountPerLayer.resize(layerIndex + NumTableLayers + 1, 0);
-                        }
-
-                        size_t matchedColumns = 0;
-                        for (size_t col = 0; col < cols; ++col) 
-                        {
-                            std::string columnName = doc.GetColumnName(col);
-                            if (compressionPipelineMap.find(columnName) != compressionPipelineMap.end()) 
-                            {
-                                matchedColumns++;
-                                if (argumentCountPerLayer.size() <= layerIndex + 5) 
-                                {
-                                    argumentCountPerLayer.resize(layerIndex + 5 + 1, 0);
-                                }
-
-                                ColumnMetaData columnMetaData; 
-                                handleCsvColumnWithCompression(
-                                    doc, 
-                                    columnName, 
-                                    compressionPipelineMap.at(columnName), 
-                                    columnMetaData
-                                ); 
-                                
-                                size_t pageCount = columnMetaData.pageHeaders.size();
-
-                                // layer +2 arguments: each Metadata entry's key
-                                argumentCountPerLayer[layerIndex + 2] += KEY_VALUE_PAIR_PER_COLUMNMETADATA; 
-                                expressionCount += KEY_VALUE_PAIR_PER_COLUMNMETADATA;
-
-                                // layer +3 arguments: each Metadata entry's value + "pages" entry's Page objects
-                                argumentCountPerLayer[layerIndex + 3] += KEY_VALUE_PAIR_PER_COLUMNMETADATA - 1 + pageCount;
-                                expressionCount += pageCount;
-
-                                // layer +4 arguments: each Page object's PageHeader entry's key
-                                argumentCountPerLayer[layerIndex + 4] += pageCount * EXPRESSION_COUNT_PER_PAGE_HEADER; 
-                                expressionCount += pageCount * EXPRESSION_COUNT_PER_PAGE_HEADER;
-
-                                // layer +5 arguments: each Page object's PageHeader entry's value
-                                argumentCountPerLayer[layerIndex + 5] += pageCount * EXPRESSION_COUNT_PER_PAGE_HEADER; 
-
-                                processedColumns[columnName] = std::move(columnMetaData);
-                                continue; 
-                            }
-
-                            // else: no compression found for this column, simply add flat data
-                            argumentCountPerLayer[layerIndex + 2] += rows; 
-                        }
-                    }
-                }
-                if (wasKeyValue[depth]) 
-                {
-                    wasKeyValue[depth] = false;
-                    layerIndex--;
-                }
-                return true;
-            }
-            return true;   // never reached
-        }
-    );
-    
-    ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(filename);
-
-    JsonToWisentWithPreloadedFileHandler jsonToWisent(
-        expressionCount,
-        std::move(argumentCountPerLayer),
-        sharedMemory, 
-        preloadedCsvData,
-        disableRLE,
-        disableCsvHandling,
-        processedColumns
-    );
-
-    json::sax_parse(preloadedJsonFile, &jsonToWisent);
-
-    result.setValue(jsonToWisent.getRoot());
-    return result; 
-}
-
-Result<WisentRootExpression*> wisent::compressor::CompressAndLoadBossExpression(
-    const char* data,
-    size_t length,
-    std::string const& csvPrefix, 
-    std::unordered_map<std::string, CompressionPipeline*> &compressionPipelineMap,
-    bool disableRLE,
-    bool disableCsvHandling, 
-    bool forceReload
-) {
-    Result<WisentRootExpression*> result; 
-    result.setError("Not implemented");
     return result; 
 }

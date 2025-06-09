@@ -1,9 +1,9 @@
 #include "WisentSerializer.hpp"
+#include "../Helpers/WisentHelpers/JsonToWisent.hpp"
 #include <cstdint>
 #include <string>
 #include <cassert>
 #include <vector>
-#include "JsonToWisent.hpp"
 
 Result<WisentRootExpression*> wisent::serializer::load(
     std::string const &filepath,
@@ -16,18 +16,21 @@ Result<WisentRootExpression*> wisent::serializer::load(
     Result<WisentRootExpression*> result; 
 
     ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
-    // if (!forceReload && sharedMemory->exists() && !sharedMemory->isLoaded()) 
-    // {
-    //     sharedMemory->load();
-    // }
+    if (!forceReload && sharedMemory->exists() && !sharedMemory->isLoaded()) 
+    {
+        sharedMemory->load();
+    }
     if (sharedMemory->isLoaded()) 
     {
-        // if (!forceReload) 
-        // {
-        //     return reinterpret_cast<WisentRootExpression *>(
-        //         sharedMemory->getBaseAddress()
-        //     );
-        // }
+        if (!forceReload) 
+        {
+            result.setValue(
+                reinterpret_cast<WisentRootExpression *>(
+                    sharedMemory->getBaseAddress()
+                )
+            );
+            return result; 
+        }
         free(sharedMemoryName);
     }
     SharedMemorySegments::setCurrentSharedMemory(sharedMemory);
@@ -127,8 +130,6 @@ Result<WisentRootExpression*> wisent::serializer::load(
             return true;   // never reached
         }
     );
-
-    std::unordered_map<std::string, CompressionPipeline*> dummyMap; 
 
     // initialise Wisent expression tree
     JsonToWisent jsonToWisent(

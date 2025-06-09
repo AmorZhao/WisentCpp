@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include "CompressionHelpers/Algorithms.hpp"
+#include "../Helpers/CompressionHelpers/Algorithms.hpp"
 #include "../Helpers/Result.hpp"
 
 using namespace wisent::algorithms; 
