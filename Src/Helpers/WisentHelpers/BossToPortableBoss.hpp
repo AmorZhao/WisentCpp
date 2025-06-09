@@ -42,12 +42,9 @@
  *      - run length encoding         (... same as above)
  *      - frame of reference encoding (... same as above)
  *  
- *  1. new preprocessing functions
+ *  pre-processing functions
  *      - countArguments
- *      - handleColumnExpression     (convertSpansToSingleSpan rewritten)
- *
- *  2. new flattening function
- *     - flattenArguments           (overloaded)
+ *      - handleColumnExpression     (convertSpansToSingleSpan + rewrite dynamic arguments)
  */
 
 #include "../BossHelpers/BossExpression.hpp"
@@ -62,6 +59,7 @@
 #include <iostream>
 #include <iterator>
 #include <string.h>
+#include <sys/types.h>
 #include <type_traits>
 #include <typeinfo>
 #include <unordered_set>
@@ -3258,10 +3256,99 @@ struct SerializedBossExpression
 
     #pragma region handle_compressed_expression
 
+    template <typename From, typename To>
+    std::vector<To>&& reinterpretVec(std::vector<From>&& v) {
+        static_assert(sizeof(From) == sizeof(To));
+        return reinterpret_cast<std::vector<To>&&>(v);
+    }
+
+    // dynamic arguments of the listExpression to include column metadata
+    boss::ComplexExpression handleColumnMetadata(
+        ColumnMetaData &columnMetadata
+    ) {
+        boss::expressions::ExpressionArguments newDynamicArguments;
+        newDynamicArguments.push_back(boss::Symbol(columnMetadata.columnName));
+        newDynamicArguments.push_back(static_cast<int64_t>(columnMetadata.numberOfValues));
+        newDynamicArguments.push_back(static_cast<int64_t>(columnMetadata.totalUncompressedSize));
+        newDynamicArguments.push_back(static_cast<int64_t>(columnMetadata.totalCompressedSize));
+        newDynamicArguments.push_back(static_cast<int32_t>(columnMetadata.physicalType));
+        newDynamicArguments.push_back(static_cast<int32_t>(columnMetadata.encodingType));
+        newDynamicArguments.push_back(static_cast<int32_t>(columnMetadata.compressionType));
+
+        boss::expressions::ExpressionArguments pagesArguments;
+        for (const auto& pageHeader : columnMetadata.pageHeaders) 
+        {
+            boss::expressions::ExpressionArguments pageArguments;
+
+            pageArguments.push_back(static_cast<int32_t>(pageHeader.pageType));
+            pageArguments.push_back(static_cast<int64_t>(pageHeader.numberOfValues));
+            pageArguments.push_back(static_cast<int64_t>(pageHeader.firstRowIndex));
+            pageArguments.push_back(static_cast<int64_t>(pageHeader.uncompressedPageSize));
+            pageArguments.push_back(static_cast<int64_t>(pageHeader.compressedPageSize));
+            
+            switch (columnMetadata.physicalType) 
+            {
+                case PhysicalType::INT64:
+                    pageArguments.push_back(pageHeader.pageStatistics.minInt.value());
+                    pageArguments.push_back(pageHeader.pageStatistics.maxInt.value());
+                    break;
+
+                case PhysicalType::DOUBLE:
+                    pageArguments.push_back(pageHeader.pageStatistics.minDouble.value());
+                    pageArguments.push_back(pageHeader.pageStatistics.maxDouble.value());
+                    break;
+
+                case PhysicalType::BYTE_ARRAY:
+                    pageArguments.push_back(pageHeader.pageStatistics.minString.value());
+                    pageArguments.push_back(pageHeader.pageStatistics.maxString.value());
+                    break;
+
+                default:
+                    throw std::runtime_error("Unsupported physical type for minValue");
+            }
+            pageArguments.push_back(pageHeader.pageStatistics.nullCount);
+            pageArguments.push_back(pageHeader.pageStatistics.distinctCount);
+
+            pageArguments.push_back(pageHeader.isDictionaryPage);
+
+            boss::expressions::ExpressionSpanArguments pageSpans;
+            boss::Span<int8_t> span = boss::Span<int8_t>(
+                reinterpretVec<uint8_t, int8_t>(std::move(pageHeader.byteArray))
+            );
+            pageSpans.push_back(std::move(span));
+
+            boss::ComplexExpression pageExpression(
+                boss::Symbol("PageHeader"),
+                std::tuple<>{}, // no static args
+                std::move(pageArguments),
+                std::move(pageSpans)
+            );
+
+            pagesArguments.push_back(std::move(pageExpression));
+        }
+
+        boss::expressions::ComplexExpression pages(
+            boss::Symbol("pages"),
+            std::tuple<>{}, 
+            std::move(pagesArguments), 
+            {}
+        );
+        newDynamicArguments.push_back(std::move(pages));
+
+        return boss::ComplexExpression(
+            boss::Symbol("page"), 
+            {}, 
+            std::move(newDynamicArguments), 
+            {} 
+        );
+    }
+
+    //  1. collect spans of the same data type to form a single span
+    //  2. for each typed span, perform compression
+    //  3. rewrites the compressed metadata and byte data into the columnExpression
     void handleColumnExpression(
         boss::ComplexExpression &&columnExpression, 
-        CompressionPipeline &pipeline,
-        ColumnMetaData &columnMetaData
+        CompressionPipeline &pipeline
     ) {
         auto [head, statics, dynamics, spans] = std::move(columnExpression).decompose();
         std::transform(
@@ -3270,6 +3357,8 @@ struct SerializedBossExpression
             dynamics.begin(),
             [&](auto &&list) 
             {
+                if (!std::holds_alternative<boss::ComplexExpression>(list)) return; 
+
                 auto [lHead, lStatics, lDynamics, lSpans] = std::move(std::get<boss::ComplexExpression>(list)).decompose();
                 std::vector<bool> boolData;
                 std::vector<int8_t> charData;
@@ -3392,35 +3481,37 @@ struct SerializedBossExpression
                     }
                 );
 
-                boss::expressions::ExpressionSpanArguments newSpanArgs;
+                boss::expressions::ExpressionSpanArguments typedSpans;
                 if (boolData.size() > 0) {
-                    newSpanArgs.push_back(boss::Span<bool>(std::move(boolData)));
+                    typedSpans.push_back(boss::Span<bool>(std::move(boolData)));
                 }
                 else if (charData.size() > 0) {
-                    newSpanArgs.push_back(boss::Span<int8_t>(std::move(charData)));
+                    typedSpans.push_back(boss::Span<int8_t>(std::move(charData)));
                 }
                 else if (intData.size() > 0) {
-                    newSpanArgs.push_back(boss::Span<int32_t>(std::move(intData)));
+                    typedSpans.push_back(boss::Span<int32_t>(std::move(intData)));
                 }
                 else if (longData.size() > 0) {
-                    newSpanArgs.push_back(boss::Span<int64_t>(std::move(longData)));
+                    typedSpans.push_back(boss::Span<int64_t>(std::move(longData)));
                 }
                 else if (floatData.size() > 0) {
-                    newSpanArgs.push_back(boss::Span<float>(std::move(floatData)));
+                    typedSpans.push_back(boss::Span<float>(std::move(floatData)));
                 }
                 else if (doubleData.size() > 0) {
-                    newSpanArgs.push_back(boss::Span<double>(std::move(doubleData)));
+                    typedSpans.push_back(boss::Span<double>(std::move(doubleData)));
                 }
                 else if (stringData.size() > 0) {
-                    newSpanArgs.push_back(boss::Span<std::string>(std::move(stringData)));
+                    typedSpans.push_back(boss::Span<std::string>(std::move(stringData)));
                 }
                 else if (symbolData.size() > 0) {
-                    newSpanArgs.push_back(boss::Span<boss::Symbol>(std::move(symbolData)));
+                    typedSpans.push_back(boss::Span<boss::Symbol>(std::move(symbolData)));
                 }
 
-                for (auto& newSpanArgument : newSpanArgs) 
+                boss::expressions::ExpressionArguments compressedArguments;
+                for (auto& typedSpan : typedSpans) 
                 {
                     std::vector<std::vector<uint8_t>> encodedData;
+                    ColumnMetaData columnMetaData;
 
                     std::visit([&](auto&& span) 
                     {
@@ -3446,7 +3537,7 @@ struct SerializedBossExpression
                                 columnMetaData
                             );
                         }
-                    }, newSpanArgument);
+                    }, typedSpan);
 
                     for (size_t i = 0; i < encodedData.size(); ++i)
                     {
@@ -3458,7 +3549,17 @@ struct SerializedBossExpression
                         columnMetaData.pageHeaders[i].compressedPageSize = compressedData.size();
                         columnMetaData.pageHeaders[i].byteArray = std::move(compressedData);
                     }
+
+                    boss::ComplexExpression newDynamicArgument = handleColumnMetadata(columnMetaData); 
+                    compressedArguments.push_back(std::move(newDynamicArgument)); 
                 }
+
+                list =  boss::ComplexExpression(
+                    std::move(lHead), 
+                    std::move(lStatics), 
+                    std::move(compressedArguments), 
+                    {}
+                );
             }
         );
     }
@@ -3486,8 +3587,7 @@ struct SerializedBossExpression
         uint64_t &argumentCount, 
         uint64_t &argumentBytesCount,
         uint64_t &expressionCount,
-        uint64_t &stringBytesCount,
-        std::unordered_map<std::string, ColumnMetaData> &processedSpans
+        uint64_t &stringBytesCount
     ) {
         std::apply(
             [&](auto const&... argument) {
@@ -3498,8 +3598,7 @@ struct SerializedBossExpression
                         argumentCount,
                         argumentBytesCount,
                         expressionCount,
-                        stringBytesCount,
-                        processedSpans
+                        stringBytesCount
                     );
                 }()));
             },
@@ -3514,17 +3613,19 @@ struct SerializedBossExpression
         uint64_t &argumentBytesCount,
         uint64_t &expressionCount,
         uint64_t &stringBytesCount, 
-        std::unordered_map<std::string, ColumnMetaData> &processedSpans
+        bool preprocessedExpression = false
     ) {
         std::visit(
             [&compressionPipelineMap, &argumentCount, &argumentBytesCount, 
-             &expressionCount, &stringBytesCount, &processedSpans, this](auto &input) 
+             &expressionCount, &stringBytesCount, &preprocessedExpression, this](auto &input) 
             {
                 if constexpr (std::is_same_v<std::decay_t<decltype(input)>, boss::ComplexExpression>)
                 {
                     // without compression: simply count everything
-                    if (compressionPipelineMap.find(input.getHead().getName()) == compressionPipelineMap.end())
-                    {
+                    // or with compression, but pre-processed
+                    if (compressionPipelineMap.find(input.getHead().getName()) == compressionPipelineMap.end()
+                        || preprocessedExpression
+                    ) {
                         // count head & span arguments
                         argumentCount += 1
                             + std::accumulate(
@@ -3647,8 +3748,7 @@ struct SerializedBossExpression
                             argumentCount,
                             argumentBytesCount,
                             expressionCount,
-                            stringBytesCount,
-                            processedSpans
+                            stringBytesCount
                         ); 
 
                         // recursively count dynamic arguments
@@ -3660,40 +3760,27 @@ struct SerializedBossExpression
                                 argumentCount, 
                                 argumentBytesCount, 
                                 expressionCount, 
-                                stringBytesCount, 
-                                processedSpans
+                                stringBytesCount
                             );
                         } 
                         return; 
                     }
 
-                    // with compression
+                    // with compression, and not compressed yet
                     CompressionPipeline pipeline = compressionPipelineMap[input.getHead().getName()];
-                    ColumnMetaData columnMetaData; 
                     this->handleColumnExpression(
                         input, 
-                        pipeline, 
-                        columnMetaData
+                        pipeline
                     ); 
-
-                    size_t pageCount = columnMetaData.pageHeaders.size();
-
-                    // each Metadata entry's key
-                    argumentCount += KEY_VALUE_PAIR_PER_COLUMNMETADATA; 
-                    expressionCount += KEY_VALUE_PAIR_PER_COLUMNMETADATA;
-
-                    // each Metadata entry's value + "pages" entry's Page objects
-                    argumentCount += KEY_VALUE_PAIR_PER_COLUMNMETADATA - 1 + pageCount;
-                    expressionCount += pageCount;
-
-                    // each Page object's PageHeader entry's key
-                    argumentCount += pageCount * EXPRESSION_COUNT_PER_PAGE_HEADER; 
-                    expressionCount += pageCount * EXPRESSION_COUNT_PER_PAGE_HEADER;
-
-                    // each Page object's PageHeader entry's value
-                    argumentCount += pageCount * EXPRESSION_COUNT_PER_PAGE_HEADER; 
-
-                    processedSpans[input.getHead().getName()] = std::move(columnMetaData);
+                    countArguments(
+                        input, 
+                        compressionPipelineMap, 
+                        argumentCount, 
+                        argumentBytesCount, 
+                        expressionCount, 
+                        stringBytesCount, 
+                        true  // preprocessedExpression
+                    );
                     return; 
                 }
 
@@ -3737,7 +3824,6 @@ struct SerializedBossExpression
         uint64_t argumentBytesCount = 0; 
         uint64_t expressionCount = 0;
         uint64_t stringBytesCount = 0;
-        std::unordered_map<std::string, ColumnMetaData> processedSpans = {}; 
 
         countArguments(
             input, 
@@ -3745,8 +3831,7 @@ struct SerializedBossExpression
             argumentCount, 
             argumentBytesCount, 
             expressionCount, 
-            stringBytesCount, 
-            processedSpans
+            stringBytesCount
         );
 
         root = allocateExpressionTree(
