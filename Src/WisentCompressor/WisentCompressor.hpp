@@ -13,7 +13,7 @@ namespace wisent
             std::string const &filepath, 
             std::string const &filename,
             std::string const &csvPrefix, 
-            std::unordered_map<std::string, CompressionPipeline*> &compressionPipelineMap,
+            std::unordered_map<std::string, CompressionPipeline> &compressionPipelineMap,
             bool disableRLE = false,
             bool disableCsvHandling = false, 
             bool forceReload = false

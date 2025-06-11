@@ -13,7 +13,7 @@ void parseRequestParams(
 
 void parseCompressionPipeline(
     const std::string &body, 
-    Result<std::unordered_map<std::string, CompressionPipeline*>> &result
+    Result<std::unordered_map<std::string, CompressionPipeline>> &result
 ); 
 
 bool WriteBufferToFile(

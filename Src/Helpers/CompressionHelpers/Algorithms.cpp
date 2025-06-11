@@ -227,18 +227,15 @@ namespace wisent::algorithms
         {
             case CompressionType::DELTA:
                 return compressWith<DELTA>(
-                    reinterpret_cast<const char*>(buffer.data()),
-                    buffer.size()
+                    buffer
                 );
             case CompressionType::RLE:
                 return compressWith<RLE>(
-                    reinterpret_cast<const char*>(buffer.data()),
-                    buffer.size()
+                    buffer
                 );
             case CompressionType::LZ77:
                 return compressWith<LZ77>(
-                    reinterpret_cast<const char*>(buffer.data()),
-                    buffer.size()
+                    buffer
                 );
             default:
                 throw std::invalid_argument("Unsupported compression type");

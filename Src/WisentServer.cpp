@@ -65,7 +65,7 @@ int main(int argc, char **argv)
             disableCsvHandling
         );
 
-        Result<std::unordered_map<std::string, CompressionPipeline*>> CompressionPipelineMapResult; 
+        Result<std::unordered_map<std::string, CompressionPipeline>> CompressionPipelineMapResult; 
         parseCompressionPipeline(
             req.body, 
             CompressionPipelineMapResult

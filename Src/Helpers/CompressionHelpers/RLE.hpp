@@ -1,6 +1,4 @@
 #pragma once
-#ifndef RLE_HPP
-#define RLE_HPP
 
 #include "../../Helpers/Result.hpp"
 
@@ -8,18 +6,12 @@ namespace wisent::algorithms
 {
     struct RLE 
     {
-        static Result<size_t> compress(
-            const std::byte* input,
-            const size_t inputSize,
-            std::byte* output
+        static Result<std::vector<uint8_t>> compress(
+            const std::vector<uint8_t>& input
         );
 
-        static Result<size_t> decompress(
-            const std::byte* input,
-            const size_t inputSize, 
-            std::byte* output
+        static Result<std::vector<uint8_t>> decompress(
+            const std::vector<uint8_t>& input
         );
     }; 
 } // RLE
-
-#endif // RLE_HPP

@@ -1,53 +1,56 @@
+#include <vector>
+#include <cstddef>
+#include <cstdint>
+#include "../Result.hpp"
 #include "RLE.hpp"
 
-Result<size_t> wisent::algorithms::RLE::compress(
-    const std::byte* input,
-    const size_t inputSize,
-    std::byte* output
-) {
-    if (input == nullptr || output == nullptr)  return makeError<size_t>("Invalid input or output buffer");
+Result<std::vector<uint8_t>> wisent::algorithms::RLE::compress(const std::vector<uint8_t>& input) 
+{
+    Result<std::vector<uint8_t>> result;
+
+    if (input.empty()) {
+        return makeError<std::vector<uint8_t>>("Input vector is empty");
+    }
+
+    std::vector<uint8_t> output;
+    output.reserve(input.size() * 2);  // Worst case: no repeats
 
     size_t inPos = 0;
-    size_t outPos = 0;
-
-    while (inPos < inputSize) {
-        std::byte current = input[inPos];
+    while (inPos < input.size()) {
+        uint8_t current = input[inPos];
         size_t runLength = 1;
 
-        while (inPos + runLength < inputSize && 
-            input[inPos + runLength] == current && 
-            runLength < 255) {
+        while (inPos + runLength < input.size() &&
+                input[inPos + runLength] == current &&
+                runLength < 255) {
             runLength++;
         }
 
-        output[outPos++] = static_cast<std::byte>(runLength);
-        output[outPos++] = current;
+        output.push_back(static_cast<uint8_t>(runLength));
+        output.push_back(current);
 
         inPos += runLength;
     }
 
-    return makeResult<size_t>(outPos);
+    return makeResult<std::vector<uint8_t>>(output, &result);
 }
 
-Result<size_t> wisent::algorithms::RLE::decompress(
-    const std::byte* input,
-    const size_t inputSize, 
-    std::byte* output
-) {
-    if (input == nullptr || output == nullptr)  return makeError<size_t>("Invalid input or output buffer");
+Result<std::vector<uint8_t>> wisent::algorithms::RLE::decompress(const std::vector<uint8_t>& input) 
+{
+    Result<std::vector<uint8_t>> result;
 
-    size_t inPos = 0;
-    size_t outPos = 0;
-
-    while (inPos < inputSize) 
-    {
-        std::byte count = input[inPos++];
-        std::byte value = input[inPos++];
-
-        size_t runLength = static_cast<unsigned char>(count);
-        for (size_t i = 0; i < runLength; ++i) {
-            output[outPos++] = value;
-        }
+    if (input.empty() || input.size() % 2 != 0) {
+        return makeError<std::vector<uint8_t>>("Invalid or corrupted RLE input data");
     }
-    return makeResult<size_t>(outPos);
+
+    std::vector<uint8_t> output;
+
+    for (size_t i = 0; i < input.size(); i += 2) {
+        uint8_t runLength = input[i];
+        uint8_t value = input[i + 1];
+
+        output.insert(output.end(), runLength, value);
+    }
+
+    return makeResult<std::vector<uint8_t>>(output, &result);
 }

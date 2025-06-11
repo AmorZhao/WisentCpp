@@ -1,99 +1,78 @@
 #include "LZ77.hpp"
 #include <cstdint>
+#include <vector>
+#include <algorithm>
 
-Result<size_t> wisent::algorithms::LZ77::compress(
-    const std::byte* input,
-    size_t inputSize,
-    std::byte* output,
-    size_t windowSize,
-    size_t lookaheadBufferSize
+Result<std::vector<uint8_t>> wisent::algorithms::LZ77::compress(
+  const std::vector<uint8_t> &input, 
+  int64_t windowSize, 
+  int64_t lookaheadBufferSize
 ) {
-    size_t codingPosition = 0;
-    size_t outputPosition = 0;
+    std::vector<uint8_t> compressed;
+    int inputSize = input.size();
+    int codingPosition = 0;
 
-    while (codingPosition < inputSize) 
-    {
-        size_t bestLength = 0;
-        size_t bestOffset = 0;
-        uint8_t byteMask = 0xFF; 
+    while (codingPosition < inputSize) {
+        int matchedLength = 0;
+        int offset = 0;
 
-        size_t start = (codingPosition >= windowSize) ? (codingPosition - windowSize) : 0;
-
-        for (size_t i = start; i < codingPosition; ++i) 
-        {
-            size_t length = 0;
-            while (
-                length < lookaheadBufferSize &&
-                codingPosition + length < inputSize &&
-                input[i + length] == input[codingPosition + length]
-            ) {
+        for (int i = std::max(static_cast<int64_t>(0), codingPosition - windowSize); 
+          i < codingPosition; ++i
+        ) {
+            int length = 0;
+            while (length < lookaheadBufferSize && codingPosition + length < inputSize &&
+                   input[i + length] == input[codingPosition + length]) {
                 ++length;
             }
-
-            if (length > bestLength) 
-            {
-                bestLength = length;
-                bestOffset = codingPosition - i;
+            if (length > matchedLength) {
+                matchedLength = length;
+                offset = codingPosition - i;
             }
         }
 
-        if (bestLength > 2) 
-        {
-            output[outputPosition++] = std::byte{0};
-            output[outputPosition++] = std::byte{static_cast<uint8_t>((bestOffset >> 8) & byteMask)};
-            output[outputPosition++] = std::byte{static_cast<uint8_t>(bestOffset & byteMask)};
-            output[outputPosition++] = std::byte{static_cast<uint8_t>(bestLength & byteMask)};
-            codingPosition += bestLength;
-        } 
-        else 
-        {
-            output[outputPosition++] = std::byte{1};
-            output[outputPosition++] = input[codingPosition];
+        if (matchedLength > 2) {
+            compressed.push_back(0);
+            compressed.push_back((offset >> 8) & 0xFF);
+            compressed.push_back(offset & 0xFF);
+            compressed.push_back(matchedLength & 0xFF);
+            codingPosition += matchedLength;
+        }
+        else {
+            compressed.push_back(1);
+            compressed.push_back(input[codingPosition]);
             ++codingPosition;
         }
     }
-    Result<size_t> result;
-    result.setValue(outputPosition);
+
+    Result<std::vector<uint8_t>> result = makeResult<std::vector<uint8_t>>(compressed);
     return result;
-}; 
+}
 
-Result<size_t> wisent::algorithms::LZ77::decompress(
-    const std::byte* input,
-    size_t inputSize,
-    std::byte* output
+Result<std::vector<uint8_t>> wisent::algorithms::LZ77::decompress(
+    const std::vector<uint8_t> &input
 ) {
-    Result<size_t> result;
-    size_t decodingPosition = 0;
-    size_t outputPosition = 0;
+    std::vector<uint8_t> decompressed;
+    int codingPosition = 0;
+    int inputSize = input.size();
 
-    while (decodingPosition < inputSize) 
-    {
-        if (input[decodingPosition] == std::byte{0}) 
-        {
-            if (decodingPosition + 3 >= inputSize)  return makeError<size_t>("Invalid compressed data");
+    while (codingPosition < inputSize) {
+        if (input[codingPosition] == 0) {
+            int offset = (input[codingPosition + 1] << 8) | input[codingPosition + 2];
+            int matchedLength = input[codingPosition + 3];
+            int start = decompressed.size() - offset;
 
-            size_t offset = (static_cast<uint8_t>(input[decodingPosition + 1]) << 8) |
-                            static_cast<uint8_t>(input[decodingPosition + 2]);
-            size_t length = static_cast<uint8_t>(input[decodingPosition + 3]);
-
-            if (offset > outputPosition) return makeError<size_t>("Invalid offset");
-
-            size_t sourcePosition = outputPosition - offset;
-            for (size_t i = 0; i < length; ++i) 
-            {
-                output[outputPosition++] = output[sourcePosition + i];
+            for (int i = 0; i < matchedLength; ++i) {
+                decompressed.push_back(decompressed[start + i]);
             }
-
-            decodingPosition += 4;
-        } 
-        else 
-        {
-            if (decodingPosition + 1 >= inputSize) return makeError<size_t>("Invalid compressed data");
-
-            output[outputPosition++] = input[decodingPosition + 1];
-            decodingPosition += 2;
+            codingPosition += 4;
+        }
+        else {
+            decompressed.push_back(input[codingPosition + 1]);
+            codingPosition += 2;
         }
     }
-    result.setValue(outputPosition);
+
+
+    Result<std::vector<uint8_t>> result = makeResult<std::vector<uint8_t>>(decompressed);
     return result;
-}; 
+}

@@ -33,7 +33,7 @@ void parseRequestParams(
 
 void parseCompressionPipeline(
     const std::string &body, 
-    Result<std::unordered_map<std::string, CompressionPipeline*>> &result
+    Result<std::unordered_map<std::string, CompressionPipeline>> &result
 ) {
     json pipelineSpecification; 
     try {
@@ -44,7 +44,7 @@ void parseCompressionPipeline(
         result.setError(errorMessage);
     }
 
-    std::unordered_map<std::string, CompressionPipeline*> CompressionPipelineMap;
+    std::unordered_map<std::string, CompressionPipeline> CompressionPipelineMap;
     for (const auto& [columnName, steps] : pipelineSpecification.items()) 
     {
         CompressionPipeline::Builder builder;
@@ -52,7 +52,7 @@ void parseCompressionPipeline(
         {
             builder.addStep(step);
         }
-        CompressionPipelineMap[columnName] = new CompressionPipeline(builder.build());
+        CompressionPipelineMap[columnName] = builder.build();
     }
     result.setValue(CompressionPipelineMap);
 }

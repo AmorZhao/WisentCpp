@@ -1,26 +1,23 @@
 #pragma once
-#ifndef LZ77_HPP
-#define LZ77_HPP
+
+#include <cstdint>
+#include <vector>
 
 #include "../../Helpers/Result.hpp"
 
 namespace wisent::algorithms 
 {
-    struct LZ77 {
-        static Result<size_t> compress(
-            const std::byte* input,
-            size_t inputSize,
-            std::byte* output,
-            size_t windowSize = 4096,
-            size_t lookaheadBufferSize = 18
+    struct LZ77 
+    {
+        static Result<std::vector<uint8_t>> compress(
+            const std::vector<uint8_t>& input, 
+            int64_t windowSize = 4096, 
+            int64_t lookaheadBufferSize = 18
         );
-
-        Result<size_t> decompress(
-            const std::byte* input,
-            size_t inputSize,
-            std::byte* output
+        
+        static Result<std::vector<uint8_t>> decompress(
+            const std::vector<uint8_t>& input
         );
     }; 
-} // LZ77
+}
 
-#endif // LZ77_HPP

@@ -2,6 +2,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 template<typename T>
 struct Result 
@@ -38,6 +39,16 @@ struct Result
     std::string getError() const 
     { 
         return error.value_or("No error"); 
+    }
+
+    T getValue() const 
+    { 
+        if (value.has_value()) {
+            return value.value();
+        } 
+        else {
+            throw std::runtime_error("No value set in Result");
+        }
     }
 };
 

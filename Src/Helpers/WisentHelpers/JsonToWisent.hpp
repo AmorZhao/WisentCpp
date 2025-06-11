@@ -266,14 +266,14 @@ class JsonToWisent : public json::json_sax_t
 
     void resetTypeRLE(std::uint64_t endIndex)
     {
-        if (repeatedArgumentTypeCount >= WisentArgumentType_RLE_MINIMUM_SIZE) 
-        {
-            setRLEArgumentFlagOrPropagateTypes(
-                root, 
-                endIndex - repeatedArgumentTypeCount,
-                repeatedArgumentTypeCount
-            );
-        }
+        // if (repeatedArgumentTypeCount >= WisentArgumentType_RLE_MINIMUM_SIZE) 
+        // {
+        //     setRLEArgumentFlagOrPropagateTypes(
+        //         root, 
+        //         endIndex - repeatedArgumentTypeCount,
+        //         repeatedArgumentTypeCount
+        //     );
+        // }
         repeatedArgumentTypeCount = 0;
     }
 
@@ -307,6 +307,7 @@ class JsonToWisent : public json::json_sax_t
 
     void addSymbol(std::string const &symbol)
     {
+        // std::cout << symbol.c_str() << std::endl;
         // index offset from the start of the string buffer
         size_t storedStringOffset = storeString(
             &root, 
@@ -341,10 +342,22 @@ class JsonToWisent : public json::json_sax_t
         resetTypeRLE(argIndex);
     }
 
+    // void startExpression(std::string const& head) {
+    //     auto expressionIndex = nextExpressionIndex++;
+    //     addExpression(expressionIndex);
+    //     auto storedString = storeString(&root, head.c_str(), sharedMemoryRealloc);
+    //     auto startChildOffset = cumulArgCountPerLayer[layerIndex++];
+    //     *makeExpression(root, expressionIndex) = WisentExpression{
+    //         storedString, startChildOffset,
+    //         0 // not known yet; set during endExpression()
+    //     };
+    //     argumentIteratorStack.push_back(0);
+    //     expressionIndexStack.push_back(expressionIndex);
+    // }
+
     void startExpression(std::string const &head)
     {
-        // make argument & type
-        addExpression(newExpressionIndex);
+        // std::cout<<head.c_str() << " (index: " << newExpressionIndex << ")" << std::endl;
 
         // store head name in the string buffer
         size_t storedStringOffset = storeString(
@@ -361,6 +374,9 @@ class JsonToWisent : public json::json_sax_t
             0                        // not known yet; set during endExpression()
         };
         *makeExpression(root, newExpressionIndex) = newSubexpression; 
+
+        // make argument & type
+        addExpression(newExpressionIndex);
 
         // update stacks
         argumentIteratorStack.push_back(0);
@@ -444,6 +460,8 @@ class JsonToWisent : public json::json_sax_t
         if (column.empty()) {
             return false;
         }
+        // std::cout << "Handling column: " << columnName << std::endl;
+        
         startExpression(columnName);
         for (auto const &val : column) 
         {

@@ -14,7 +14,7 @@
 void handleCsvColumnWithCompression(
     rapidcsv::Document const &doc,
     std::string const &columnName, 
-    CompressionPipeline const *pipeline, 
+    CompressionPipeline const &pipeline, 
     ColumnMetaData &metadata
 ) {
     Result<size_t> result;
@@ -56,7 +56,7 @@ void handleCsvColumnWithCompression(
 
     for (size_t i = 0; i < encodedData.size(); ++i)
     {
-        std::vector<uint8_t> compressedData = pipeline->compress(
+        std::vector<uint8_t> compressedData = pipeline.compress(
             encodedData[i], 
             result
         );
@@ -69,7 +69,7 @@ Result<WisentRootExpression*> wisent::compressor::CompressAndLoadJson(
     std::string const& filepath, 
     std::string const& filename,
     std::string const& csvPrefix, 
-    std::unordered_map<std::string, CompressionPipeline*> &compressionPipelineMap,
+    std::unordered_map<std::string, CompressionPipeline> &compressionPipelineMap,
     bool disableRLE,
     bool disableCsvHandling, 
     bool forceReload
@@ -93,6 +93,7 @@ Result<WisentRootExpression*> wisent::compressor::CompressAndLoadJson(
         }
         sharedMemory->erase();
         SharedMemorySegments::getSharedMemorySegments().erase(filename);
+        sharedMemory = SharedMemorySegments::createOrGetMemorySegment(filename);
     }
     SharedMemorySegments::setCurrentSharedMemory(sharedMemory);
 
