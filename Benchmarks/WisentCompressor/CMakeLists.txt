@@ -30,8 +30,8 @@ set(HelperFiles
     ${Src_DIR}/Helpers/CompressionHelpers/RLE.cpp
     ${Src_DIR}/Helpers/CompressionHelpers/Delta.cpp
     ${Src_DIR}/Helpers/CompressionHelpers/LZ77.cpp
-    # ${Src_DIR}/Helpers/CompressionHelpers/Huffman.cpp
-    # ${Src_DIR}/Helpers/CompressionHelpers/FiniteStateEntropy.cpp
+    ${Src_DIR}/Helpers/CompressionHelpers/Huffman.cpp
+    ${Src_DIR}/Helpers/CompressionHelpers/FSE.cpp
 )
 
 set(SourceFiles

@@ -1,8 +1,8 @@
 #include "RLE.hpp"
 #include "LZ77.hpp"
 #include "Delta.hpp"
-// #include "FSE.hpp"
-// #include "Huffman.hpp"
+#include "FSE.hpp"
+#include "Huffman.hpp"
 #include "Algorithms.hpp"
 #include <stdexcept>
 #include <unordered_set>
@@ -237,6 +237,14 @@ namespace wisent::algorithms
                 );
             case CompressionType::LZ77:
                 return compressWith<LZ77>(
+                    buffer
+                );
+            case CompressionType::FSE:
+                return compressWith<FSE>(
+                    buffer
+                );
+            case CompressionType::HUFFMAN:
+                return compressWith<Huffman>(
                     buffer
                 );
             default:

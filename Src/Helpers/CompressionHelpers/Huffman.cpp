@@ -9,7 +9,7 @@
 #include <queue>
 #include <unordered_map>
 #include <bitset>
-#include <fstream>
+// #include <fstream>
 #include "Huffman.hpp"
 
 struct HuffmanNode 
@@ -244,72 +244,73 @@ class HuffmanTree
     }
 }; 
 
-namespace Huffman
-{
-    std::vector<uint8_t> compress(
-        const std::vector<uint8_t>& input
-    ) {    
-        HuffmanTree huffmanTree;
-        huffmanTree.buildTreeWithInput(input);
+Result<std::vector<uint8_t>> wisent::algorithms::Huffman::compress(
+    const std::vector<uint8_t>& input
+) {
+    Result<std::vector<uint8_t>> result; 
+    HuffmanTree huffmanTree;
+    huffmanTree.buildTreeWithInput(input);
 
-        std::vector<uint8_t> encoded = huffmanTree.encode(input);
-        
-        return encoded;
-    } 
-
-    std::string byteToBinaryString(uint8_t byte, uint8_t stringLength) 
-    {
-        std::bitset<8> eofBits(byte);
-        std::string binaryString = eofBits.to_string();
-        return (stringLength >= 8) ? binaryString : binaryString.substr(0, stringLength);
-    }
-
-    std::vector<uint8_t> decompress(
-        const std::vector<uint8_t>& input
-    ) {
-        HuffmanTree huffmanTree;
-        std::unordered_map<char, std::string> encodingTable;
-
-        uint8_t offset = 0; 
-
-        // Read EOF symbol
-        uint8_t eofCodeLength = input[offset++];
-        int maxCodeLengthInByte = (eofCodeLength + 7 ) / 8;
-
-        std::string eofBitString;
-        for (int i = 1; i <= maxCodeLengthInByte; i++) 
-        {
-            eofBitString += byteToBinaryString(input[offset++], 8);
-        }
-        eofBitString = eofBitString.substr(0, eofCodeLength);        
-        encodingTable['\0'] = eofBitString;
-
-        // Read encoding table
-        while (offset < input.size()) 
-        {
-            uint8_t symbol = input[offset++];
-            if (symbol == 0) break; // End of encoding table
-
-            uint8_t codeLength = input[offset++]; 
-            int codeLengthInByte = (codeLength + 7) / 8;
-            
-            std::string bitString;
-            uint8_t byteCount = 0; 
-            while (offset < input.size() && byteCount < codeLengthInByte) 
-            {
-                bitString += byteToBinaryString(input[offset++], 8);
-                byteCount++;
-            }
-            bitString = bitString.substr(0, codeLength);  
-            encodingTable[symbol] = bitString;
-            offset ++; // Skip delimiter
-        }
-        huffmanTree.buildTreeWithEncodingTable(encodingTable);
-
-        std::vector<uint8_t> data(input.begin() + offset, input.end());
-
-        std::vector<uint8_t> decoded = huffmanTree.decode(data);
+    std::vector<uint8_t> encoded = huffmanTree.encode(input);
     
-        return decoded; 
+    result.setValue(encoded);
+    return result;
+} 
+
+std::string byteToBinaryString(uint8_t byte, uint8_t stringLength) 
+{
+    std::bitset<8> eofBits(byte);
+    std::string binaryString = eofBits.to_string();
+    return (stringLength >= 8) ? binaryString : binaryString.substr(0, stringLength);
+}
+
+Result<std::vector<uint8_t>> wisent::algorithms::Huffman::decompress(
+    const std::vector<uint8_t>& input
+) {
+    Result<std::vector<uint8_t>> result; 
+    HuffmanTree huffmanTree;
+    std::unordered_map<char, std::string> encodingTable;
+
+    uint8_t offset = 0; 
+
+    // Read EOF symbol
+    uint8_t eofCodeLength = input[offset++];
+    int maxCodeLengthInByte = (eofCodeLength + 7 ) / 8;
+
+    std::string eofBitString;
+    for (int i = 1; i <= maxCodeLengthInByte; i++) 
+    {
+        eofBitString += byteToBinaryString(input[offset++], 8);
     }
-} // Huffman
+    eofBitString = eofBitString.substr(0, eofCodeLength);        
+    encodingTable['\0'] = eofBitString;
+
+    // Read encoding table
+    while (offset < input.size()) 
+    {
+        uint8_t symbol = input[offset++];
+        if (symbol == 0) break; // End of encoding table
+
+        uint8_t codeLength = input[offset++]; 
+        int codeLengthInByte = (codeLength + 7) / 8;
+        
+        std::string bitString;
+        uint8_t byteCount = 0; 
+        while (offset < input.size() && byteCount < codeLengthInByte) 
+        {
+            bitString += byteToBinaryString(input[offset++], 8);
+            byteCount++;
+        }
+        bitString = bitString.substr(0, codeLength);  
+        encodingTable[symbol] = bitString;
+        offset ++; // Skip delimiter
+    }
+    huffmanTree.buildTreeWithEncodingTable(encodingTable);
+
+    std::vector<uint8_t> data(input.begin() + offset, input.end());
+
+    std::vector<uint8_t> decoded = huffmanTree.decode(data);
+
+    result.setValue(decoded);
+    return result; 
+}

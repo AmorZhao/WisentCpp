@@ -1,14 +1,16 @@
-#ifndef COMPRESSION_ALGORITHMS_HUFFMAN_HPP
-#define COMPRESSION_ALGORITHMS_HUFFMAN_HPP
+#pragma once
 
 #include <cstdint>
 #include <vector>
+#include "../Result.hpp"
 
-namespace Huffman 
+namespace wisent::algorithms
 {
-    std::vector<uint8_t> compress(const std::vector<uint8_t>& input);
-    
-    std::vector<uint8_t> decompress(const std::vector<uint8_t>& input);
-} // Huffman
+    struct Huffman
+    {
+        static Result<std::vector<uint8_t>> compress(const std::vector<uint8_t>& input);
+        
+        static Result<std::vector<uint8_t>> decompress(const std::vector<uint8_t>& input);
+    }; 
+}
 
-#endif // COMPRESSION_ALGORITHMS_HUFFMAN_HPP
