@@ -19,26 +19,10 @@ void benchmark::utilities::WisentSerialize(
     ); 
 }
 
-// std::unordered_map<std::string, CompressionPipeline> 
-void benchmark::utilities::ConstructCompressionPipelineMap(
-    std::unordered_map<std::string, CompressionPipeline> &CompressionPipelineMap
-)
+std::unordered_map<std::string, CompressionPipeline> 
+benchmark::utilities::ConstructCompressionPipelineMap()
 {
-    // std::unordered_map<std::string, CompressionPipeline> compressionPipelineMap;
-    // for (const std::pair<const std::string, std::vector<std::string>>& entry : CompressionSpecifier)
-    // {
-    //     const std::string& columnName = entry.first;
-    //     const std::vector<std::string>& steps = entry.second;
-    //     CompressionPipeline::Builder builder;
-    //     for (const std::string& step : steps)
-    //     {
-    //         builder.addStep(step);
-    //     }
-    //     compressionPipelineMap[columnName] = builder.build();
-    // }
-    // return compressionPipelineMap;
-
-    // std::unordered_map<std::string, CompressionPipeline> CompressionPipelineMap;
+    std::unordered_map<std::string, CompressionPipeline> compressionPipelineMap;
     for (const auto& [columnName, steps] : CompressionSpecifier) 
     {
         CompressionPipeline::Builder builder;
@@ -46,34 +30,23 @@ void benchmark::utilities::ConstructCompressionPipelineMap(
         {
             builder.addStep(step);
         }
-        CompressionPipelineMap[columnName] = builder.build();
+        compressionPipelineMap[columnName] = builder.build();
     }
-    // return CompressionPipelineMap; 
+    return compressionPipelineMap; 
 }
 
 void benchmark::utilities::WisentCompressWithPipeline(
-    // std::unordered_map<std::string, CompressionPipeline> &compressionPipelineMap, 
+    std::unordered_map<std::string, CompressionPipeline> &compressionPipelineMap, 
     std::string csvPath
 ) {
-    std::unordered_map<std::string, CompressionPipeline> CompressionPipelineMap;
-    for (const auto& [columnName, steps] : CompressionSpecifier) 
-    {
-        CompressionPipeline::Builder builder;
-        for (const std::string& step : steps) 
-        {
-            builder.addStep(step);
-        }
-        CompressionPipelineMap[columnName] = builder.build();
-    }
-
     std::cout << "Compression Pipeline Map constructed with " 
-              << CompressionPipelineMap.size() << " entries." << std::endl;
+              << compressionPipelineMap.size() << " entries." << std::endl;
 
     Result<WisentRootExpression*> result =  wisent::compressor::CompressAndLoadJson(
         DatasetPath+DatasetName, 
         SharedMemoryName,
         csvPath,
-        CompressionPipelineMap,
+        compressionPipelineMap,
         DisableRLE,
         DisableCSV,
         ForceReload

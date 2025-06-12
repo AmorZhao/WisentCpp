@@ -11,11 +11,10 @@ namespace benchmark
             std::string csvPath
         );
 
-        void ConstructCompressionPipelineMap(
-            std::unordered_map<std::string, CompressionPipeline> &CompressionPipelineMap); 
+        std::unordered_map<std::string, CompressionPipeline> ConstructCompressionPipelineMap(); 
 
         void WisentCompressWithPipeline(
-            // std::unordered_map<std::string, CompressionPipeline> &compressionPipelineMap, 
+            std::unordered_map<std::string, CompressionPipeline> &compressionPipelineMap, 
             std::string csvPath
         ); 
 

@@ -6,48 +6,6 @@
 #include <unordered_map>
 #include <string>
 
-#include "../../Include/json.h"
-
-// void parseCompressionPipeline(
-//     std::unordered_map<std::string, CompressionPipeline> &result
-// ) {
-//     using nlohmann::json; 
-
-//     const std::string body = R"({
-//         "GR_temperature": [
-//             "LZ77",
-//             "Huffman", 
-//             "FSE"
-//         ],
-//         "BG_temperature": [
-//             "LZ77",
-//             "Huffman", 
-//             "FSE"
-//         ]
-//     })";
-
-//     json pipelineSpecification; 
-//     try {
-//         pipelineSpecification = json::parse(body);
-//     } 
-//     catch (const std::exception &e) {
-//         std::string errorMessage = "Error parsing request body: " + std::string(e.what());
-//         // result.setError(errorMessage);
-//     }
-
-//     std::unordered_map<std::string, CompressionPipeline> CompressionPipelineMap;
-//     for (const auto& [columnName, steps] : pipelineSpecification.items()) 
-//     {
-//         CompressionPipeline::Builder builder;
-//         for (const std::string& step : steps) 
-//         {
-//             builder.addStep(step);
-//         }
-//         CompressionPipelineMap[columnName] = builder.build();
-//     }
-//     // result.setValue(CompressionPipelineMap);
-// }
-
 static void BM_Load_JsonToWisent(benchmark::State& state)
 {
     const int index = state.range(0); 
@@ -83,13 +41,13 @@ static void BM_LoadAndCompress_JsonToWisent(benchmark::State& state)
     const int index = state.range(0); 
     std::string path = benchmark::utilities::GetCsvPath(CsvSubDirs[index]);
 
+    std::unordered_map<std::string, CompressionPipeline> compressionPipelineMap = 
+        benchmark::utilities::ConstructCompressionPipelineMap();
+
     for (auto _ : state) 
     {
-        // std::unordered_map<std::string, CompressionPipeline> compressionPipelineMap; 
-        // parseCompressionPipeline(compressionPipelineMap);
-
         vtune_start_task("WisentCompressWithPipeline");
-        benchmark::utilities::WisentCompressWithPipeline(path); 
+        benchmark::utilities::WisentCompressWithPipeline(compressionPipelineMap, path); 
         vtune_end_task();
     }
 
