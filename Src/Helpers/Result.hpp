@@ -16,6 +16,11 @@ struct Result
         return value.has_value() && !error.has_value(); 
     }
 
+    bool hasError() const 
+    { 
+        return error.has_value(); 
+    }
+
     bool hasWarning() const 
     { 
         return !warnings.empty(); 

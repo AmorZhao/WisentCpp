@@ -66,12 +66,20 @@ void benchmark::utilities::WisentCompressWithPipeline(
         compressionPipelineMap,
         DisableRLE,
         DisableCSV,
-        ForceReload
+        ForceReload, 
+        CompressVerbose
     ); 
 
     if (!result.success())
     {
         std::cerr << "Error during compression: " << result.getError() << std::endl; 
+    }
+    else if (result.hasWarning())
+    {
+        for (const auto& warning : result.getWarnings())
+        {
+            std::cout << "Warning: " << warning << std::endl;
+        }
     }
     // else
     // {

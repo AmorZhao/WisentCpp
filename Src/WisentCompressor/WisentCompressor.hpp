@@ -16,7 +16,8 @@ namespace wisent
             std::unordered_map<std::string, CompressionPipeline> &compressionPipelineMap,
             bool disableRLE = false,
             bool disableCsvHandling = false, 
-            bool forceReload = false
+            bool forceReload = false, 
+            bool verbose = false
         ); 
     }
 }

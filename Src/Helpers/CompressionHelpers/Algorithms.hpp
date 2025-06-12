@@ -105,7 +105,7 @@ namespace wisent::algorithms
 
         PhysicalType physicalType;
         EncodingType encodingType;
-        CompressionType compressionType;
+        std::vector<CompressionType> compressionTypes;
 
         std::vector<PageHeader> pageHeaders; 
 
@@ -200,11 +200,29 @@ namespace wisent::algorithms
         }
 
         return result.getValue();
-    }
+    }; 
 
     std::vector<uint8_t> performCompression(
         CompressionType type,
         const std::vector<uint8_t>& buffer
     ); 
 
+    template <typename codec>
+    std::vector<uint8_t> decompressWith(
+        std::vector<uint8_t> const &data
+    ) {
+        auto result = codec::decompress(data);
+
+        if (!result.success()) 
+        {
+            throw std::runtime_error("Decompression failed");
+        }
+
+        return result.getValue();
+    }; 
+
+    std::vector<uint8_t> performDecompression(
+        CompressionType type,
+        const std::vector<uint8_t>& buffer
+    ); 
 }

@@ -1,9 +1,9 @@
 #!/bin/bash
 
 BENCHMARK_FOLDERS=(
-    # "WisentCompressor"
+    "WisentCompressor"
     # "WisentFileSize"
-    "Compression"
+    # "Compression"
 )
 
 for BENCHMARK_DIR in "${BENCHMARK_FOLDERS[@]}"; do

@@ -525,7 +525,10 @@ class JsonToWisent : public json::json_sax_t
         endExpression();
 
         startExpression("compressionType");
-        addLong(static_cast<std::int64_t>(columnMetaData.compressionType)); 
+        for (const auto &compressionType : columnMetaData.compressionTypes) 
+        {
+            addLong(static_cast<std::int64_t>(compressionType));
+        }
         endExpression();
 
         startExpression("pages");

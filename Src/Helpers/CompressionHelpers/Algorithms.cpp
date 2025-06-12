@@ -18,7 +18,6 @@ namespace wisent::algorithms
         size_t totalUncompressedSize = 0;
 
         columnMetaData.physicalType = PhysicalType::INT64;
-        columnMetaData.compressionType = CompressionType::NONE;
         columnMetaData.encodingType = EncodingType::PLAIN;
 
         size_t startIndex = 0;
@@ -89,7 +88,6 @@ namespace wisent::algorithms
         size_t totalUncompressedSize = 0;
 
         columnMetaData.physicalType = PhysicalType::DOUBLE;
-        columnMetaData.compressionType = CompressionType::NONE;
         columnMetaData.encodingType = EncodingType::PLAIN;
 
         while (startIndex < column.size()) 
@@ -156,7 +154,6 @@ namespace wisent::algorithms
         size_t totalUncompressedSize = 0;
 
         columnMetaData.physicalType = PhysicalType::BYTE_ARRAY;
-        columnMetaData.compressionType = CompressionType::NONE;
         columnMetaData.encodingType = EncodingType::PLAIN;
 
         while (startIndex < column.size()) 
@@ -245,6 +242,37 @@ namespace wisent::algorithms
                 );
             case CompressionType::HUFFMAN:
                 return compressWith<Huffman>(
+                    buffer
+                );
+            default:
+                throw std::invalid_argument("Unsupported compression type");
+        }
+    }; 
+
+    std::vector<uint8_t> performDecompression(
+        CompressionType type,
+        const std::vector<uint8_t>& buffer
+    ) {
+        switch (type) 
+        {
+            case CompressionType::DELTA:
+                return decompressWith<DELTA>(
+                    buffer
+                );
+            case CompressionType::RLE:
+                return decompressWith<RLE>(
+                    buffer
+                );
+            case CompressionType::LZ77:
+                return decompressWith<LZ77>(
+                    buffer
+                );
+            case CompressionType::FSE:
+                return decompressWith<FSE>(
+                    buffer
+                );
+            case CompressionType::HUFFMAN:
+                return decompressWith<Huffman>(
                     buffer
                 );
             default:

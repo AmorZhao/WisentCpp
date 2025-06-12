@@ -8,16 +8,10 @@ const int IterationTimes = 5;
 const bool DisableRLE = false;
 const bool DisableCSV = false;
 const bool ForceReload = true; 
+const bool CompressVerbose = true; 
 
 const std::string DatasetPath = "/root/Documents/WisentCpp/Data/tpch/data/";  
 const std::string DatasetName = "tpch_metadata.json"; 
-
-// const std::unordered_map<std::string, std::vector<std::string>> CompressionSpecifier
-// {
-//     {"N_NATIONKEY", {"DELTA"}},
-//     {"R_REGIONKEY", {"DELTA"}},
-//     {"P_PARTKEY", {"RLE"}}
-// }; 
 
 const std::unordered_map<std::string, std::vector<std::string>> CompressionSpecifier
 {

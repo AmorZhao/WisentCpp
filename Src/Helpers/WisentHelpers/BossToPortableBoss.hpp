@@ -3273,7 +3273,20 @@ struct SerializedBossExpression
         newDynamicArguments.push_back(static_cast<int64_t>(columnMetadata.totalCompressedSize));
         newDynamicArguments.push_back(static_cast<int32_t>(columnMetadata.physicalType));
         newDynamicArguments.push_back(static_cast<int32_t>(columnMetadata.encodingType));
-        newDynamicArguments.push_back(static_cast<int32_t>(columnMetadata.compressionType));
+
+
+        boss::expressions::ExpressionArguments compressionTypeArguments;
+        for (const auto& compressionType : columnMetadata.compressionTypes) 
+        {
+            compressionTypeArguments.push_back(static_cast<int64_t>(compressionType));
+        }
+        boss::expressions::ComplexExpression compressionTypes(
+            boss::Symbol("compressionTypes"),
+            std::tuple<>{}, 
+            std::move(compressionTypeArguments), 
+            {}
+        );
+        newDynamicArguments.push_back(std::move(compressionTypes));
 
         boss::expressions::ExpressionArguments pagesArguments;
         for (const auto& pageHeader : columnMetadata.pageHeaders) 
@@ -3541,23 +3554,28 @@ struct SerializedBossExpression
 
                     for (size_t i = 0; i < encodedData.size(); ++i)
                     {
-                        Result<size_t> result; 
-                        std::vector<uint8_t> compressedData = pipeline.compress(
-                            encodedData[i], 
-                            result
+                        Result<std::vector<uint8_t>> compressedData = pipeline.compress(
+                            encodedData[i]
                         );
-                        columnMetaData.pageHeaders[i].compressedPageSize = compressedData.size();
-                        columnMetaData.pageHeaders[i].byteArray = std::move(compressedData);
+                        if (!compressedData.success())
+                        {
+                            throw std::runtime_error(
+                                "Compression failed: " + compressedData.getError()
+                            );
+                        }
+                        columnMetaData.pageHeaders[i].compressedPageSize = compressedData.getValue().size();
+                        columnMetaData.pageHeaders[i].byteArray = std::move(compressedData.getValue());
+                        columnMetaData.compressionTypes = pipeline.getPipeline();
                     }
 
                     boss::ComplexExpression newDynamicArgument = handleColumnMetadata(columnMetaData); 
                     compressedArguments.push_back(std::move(newDynamicArgument)); 
                 }
 
-                list =  boss::ComplexExpression(
-                    std::move(lHead), 
-                    std::move(lStatics), 
-                    std::move(compressedArguments), 
+                list = boss::ComplexExpression(
+                    std::move(lHead),
+                    std::move(lStatics),
+                    std::move(compressedArguments),
                     {}
                 );
             }
