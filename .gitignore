@@ -5,7 +5,7 @@
 
 # build
 /build*
-Tests/**/build*
+Misc/Tests/**/build*
 Benchmarks/**/build*
 
 # Test
