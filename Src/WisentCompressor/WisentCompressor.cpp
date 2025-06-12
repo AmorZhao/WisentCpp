@@ -20,7 +20,6 @@ void handleCsvColumnWithCompression(
     Result<size_t> result;
 
     std::optional<ColumnDataType> columnData = tryLoadColumn(doc, columnName); 
-    ColumnMetaData columnMetaData; 
     std::vector<std::vector<uint8_t>> encodedData;
 
     std::visit([&](auto&& data) 
@@ -30,21 +29,21 @@ void handleCsvColumnWithCompression(
         {
             encodedData = encodeIntColumn(
                 data, 
-                columnMetaData
+                metadata
             );
         } 
         else if constexpr (std::is_same_v<T, std::vector<double>>) 
         {
             encodedData = encodeDoubleColumn(
                 data,
-                columnMetaData
+                metadata
             );
         } 
         else if constexpr (std::is_same_v<T, std::vector<std::string>>) 
         {
             encodedData = encodeStringColumn(
                 data, 
-                columnMetaData
+                metadata
             );
         } 
         else 
@@ -60,8 +59,9 @@ void handleCsvColumnWithCompression(
             encodedData[i], 
             result
         );
-        columnMetaData.pageHeaders[i].compressedPageSize = compressedData.size();
-        columnMetaData.pageHeaders[i].byteArray = std::move(compressedData);
+        metadata.pageHeaders[i].compressedPageSize = compressedData.size();
+        metadata.pageHeaders[i].byteArray = std::move(compressedData);
+        metadata.totalCompressedSize += compressedData.size();
     }
 }
 

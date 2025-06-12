@@ -12,12 +12,15 @@ const bool ForceReload = true;
 const std::string DatasetPath = "/root/Documents/WisentCpp/Data/tpch/data/";  
 const std::string DatasetName = "tpch_metadata.json"; 
 
-// const std::unordered_map<std::string, std::vector<std::string>> CompressionSpecifier
-// {
-//     {"N_NATIONKEY", {"DELTA"}},
-//     {"R_REGIONKEY", {"DELTA"}},
-//     {"P_PARTKEY", {"RLE"}}
-// }; 
+const std::string CsvPath = DatasetPath; 
+const std::vector<std::string> CsvSubDirs = {
+    // "data_0.005G",
+    // "data_0.01G",
+    // "data_0.05G"
+    "data_0.1G",
+    "data_0.2G"
+    // "data_0.5G"
+};
 
 const std::unordered_map<std::string, std::vector<std::string>> CompressionSpecifier
 {
@@ -108,4 +111,4 @@ const std::unordered_map<std::string, std::vector<std::string>> CompressionSpeci
 // }; 
 
 const std::string SharedMemoryName = "benchmark_sharedMemorySegment";
-const std::string CsvPath = DatasetPath; 
+

@@ -176,8 +176,8 @@ namespace wisent::algorithms
 
                 if (bytesInPage + encodedLen > DEFAULT_PAGE_SIZE) break;
 
-                minStr = std::min(minStr, str);
-                maxStr = std::max(maxStr, str);
+                if (str < minStr) minStr = str;
+                if (str > maxStr) maxStr = str;
 
                 uint32_t len = static_cast<uint32_t>(strLen);
                 for (int i = 0; i < 4; ++i)
@@ -196,6 +196,8 @@ namespace wisent::algorithms
                 column.begin() + startIndex, 
                 column.begin() + endIndex
             ).size();
+            stats.minString = minStr;
+            stats.maxString = maxStr;
 
             PageHeader header;
             header.pageType = PageType::DATA_PAGE;

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DBGEN_PATH="../../../Include/TPC-H V3.0.1/dbgen"
-SCALE_FACTOR=0.01    # GB
+SCALE_FACTOR=0.01
 OUTPUT_DIR="../data"
 
 declare -A TABLE_HEADERS
@@ -35,13 +35,30 @@ for tbl_file in "$DBGEN_PATH"/*.tbl; do
         continue
     fi
 
-    echo "Converting $tbl_file → $dest_csv"
+    echo "Converting $tbl_file to $dest_csv"
+    expected_fields=$(awk -F"," '{print NF}' <<< "$header")
+
     {
         echo "$header"
-        awk -F"|" -v OFS="," 'NF>1 {NF--; print}' "$tbl_file"
+        awk -v OFS="," -F"|" -v E="$expected_fields" '
+        function escape_csv(val) {
+            gsub(/"/, "\"\"", val)
+            if (val ~ /,/) {
+                return "\"" val "\""
+            } else {
+                return val
+            }
+        }
+        NF==E+1 {
+            NF--
+            for (i = 1; i <= NF; i++) {
+                $i = escape_csv($i)
+            }
+            print
+        }' "$tbl_file"
     } > "$dest_csv"
 
     rm -f "$tbl_file"
 done
 
-echo "TPC-H data generated and saved to $OUTPUT_DIR"
+echo "TPC-H data converted and saved to $OUTPUT_DIR"

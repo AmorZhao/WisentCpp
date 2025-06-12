@@ -50,6 +50,11 @@ struct Result
             throw std::runtime_error("No value set in Result");
         }
     }
+
+    std::vector<std::string> getWarnings() const 
+    { 
+        return warnings; 
+    }
 };
 
 
