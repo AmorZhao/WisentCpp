@@ -47,31 +47,11 @@ WisentCpp/
 │   │
 │   └── WisentServer
 │
-├── Tests/
-│   ├── Benchmark/
-│   └── UnitTests/
-│
 └── Misc/
-    ├── client-app/ 
-    └── Wisent-standalone/
-```
-
-## Requirements
-
-```bash
-GCC >= 5.0
-Clang >= 3.4
-cmake >= 3.10
-```
-
-
-## Run locally 
-
-### Build project
-
-```
-./build_server.sh
-./build/WisentServer
+    ├── ... (ad-hoc tests)
+    └── Tests/
+        ├── Benchmark/
+        └── UnitTests/
 ```
 
 <br>

@@ -1,10 +1,23 @@
+/*  The following parts of FSE has been simplified, 
+    We can add some of these features as Todo if needed: 
+    - wksp (workspace / buffer selection)
+    - normalizeM2 (a fallback normalization method)
+    - assert / error handling / ErrorCode
+        (most errors were thrown at runtime)
+    - vectors passed by reference instead of using pointers
+    - simplified way of writting and reading normalizedCounts
+    - omitted unsafe fast decoding mode (when a symbol has probability > 50%)
+*/
+
 #include <iostream>
 #include <cstring>
 #include <vector>
+#include <bitset>
 #include <iomanip>
-#include "FiniteStateEntropy.hpp"
+#include "FSE.hpp"
 
 const unsigned DefaultMaxSymbolValue = 255; 
+
 const unsigned DefaultTableLog = 11;
 const unsigned MinTablelog = 5; 
 const unsigned MaxTableLog = 15;
@@ -46,7 +59,7 @@ std::vector<unsigned> parallelCount(
     unsigned& maxSymbolValue,
     const std::vector<uint8_t>& input
 ) {
-    std::cout << "Using parallel Count" << std::endl;
+    // std::cout << "Using parallel Count" << std::endl;
     unsigned max = 0;
     std::vector<unsigned> count(maxSymbolValue + 1, 0);
     
@@ -430,12 +443,11 @@ void compressDataUsingCTable(
     }
 }
 
-Result<size_t> algorithms::FSE::compress(
-    const std::byte* input,
-    const size_t inputSize,
-    const std::byte* output, 
+Result<std::vector<uint8_t>> wisent::algorithms::FSE::compress(
+    const std::vector<uint8_t>& input, 
     bool verbose
 ) { 
+    Result<std::vector<uint8_t>> result; 
     std::vector<uint8_t> compressed;
 
     //  1. Count all symbols
@@ -484,7 +496,8 @@ Result<size_t> algorithms::FSE::compress(
         cTable
     );
 
-    return compressed;
+    result.setValue(compressed);
+    return result;
 }
 
 // ========== Decompression ==========
@@ -662,12 +675,12 @@ std::vector<uint8_t> decompressDataUsingDTable(
     return decompressed;
 }
 
-Result<size_t> algorithms::FSE::decompress(
-    const std::byte* input,
-    const size_t inputSize, 
-    const std::byte* output, 
+Result<std::vector<uint8_t>> wisent::algorithms::FSE::decompress(
+    const std::vector<uint8_t>& input, 
     bool verbose
 ) {
+    Result<std::vector<uint8_t>> result; 
+
     //  1. Read frequencies of symbols.
     unsigned maxSymbolValue = DefaultMaxSymbolValue;
     unsigned tableLog = 0;
@@ -708,5 +721,6 @@ Result<size_t> algorithms::FSE::decompress(
         normalizeCounterOffset
     );
 
-    return decompressed;
+    result.setValue(decompressed);
+    return result;
 }

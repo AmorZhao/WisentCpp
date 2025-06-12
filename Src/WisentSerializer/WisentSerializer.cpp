@@ -32,6 +32,7 @@ Result<WisentRootExpression*> wisent::serializer::load(
             return result; 
         }
         free(sharedMemoryName);
+        sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
     }
     SharedMemorySegments::setCurrentSharedMemory(sharedMemory);
 
@@ -105,7 +106,7 @@ Result<WisentRootExpression*> wisent::serializer::load(
                     if (extPos != std::string::npos &&
                         filename.substr(extPos) == ".csv") 
                     {
-                        std::cout << "Handling csv file: " << filename << std::endl;
+                        // std::cout << "Handling csv file: " << filename << std::endl;
                         auto doc = openCsvFile(csvPrefix + filename);
                         auto rows = doc.GetRowCount();
                         auto cols = doc.GetColumnCount();
@@ -146,7 +147,7 @@ Result<WisentRootExpression*> wisent::serializer::load(
     json::sax_parse(ifs, &jsonToWisent);
     ifs.close();
 
-    std::cout << "loaded: " << filepath << std::endl;
+    // std::cout << "loaded: " << filepath << std::endl;
     result.setValue(jsonToWisent.getRoot());
     return result; 
 }
@@ -160,7 +161,7 @@ void wisent::serializer::unload (std::string const &sharedMemoryName)
         return;
     }
     sharedMemory->unload();
-    std::cout << "Shared memory segment unloaded successfully." << std::endl;
+    // std::cout << "Shared memory segment unloaded successfully." << std::endl;
 }
 
 void wisent::serializer::free(std::string const &sharedMemoryName)
@@ -168,5 +169,5 @@ void wisent::serializer::free(std::string const &sharedMemoryName)
     ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
     sharedMemory->erase();
     SharedMemorySegments::getSharedMemorySegments().erase(sharedMemoryName);
-    std::cout << "Shared memory segment erased from list." << std::endl;
+    // std::cout << "Shared memory segment erased from list." << std::endl;
 }

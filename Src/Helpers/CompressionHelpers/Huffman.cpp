@@ -1,15 +1,24 @@
-#include "Huffman.hpp"
+/*  Possible Todo's: 
+    - check if the previous dictionary is beneficial (?)
+    - handle less compressible data
+    - the way of storing encoding table is not optimal
+*/
+
+#include <iostream>
+#include <vector>
 #include <queue>
 #include <unordered_map>
 #include <bitset>
-#include <cstring>
-            
+// #include <fstream>
+#include "Huffman.hpp"
+
 struct HuffmanNode 
 {
     char symbol;
     int64_t frequency;
     HuffmanNode* left;
     HuffmanNode* right;
+    
     HuffmanNode(char s, int64_t f) : symbol(s), frequency(f), left(nullptr), right(nullptr) {}
 };
 
@@ -21,40 +30,56 @@ struct Compare
     }
 };
 
-class HuffmanTree {
-private:
-    HuffmanNode* root = nullptr;
+class HuffmanTree 
+{
+  private:
+    HuffmanNode* root;
     std::unordered_map<char, std::string> encodingTable;
 
-    void buildEncodingTable(HuffmanNode* node, const std::string& str) {
+    void buildEncodingTable(HuffmanNode* node, const std::string& str) 
+    {
         if (!node) return;
-        if (!node->left && !node->right) {
+        if (!node->left && !node->right) 
+        {
             encodingTable[node->symbol] = str;
         }
         buildEncodingTable(node->left, str + "0");
         buildEncodingTable(node->right, str + "1");
     }
 
-public:
-    void buildTreeWithInput(const std::byte* input, size_t inputSize) {
+  public:
+    HuffmanTree() : root(nullptr) {}
+
+    void buildTreeWithInput(const std::vector<uint8_t>& input) 
+    {
         std::unordered_map<char, int64_t> frequencies;
-        for (size_t i = 0; i < inputSize; ++i) {
-            frequencies[static_cast<char>(input[i])]++;
+        for (char c : input) 
+        {
+            frequencies[c]++;
         }
-        frequencies['\0'] = 1; // EOF
+        frequencies['\0'] = 1; // EOF symbol
 
         std::priority_queue<HuffmanNode*, std::vector<HuffmanNode*>, Compare> tree;
-        for (auto& [ch, freq] : frequencies) {
-            tree.push(new HuffmanNode(ch, freq));
+        for (auto& pair : frequencies) 
+        {
+            tree.push(new HuffmanNode(pair.first, pair.second));
         }
 
-        while (tree.size() > 1) {
-            HuffmanNode* left = tree.top(); tree.pop();
-            HuffmanNode* right = tree.top(); tree.pop();
+        while (tree.size() > 1) 
+        {
+            HuffmanNode* left = tree.top(); 
+            tree.pop();
+            
+            HuffmanNode* right = tree.top(); 
+            tree.pop();
 
-            HuffmanNode* parent = new HuffmanNode('*', left->frequency + right->frequency);
+            HuffmanNode* parent = new HuffmanNode(
+                '*', 
+                left->frequency + right->frequency
+            );
             parent->left = left;
             parent->right = right;
+
             tree.push(parent);
         }
 
@@ -62,97 +87,187 @@ public:
         buildEncodingTable(root, "");
     }
 
-    std::vector<uint8_t> encode(const std::byte* input, size_t inputSize) {
-        std::vector<uint8_t> encodedBytes;
+    void buildTreeWithEncodingTable(
+        const std::unordered_map<char, std::string>& encodingTable
+    ) {
+        root = new HuffmanNode('*', 0);
+        size_t index = 0;
 
+        for (const auto& pair : encodingTable) 
+        {
+            HuffmanNode* current = root;
+            for (char bit : pair.second) 
+            {
+                if (bit == '0') 
+                {
+                    if (!current->left) 
+                    {
+                        current->left = new HuffmanNode('*', 0);
+                    }
+                    current = current->left;
+                } 
+                else 
+                {
+                    if (!current->right) 
+                    {
+                        current->right = new HuffmanNode('*', 0);
+                    }
+                    current = current->right;
+                }
+            }
+            current->symbol = pair.first; 
+        }
+    }
+
+    std::vector<uint8_t> encode(const std::vector<uint8_t>& data) 
+    {
+        std::vector<uint8_t> encodedBytes;
+	encodedBytes.reserve(data.size());
+
+        // Encode EOF symbol
         std::string eofCode = encodingTable['\0'];
-        encodedBytes.push_back(static_cast<uint8_t>(eofCode.size()));
+        encodedBytes.push_back(eofCode.size());
         encodeStringToBytes(eofCode, encodedBytes);
 
-        for (const auto& [symbol, code] : encodingTable) {
-            if (symbol == '\0') continue;
-            encodedBytes.push_back(static_cast<uint8_t>(symbol));
-            encodedBytes.push_back(static_cast<uint8_t>(code.size()));
-            encodeStringToBytes(code, encodedBytes);
+        // Add encoding table
+        for (const auto& pair : encodingTable) 
+        {
+            if (pair.first == '\0') continue;
+
+            encodedBytes.push_back(pair.first);
+
+            uint8_t codeLength = pair.second.size();
+            encodedBytes.push_back(codeLength);
+
+            encodeStringToBytes(pair.second, encodedBytes);
+
             encodedBytes.push_back(0); // Delimiter
         }
         encodedBytes.push_back(0); // Final delimiter
 
-        // Encode actual data
-        std::vector<bool> bits;
-        for (size_t i = 0; i < inputSize; ++i) {
-            for (char bit : encodingTable[static_cast<char>(input[i])]) {
-                bits.push_back(bit == '1');
+        // Encode data 
+        std::vector<bool> encoded;
+	encoded.reserve(data.size());
+        for (char c : data) 
+        {
+            for (char bit : encodingTable[c]) 
+            {
+                encoded.push_back(bit == '1' ? 1 : 0);
             }
         }
-        for (char bit : encodingTable['\0']) {
-            bits.push_back(bit == '1');
+        for (char bit : encodingTable['\0'])  // EOF symbol
+        {
+            encoded.push_back(bit == '1' ? 1 : 0);
         }
 
-        uint8_t byte = 0, count = 0;
-        for (bool bit : bits) {
+        // Convert to bytes
+        uint8_t byte = 0;
+        uint8_t bitCount = 0;
+
+        for (bool bit : encoded) 
+        {
             byte = (byte << 1) | bit;
-            ++count;
-            if (count == 8) {
+            bitCount++;
+            if (bitCount == 8) 
+            {
                 encodedBytes.push_back(byte);
                 byte = 0;
-                count = 0;
+                bitCount = 0;
             }
         }
-        if (count > 0) {
-            byte <<= (8 - count);
+        if (bitCount > 0) 
+        {
+            byte <<= (8 - bitCount);
             encodedBytes.push_back(byte);
         }
 
         return encodedBytes;
     }
 
-    void encodeStringToBytes(const std::string& str, std::vector<uint8_t>& out) {
-        uint8_t buffer = 0;
-        int count = 0;
-        for (char bit : str) {
-            buffer = (buffer << 1) | (bit == '1' ? 1 : 0);
-            ++count;
-            if (count == 8) {
-                out.push_back(buffer);
-                buffer = 0;
-                count = 0;
+    std::vector<uint8_t> decode(const std::vector<uint8_t>& data) 
+    {
+        std::vector<uint8_t> decoded;
+	decoded.reserve(data.size());
+        HuffmanNode* current = root;
+
+        std::vector<bool> bits;
+	bits.reserve(data.size());
+        for (size_t i = 0; i < data.size(); ++i) 
+        {
+            std::bitset<8> byte(data[i]);
+            for (int j = 7; j >= 0; --j) 
+            {
+                bits.push_back(byte[j]);
             }
         }
-        if (count > 0) {
-            buffer <<= (8 - count);
-            out.push_back(buffer);
+
+        for (bool bit : bits) 
+        {
+            current = bit ? current->right : current->left;
+            if (current->left == nullptr && current->right == nullptr) 
+            {
+                if (current->symbol == '\0') break;  // EOF 
+                decoded.push_back((uint8_t)current->symbol);
+                current = root;
+            }
+        }
+        return decoded;
+    }
+
+    void encodeStringToBytes(
+        const std::string& str, 
+        std::vector<uint8_t>& encodedBytes
+    ) {
+        uint8_t bitBuffer = 0;
+        int64_t bitCount = 0;
+        for (char bit : str) 
+        {
+            bitBuffer = (bitBuffer << 1) | (bit == '1' ? 1 : 0);
+            bitCount++;
+            if (bitCount % 8 == 0) 
+            {
+                encodedBytes.push_back(bitBuffer);
+                bitBuffer = 0;
+                bitCount = 0; 
+            }
+        }
+        if (bitCount > 0) 
+        {
+            bitBuffer <<= (8 - bitCount);
+            encodedBytes.push_back(bitBuffer);
         }
     }
-};
 
-static Result<size_t> wisent::algorithms::Huffman::compress(
-    const std::byte* input,
-    const size_t inputSize,
-    const std::byte* output
-) {
-    if (!input || !output || inputSize == 0) 
-        return makeError<size_t>("Invalid input or output buffer");
-
-    HuffmanTree tree;
-    tree.buildTreeWithInput(input, inputSize);
-    std::vector<uint8_t> encoded = tree.encode(input, inputSize);
-
-    std::memcpy(output, encoded.data(), encoded.size());
-    return makeResult<size_t>(encoded.size());
+    std::unordered_map<char, std::string> getEncodingTable() 
+    {
+        return encodingTable;
+    }
 }; 
 
+Result<std::vector<uint8_t>> wisent::algorithms::Huffman::compress(
+    const std::vector<uint8_t>& input
+) {
+    Result<std::vector<uint8_t>> result; 
+    HuffmanTree huffmanTree;
+    huffmanTree.buildTreeWithInput(input);
 
-static std::string byteToBinaryString(uint8_t byte, uint8_t stringLength) 
+    std::vector<uint8_t> encoded = huffmanTree.encode(input);
+    
+    result.setValue(encoded);
+    return result;
+} 
+
+std::string byteToBinaryString(uint8_t byte, uint8_t stringLength) 
 {
     std::bitset<8> eofBits(byte);
     std::string binaryString = eofBits.to_string();
     return (stringLength >= 8) ? binaryString : binaryString.substr(0, stringLength);
-}; 
+}
 
-static std::vector<uint8_t> wisent::algorithms::Huffman::decompress(
+Result<std::vector<uint8_t>> wisent::algorithms::Huffman::decompress(
     const std::vector<uint8_t>& input
 ) {
+    Result<std::vector<uint8_t>> result; 
     HuffmanTree huffmanTree;
     std::unordered_map<char, std::string> encodingTable;
 
@@ -196,5 +311,6 @@ static std::vector<uint8_t> wisent::algorithms::Huffman::decompress(
 
     std::vector<uint8_t> decoded = huffmanTree.decode(data);
 
-    return decoded; 
-}; 
+    result.setValue(decoded);
+    return result; 
+}

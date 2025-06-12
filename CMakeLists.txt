@@ -37,8 +37,8 @@ set(HelperFiles
   Src/Helpers/CompressionHelpers/Delta.cpp
   Src/Helpers/CompressionHelpers/RLE.cpp
   Src/Helpers/CompressionHelpers/LZ77.cpp
-  # Src/Helpers/CompressionHelpers/Huffman.cpp
-  # Src/Helpers/CompressionHelpers/FSE.cpp
+  Src/Helpers/CompressionHelpers/Huffman.cpp
+  Src/Helpers/CompressionHelpers/FSE.cpp
   Src/Helpers/BossHelpers/BossEngine.cpp
 )
 

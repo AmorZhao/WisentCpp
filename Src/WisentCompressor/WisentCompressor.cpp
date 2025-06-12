@@ -14,13 +14,11 @@
 void handleCsvColumnWithCompression(
     rapidcsv::Document const &doc,
     std::string const &columnName, 
-    CompressionPipeline const *pipeline, 
-    ColumnMetaData &metadata
+    CompressionPipeline const &pipeline, 
+    ColumnMetaData &metadata, 
+    Result<WisentRootExpression*> result
 ) {
-    Result<size_t> result;
-
     std::optional<ColumnDataType> columnData = tryLoadColumn(doc, columnName); 
-    ColumnMetaData columnMetaData; 
     std::vector<std::vector<uint8_t>> encodedData;
 
     std::visit([&](auto&& data) 
@@ -30,21 +28,21 @@ void handleCsvColumnWithCompression(
         {
             encodedData = encodeIntColumn(
                 data, 
-                columnMetaData
+                metadata
             );
         } 
         else if constexpr (std::is_same_v<T, std::vector<double>>) 
         {
             encodedData = encodeDoubleColumn(
                 data,
-                columnMetaData
+                metadata
             );
         } 
         else if constexpr (std::is_same_v<T, std::vector<std::string>>) 
         {
             encodedData = encodeStringColumn(
                 data, 
-                columnMetaData
+                metadata
             );
         } 
         else 
@@ -56,23 +54,32 @@ void handleCsvColumnWithCompression(
 
     for (size_t i = 0; i < encodedData.size(); ++i)
     {
-        std::vector<uint8_t> compressedData = pipeline->compress(
-            encodedData[i], 
-            result
+        Result<std::vector<uint8_t>> compressedData = pipeline.compress(
+            encodedData[i]
         );
-        columnMetaData.pageHeaders[i].compressedPageSize = compressedData.size();
-        columnMetaData.pageHeaders[i].byteArray = std::move(compressedData);
+        if (!compressedData.success()) 
+        {
+            std::string errorMessage = "Failed to compress column '" + columnName + "': " + compressedData.getError();
+            result.setError(errorMessage);
+            return; 
+        }
+        std::vector<uint8_t> compressedDataValue = compressedData.getValue(); 
+        metadata.pageHeaders[i].compressedPageSize = compressedDataValue.size();
+        metadata.pageHeaders[i].byteArray = std::move(compressedDataValue);
+        metadata.totalCompressedSize += compressedDataValue.size();
     }
+    metadata.compressionTypes = pipeline.getPipeline();
 }
 
 Result<WisentRootExpression*> wisent::compressor::CompressAndLoadJson(
     std::string const& filepath, 
     std::string const& filename,
     std::string const& csvPrefix, 
-    std::unordered_map<std::string, CompressionPipeline*> &compressionPipelineMap,
+    std::unordered_map<std::string, CompressionPipeline> &compressionPipelineMap,
     bool disableRLE,
     bool disableCsvHandling, 
-    bool forceReload
+    bool forceReload, 
+    bool verbose
 ) {
     Result<WisentRootExpression*> result; 
 
@@ -93,6 +100,7 @@ Result<WisentRootExpression*> wisent::compressor::CompressAndLoadJson(
         }
         sharedMemory->erase();
         SharedMemorySegments::getSharedMemorySegments().erase(filename);
+        sharedMemory = SharedMemorySegments::createOrGetMemorySegment(filename);
     }
     SharedMemorySegments::setCurrentSharedMemory(sharedMemory);
 
@@ -120,7 +128,9 @@ Result<WisentRootExpression*> wisent::compressor::CompressAndLoadJson(
             &compressionPipelineMap,
             &processedColumns, 
             layerIndex = uint64_t{0},
-            wasKeyValue = std::vector<bool>(16)
+            wasKeyValue = std::vector<bool>(16), 
+            result,
+            verbose
         ](                  // lambda params
             int depth, 
             json::parse_event_t event, 
@@ -168,7 +178,10 @@ Result<WisentRootExpression*> wisent::compressor::CompressAndLoadJson(
                         size_t extPos = filename.find_last_of(".");
                         if (extPos != std::string::npos && filename.substr(extPos) == ".csv") 
                         {
-                            // std::cout << "Handling csv file: " << filename << std::endl;
+                            if (verbose)
+                            {
+                                std::cout << "Handling csv file: " << filename << std::endl;
+                            }
                             rapidcsv::Document doc = openCsvFile(csvPrefix + filename);
                             size_t rows = doc.GetRowCount();
                             size_t cols = doc.GetColumnCount();
@@ -190,27 +203,44 @@ Result<WisentRootExpression*> wisent::compressor::CompressAndLoadJson(
                                 if (compressionPipelineMap.find(columnName) != compressionPipelineMap.end()) 
                                 {
                                     matchedColumns++;
+
                                     if (argumentCountPerLayer.size() <= layerIndex + 5) 
                                     {
                                         argumentCountPerLayer.resize(layerIndex + 5 + 1, 0);
                                     }
 
+                                    CompressionPipeline pipeline = compressionPipelineMap[columnName]; 
+
                                     ColumnMetaData columnMetaData; 
                                     handleCsvColumnWithCompression(
                                         doc, 
                                         columnName, 
-                                        compressionPipelineMap[columnName], 
-                                        columnMetaData
+                                        pipeline, 
+                                        columnMetaData, 
+                                        result
                                     ); 
-                                    
+                                    if (verbose) 
+                                    {
+                                        std::cout << "Handling column: " << columnName << std::endl;
+                                        std::cout << "using compression pipeline: "; 
+                                        for (const CompressionType &step : pipeline.getPipeline()) 
+                                        {
+                                            std::cout << compressionTypeToString(step) << " ";
+                                        }
+                                        std::cout << std::endl;
+                                    }
+
                                     size_t pageCount = columnMetaData.pageHeaders.size();
 
                                     // layer +2 arguments: each Metadata entry's key
                                     argumentCountPerLayer[layerIndex + 2] += KEY_VALUE_PAIR_PER_COLUMNMETADATA; 
                                     expressionCount += KEY_VALUE_PAIR_PER_COLUMNMETADATA;
 
-                                    // layer +3 arguments: each Metadata entry's value + "pages" entry's Page objects
-                                    argumentCountPerLayer[layerIndex + 3] += KEY_VALUE_PAIR_PER_COLUMNMETADATA - 1 + pageCount;
+                                    // layer +3 arguments: each Metadata entry's value 
+                                    //                      + each CompressionType in pipeline
+                                    //                      + each Page object in "pages" entry
+                                    argumentCountPerLayer[layerIndex + 3] += KEY_VALUE_PAIR_PER_COLUMNMETADATA - 2 
+                                        + columnMetaData.compressionTypes.size() + pageCount;
                                     expressionCount += pageCount;
 
                                     // layer +4 arguments: each Page object's PageHeader entry's key
@@ -241,6 +271,12 @@ Result<WisentRootExpression*> wisent::compressor::CompressAndLoadJson(
             }
         }
     );
+
+    if (result.hasError()) 
+    {
+        ifs.close();
+        return result; 
+    }
 
     JsonToWisent jsonToWisent(
         expressionCount,

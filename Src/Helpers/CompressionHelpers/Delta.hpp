@@ -1,25 +1,17 @@
 #pragma once
-#ifndef DELTA_HPP
-#define DELTA_HPP
 
-#include <cstddef>
 #include "../../Helpers/Result.hpp"
 
 namespace wisent::algorithms
 {
     struct DELTA
     {
-        static Result<size_t> compress(
-            const std::byte* input,
-            const size_t inputSize,
-            std::byte* output
+        static Result<std::vector<uint8_t>> compress(
+            const std::vector<uint8_t>& input
         ); 
-        static Result<size_t> decompress(
-            const std::byte* input,
-            const size_t inputSize, 
-            std::byte* output
+
+        static Result<std::vector<uint8_t>> decompress(
+           const std::vector<uint8_t>& input
         );
     }; 
 }
-
-#endif // DELTA_HPP

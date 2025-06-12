@@ -1,8 +1,8 @@
 #include "RLE.hpp"
 #include "LZ77.hpp"
 #include "Delta.hpp"
-// #include "FSE.hpp"
-// #include "Huffman.hpp"
+#include "FSE.hpp"
+#include "Huffman.hpp"
 #include "Algorithms.hpp"
 #include <stdexcept>
 #include <unordered_set>
@@ -18,7 +18,6 @@ namespace wisent::algorithms
         size_t totalUncompressedSize = 0;
 
         columnMetaData.physicalType = PhysicalType::INT64;
-        columnMetaData.compressionType = CompressionType::NONE;
         columnMetaData.encodingType = EncodingType::PLAIN;
 
         size_t startIndex = 0;
@@ -89,7 +88,6 @@ namespace wisent::algorithms
         size_t totalUncompressedSize = 0;
 
         columnMetaData.physicalType = PhysicalType::DOUBLE;
-        columnMetaData.compressionType = CompressionType::NONE;
         columnMetaData.encodingType = EncodingType::PLAIN;
 
         while (startIndex < column.size()) 
@@ -156,7 +154,6 @@ namespace wisent::algorithms
         size_t totalUncompressedSize = 0;
 
         columnMetaData.physicalType = PhysicalType::BYTE_ARRAY;
-        columnMetaData.compressionType = CompressionType::NONE;
         columnMetaData.encodingType = EncodingType::PLAIN;
 
         while (startIndex < column.size()) 
@@ -176,8 +173,8 @@ namespace wisent::algorithms
 
                 if (bytesInPage + encodedLen > DEFAULT_PAGE_SIZE) break;
 
-                minStr = std::min(minStr, str);
-                maxStr = std::max(maxStr, str);
+                if (str < minStr) minStr = str;
+                if (str > maxStr) maxStr = str;
 
                 uint32_t len = static_cast<uint32_t>(strLen);
                 for (int i = 0; i < 4; ++i)
@@ -196,6 +193,8 @@ namespace wisent::algorithms
                 column.begin() + startIndex, 
                 column.begin() + endIndex
             ).size();
+            stats.minString = minStr;
+            stats.maxString = maxStr;
 
             PageHeader header;
             header.pageType = PageType::DATA_PAGE;
@@ -227,18 +226,54 @@ namespace wisent::algorithms
         {
             case CompressionType::DELTA:
                 return compressWith<DELTA>(
-                    reinterpret_cast<const char*>(buffer.data()),
-                    buffer.size()
+                    buffer
                 );
             case CompressionType::RLE:
                 return compressWith<RLE>(
-                    reinterpret_cast<const char*>(buffer.data()),
-                    buffer.size()
+                    buffer
                 );
             case CompressionType::LZ77:
                 return compressWith<LZ77>(
-                    reinterpret_cast<const char*>(buffer.data()),
-                    buffer.size()
+                    buffer
+                );
+            case CompressionType::FSE:
+                return compressWith<FSE>(
+                    buffer
+                );
+            case CompressionType::HUFFMAN:
+                return compressWith<Huffman>(
+                    buffer
+                );
+            default:
+                throw std::invalid_argument("Unsupported compression type");
+        }
+    }; 
+
+    std::vector<uint8_t> performDecompression(
+        CompressionType type,
+        const std::vector<uint8_t>& buffer
+    ) {
+        switch (type) 
+        {
+            case CompressionType::DELTA:
+                return decompressWith<DELTA>(
+                    buffer
+                );
+            case CompressionType::RLE:
+                return decompressWith<RLE>(
+                    buffer
+                );
+            case CompressionType::LZ77:
+                return decompressWith<LZ77>(
+                    buffer
+                );
+            case CompressionType::FSE:
+                return decompressWith<FSE>(
+                    buffer
+                );
+            case CompressionType::HUFFMAN:
+                return decompressWith<Huffman>(
+                    buffer
                 );
             default:
                 throw std::invalid_argument("Unsupported compression type");

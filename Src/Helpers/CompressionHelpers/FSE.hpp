@@ -1,26 +1,21 @@
 #pragma once
-#ifndef FSE_HPP
-#define FSE_HPP
-
-#include "../Helpers/Result.hpp"
+#include "../Result.hpp"
+#include <cstdint>
+#include <vector>
+#include <stdexcept>
 
 namespace wisent::algorithms 
 {
     struct FSE 
     {
-        static Result<size_t> compress(
-            const std::byte* input,
-            const size_t inputSize,
-            const std::byte* output, 
+        static Result<std::vector<uint8_t>> compress(
+            const std::vector<uint8_t>& input, 
             bool verbose = false
         );
-        static Result<size_t> decompress(
-            const std::byte* input,
-            const size_t inputSize, 
-            const std::byte* output, 
-            bool verbose = false
+        static Result<std::vector<uint8_t>> decompress(
+            const std::vector<uint8_t>& input, bool verbose = false
         );
     };
 } // FSE
 
-#endif // FSE_HPP
+

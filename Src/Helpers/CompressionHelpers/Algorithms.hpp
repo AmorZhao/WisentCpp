@@ -89,8 +89,8 @@ namespace wisent::algorithms
         RLE,
         LZ77,
         HUFFMAN,
-        FSE
-        // TODO: add type builder for compression pipelines
+        FSE, 
+        CUSTOM
     };
 
     // (excluding page header expressions)
@@ -105,7 +105,7 @@ namespace wisent::algorithms
 
         PhysicalType physicalType;
         EncodingType encodingType;
-        CompressionType compressionType;
+        std::vector<CompressionType> compressionTypes;
 
         std::vector<PageHeader> pageHeaders; 
 
@@ -157,7 +157,8 @@ namespace wisent::algorithms
         {"fse", CompressionType::FSE},
         {"finitestateentropy", CompressionType::FSE},
         {"delta", CompressionType::DELTA},
-        {"de", CompressionType::DELTA}
+        {"de", CompressionType::DELTA}, 
+        {"custom", CompressionType::CUSTOM}
     };
 
     static const std::unordered_map<CompressionType, std::string> compressionTypeNames = 
@@ -167,7 +168,8 @@ namespace wisent::algorithms
         {CompressionType::HUFFMAN, "huffman"},
         {CompressionType::LZ77, "lz77"},
         {CompressionType::FSE, "fse"},
-        {CompressionType::DELTA, "delta"}
+        {CompressionType::DELTA, "delta"}, 
+        {CompressionType::CUSTOM, "custom"}
     };
 
     static std::string compressionTypeToString(CompressionType type)
@@ -188,28 +190,39 @@ namespace wisent::algorithms
 
     template <typename codec>
     std::vector<uint8_t> compressWith(
-        const char* data, 
-        const size_t size
+        std::vector<uint8_t> const &data
     ) {
-        const std::byte* input = reinterpret_cast<const std::byte*>(data);
+        auto result = codec::compress(data);
 
-        std::vector<std::byte> output(size * 2); 
-        auto result = codec::compress(input, size, output.data());
-        if (!result.success()) {
+        if (!result.success()) 
+        {
             throw std::runtime_error("Compression failed");
         }
 
-        output.resize(result.value.value());
-
-        return std::vector<uint8_t>(
-            reinterpret_cast<const uint8_t*>(output.data()),
-            reinterpret_cast<const uint8_t*>(output.data() + output.size())
-        );
-    }
+        return result.getValue();
+    }; 
 
     std::vector<uint8_t> performCompression(
         CompressionType type,
         const std::vector<uint8_t>& buffer
     ); 
 
+    template <typename codec>
+    std::vector<uint8_t> decompressWith(
+        std::vector<uint8_t> const &data
+    ) {
+        auto result = codec::decompress(data);
+
+        if (!result.success()) 
+        {
+            throw std::runtime_error("Decompression failed");
+        }
+
+        return result.getValue();
+    }; 
+
+    std::vector<uint8_t> performDecompression(
+        CompressionType type,
+        const std::vector<uint8_t>& buffer
+    ); 
 }

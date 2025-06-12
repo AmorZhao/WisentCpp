@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdint>
 #include <cstdlib>
+#include <iostream>
 
 extern "C" {
 
@@ -1038,6 +1039,8 @@ inline size_t storeString(
             + inputStringLength + 1                            // new string length + 1 for terminator
     ));
 
+    stringBufferStart = getStringBuffer(*root); // update start after reallocation
+    
     char* destination = stringBufferStart + (*root)->stringBufferBytesWritten;
     strncpy(
         destination,
@@ -1064,6 +1067,8 @@ inline size_t storeBytes(
             + (*root)->stringBufferBytesWritten               // current length of string buffer
             + inputBytesLength + 1                            // new bytes length + terminator
     ));
+
+    stringBufferStart = getStringBuffer(*root);     // update start after reallocation
 
     char *destination = stringBufferStart + (*root)->stringBufferBytesWritten;
     memcpy(

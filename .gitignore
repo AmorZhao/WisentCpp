@@ -5,11 +5,10 @@
 
 # build
 /build*
-Tests/**/build*
+Misc/Tests/**/build*
+Benchmarks/**/build*
 
 # Test
-Tests/Benchmarks/
-Tests/benchmark.sh
 Misc/Zstd-Compression/test/*
 !Misc/Zstd-Compression/test/original.txt
 
@@ -31,6 +30,10 @@ Misc/Zstd-Compression/test/*
 *.swp
 *.bak
 *.tmp
+
+# tpch
+Include/TPC-H V3.0.1/
+Data/tpch/data/
 
 # temporary ignorance
 Documentation/Final Report

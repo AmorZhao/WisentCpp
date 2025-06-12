@@ -144,6 +144,10 @@ void *bson::serializer::loadAsBson(
 {
     ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
 
+    if (!forceReload && sharedMemory->exists() && !sharedMemory->isLoaded()) 
+    {
+        sharedMemory->load();
+    }
     if (sharedMemory->isLoaded()) 
     {
         if (!forceReload) 
@@ -151,8 +155,8 @@ void *bson::serializer::loadAsBson(
             return sharedMemory->getBaseAddress();
         }
         free(sharedMemoryName);
+        sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
     }
-
     SharedMemorySegments::setCurrentSharedMemory(sharedMemory);
 
     json j = load(
@@ -162,12 +166,16 @@ void *bson::serializer::loadAsBson(
     );
     std::vector<std::uint8_t> v = json::to_bson(j);
 
-    static std::vector<std::uint8_t, SharedMemoryAllocator<std::uint8_t>> sharedV(
-        v.begin(), 
-        v.end()
-    );
+    void *base = SharedMemorySegments::sharedMemoryMalloc(v.size() + 1);
+    memcpy(base, v.data(), v.size());
+    reinterpret_cast<char *>(base)[v.size()] = '\0';
+    return base;
 
-    return sharedV.data();
+    // static std::vector<std::uint8_t, SharedMemoryAllocator<std::uint8_t>> sharedV(
+    //     v.begin(), 
+    //     v.end()
+    // );
+    // return sharedV.data();
 }
 
 void *bson::serializer::loadAsJson(
@@ -179,6 +187,10 @@ void *bson::serializer::loadAsJson(
 {
     ISharedMemorySegment *sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
 
+    if (!forceReload && sharedMemory->exists() && !sharedMemory->isLoaded()) 
+    {
+        sharedMemory->load();
+    }
     if (sharedMemory->isLoaded()) 
     {
         if (!forceReload) 
@@ -186,8 +198,8 @@ void *bson::serializer::loadAsJson(
             return sharedMemory->getBaseAddress();
         }
         free(sharedMemoryName);
+        sharedMemory = SharedMemorySegments::createOrGetMemorySegment(sharedMemoryName);
     }
-
     SharedMemorySegments::setCurrentSharedMemory(sharedMemory);
 
     json j = load(
@@ -198,12 +210,15 @@ void *bson::serializer::loadAsJson(
     std::ostringstream ostream;
     ostream << j;
 
-    static std::basic_string<char, std::char_traits<char>, SharedMemoryAllocator<char>> str(
-        ostream.str().begin(), 
-        ostream.str().end()
-    );
+    std::string str = ostream.str();
+    void *base = SharedMemorySegments::sharedMemoryMalloc(str.size() + 1);
+    memcpy(base, str.data(), str.size());
+    reinterpret_cast<char *>(base)[str.size()] = '\0';
+    return base;
 
-    return const_cast<void *>(static_cast<const void *>(str.data())); 
+    // using SharedString = std::basic_string<char, std::char_traits<char>, SharedMemoryAllocator<char>>;
+    // SharedString *str = new SharedString(ostream.str().begin(), ostream.str().end());
+    // return const_cast<void *>(static_cast<const void *>(str->data())); 
 }
 
 void bson::serializer::unload(std::string const &sharedMemoryName)
