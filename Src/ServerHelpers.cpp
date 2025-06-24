@@ -12,11 +12,16 @@ void parseRequestParams(
     std::string &filepath, 
     std::string &csvPrefix,
     bool &disableRLE, 
-    bool &disableCsvHandling
+    bool &disableCsvHandling, 
+    bool &forceReload
 ) {
     filename = params.find("name") != params.end() ? params.find("name")->second : "";
     filepath = params.find("path") != params.end() ? params.find("path")->second : "";
     csvPrefix = filepath.substr(0, filepath.find_last_of("/\\") + 1);
+    if (params.find("csvPrefix") != params.end())
+    {
+        csvPrefix = params.find("csvPrefix")->second;
+    }
 
     if (params.find("disableRLE") != params.end()) 
     {
@@ -28,6 +33,12 @@ void parseRequestParams(
     {
         auto const &str = params.find("disableCsvHandling")->second;
         disableCsvHandling = (str.empty() || str == "True" || str == "true" || atoi(str.c_str()) > 0);
+    }
+
+    if (params.find("forceReload") != params.end()) 
+    {
+        auto const &str = params.find("forceReload")->second;
+        forceReload = (str.empty() || str == "True" || str == "true" || atoi(str.c_str()) > 0);
     }
 }
 

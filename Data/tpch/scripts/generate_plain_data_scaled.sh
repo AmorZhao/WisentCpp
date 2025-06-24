@@ -1,7 +1,8 @@
 #!/bin/bash
 
 DBGEN_PATH="../../../Include/TPC-H V3.0.1/dbgen"
-SCALE_FACTORS=(0.005 0.01 0.05 0.1 0.2 0.5 0.8 1)  # GB
+# 50K - 1GB
+SCALE_FACTORS=(0.00005 0.0001 0.0002 0.0005 0.001 0.002 0.005 0.01 0.02 0.05 0.1 0.2 0.5 0.8 1)  
 OUTPUT_DIR="../data"
 
 declare -A TABLE_HEADERS

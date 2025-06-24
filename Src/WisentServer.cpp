@@ -21,13 +21,15 @@ int main(int argc, char **argv)
         std::string csvPrefix;
         bool disableRLE = false;
         bool disableCsvHandling = false;
+        bool forceReload = false; 
         parseRequestParams(
             req.params, 
             filename, 
             filepath, 
             csvPrefix,
             disableRLE, 
-            disableCsvHandling
+            disableCsvHandling, 
+            forceReload
         );
 
         const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
@@ -36,7 +38,8 @@ int main(int argc, char **argv)
             filename, 
             csvPrefix, 
             disableRLE,
-            disableCsvHandling
+            disableCsvHandling, 
+            forceReload
         );
         const std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
 
@@ -44,7 +47,8 @@ int main(int argc, char **argv)
             res, 
             serializeResult, 
             start, 
-            end
+            end, 
+            filename
         );
         return;
     });
@@ -56,13 +60,15 @@ int main(int argc, char **argv)
         std::string csvPrefix; 
         bool disableRLE = false;
         bool disableCsvHandling = false;
+        bool forceReload = false; 
         parseRequestParams(
             req.params, 
             filename, 
             filepath, 
             csvPrefix,
             disableRLE, 
-            disableCsvHandling
+            disableCsvHandling, 
+            forceReload
         );
 
         Result<std::unordered_map<std::string, CompressionPipeline>> CompressionPipelineMapResult; 
@@ -76,15 +82,16 @@ int main(int argc, char **argv)
             res.set_content(CompressionPipelineMapResult.getError(), "text/plain");
             return;
         }
-        
+
         const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
         Result<WisentRootExpression*> compressResult = wisent::compressor::CompressAndLoadJson(
-            filename, 
             filepath, 
+            filename, 
             csvPrefix, 
             CompressionPipelineMapResult.value.value(), 
             disableRLE,
-            disableCsvHandling
+            disableCsvHandling, 
+            forceReload
         );
         const std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
 
@@ -92,7 +99,8 @@ int main(int argc, char **argv)
             res, 
             compressResult, 
             start, 
-            end
+            end, 
+            filename
         );
         return;
     });
@@ -104,13 +112,15 @@ int main(int argc, char **argv)
         std::string csvPrefix;
         bool disableRLE = false;
         bool disableCsvHandling = false;
+        bool forceReload = false; 
         parseRequestParams(
             req.params, 
             filename, 
             filepath, 
             csvPrefix,
             disableRLE, 
-            disableCsvHandling
+            disableCsvHandling, 
+            forceReload
         );
 
         const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();

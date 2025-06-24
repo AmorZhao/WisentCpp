@@ -60,7 +60,7 @@ void benchmark::utilities::WisentCompressWithPipeline(
     std::unordered_map<std::string, CompressionPipeline> &compressionPipelineMap
 ) {
     Result<WisentRootExpression*> result =  wisent::compressor::CompressAndLoadJson(
-        DatasetPath+DatasetName, 
+        DatasetPath + DatasetName, 
         SharedMemoryName,
         CsvPath,
         compressionPipelineMap,

@@ -4,6 +4,7 @@ BENCHMARK_FOLDERS=(
     "WisentCompressor"
     # "WisentFileSize"
     # "Compression"
+    # "WisentProcessing"
 )
 
 for BENCHMARK_DIR in "${BENCHMARK_FOLDERS[@]}"; do
